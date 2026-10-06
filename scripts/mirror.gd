@@ -203,7 +203,7 @@ func _scare_girl() -> void:
 	var sp: Node3D = preload("res://scripts/spirit.gd").new()
 	g.add_child(sp)
 	L.add_child(g)
-	sp.freeze("idle", 1.5)
+	sp.play_from("idle", 1.5, 1.0)
 	sp.set_blood(0.35)
 	sp.float_h = 0.12
 	sp.set_layer(1 << (GHOST_LAYER - 1))

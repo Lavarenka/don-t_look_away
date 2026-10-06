@@ -6,7 +6,7 @@ extends Node3D
 ## Анимации: idle — стоит как призрак, zidle — жуткое покачивание, walk — медленный шаг,
 ## run — бег, reach — тянет руку.
 
-const HEIGHT := 1.5          ## рост, м (один для всех появлений призрака)
+const HEIGHT := 1.7          ## рост, м (один для всех появлений призрака)
 const ANIMS := ["idle", "zidle", "walk", "run", "reach"]
 
 var model: Node3D
@@ -51,6 +51,13 @@ func freeze(n: String, t: float) -> void:
 	ap.play("g/" + n, 0.0)
 	ap.seek(t, true)
 	ap.speed_scale = 0.0
+
+
+## Играть анимацию n с секунды t — так призрак «живой» даже в короткие появления.
+func play_from(n: String, t: float, speed := 0.8) -> void:
+	ap.play("g/" + n, 0.0)
+	ap.seek(t, true)
+	ap.speed_scale = speed
 
 
 func set_speed(s: float) -> void:

@@ -468,7 +468,7 @@ func _girl() -> void:
 	girl.add_child(sp)
 	girl.visible = false
 	add_child(girl)
-	sp.freeze("idle", 1.0)
+	sp.play_from("idle", 1.0, 1.0)
 	sp.set_blood(0.3)
 	sp.float_h = 0.12
 

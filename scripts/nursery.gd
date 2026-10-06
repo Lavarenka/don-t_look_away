@@ -141,7 +141,7 @@ func _end_dance(close: bool) -> void:
 	dancing = false
 	var g: Node3D = L.girl
 	# замирает, поворачивается к игроку — свет мигает — её нет
-	L._girl_anim(0.0)
+	L._girl_anim(0.4)                 # замедляется, но не замирает
 	L._face(g, L.player.global_position)
 	L._sfx("sting", -2.0 if close else -6.0)
 	L.player.flicker = 0.45
@@ -358,8 +358,7 @@ func _solve() -> void:
 	f.y = 0.0
 	girl.global_position = p.global_position + f.normalized() * 0.55
 	L._face(girl, p.global_position)
-	girl.global_position.y += 0.22           # приподнята: лицо прямо на уровне глаз
-	_gpose("reach", 2.2, 1.0, 1.0)            # тянет руку, вся в крови, волосы дыбом
+	_gpose("reach", 1.7, 1.0, 1.0)            # тянет к тебе руку, вся в крови, волосы дыбом
 	girl.visible = true
 	p.light_on = true
 	p.flicker = 0.0               # фонарь вспыхивает — она прямо перед лицом
@@ -381,7 +380,7 @@ func _gpose(n: String, t: float, blood: float, lift := 0.0) -> void:
 	if t < 0.0:
 		g.play(n, 1.0, 0.0)
 	else:
-		g.freeze(n, t)
+		g.play_from(n, t, 0.7)                 # не замирает: продолжает двигаться с этой позы
 	g.set_blood(blood)
 	g.set_lift(lift)
 	g.float_h = 0.0
