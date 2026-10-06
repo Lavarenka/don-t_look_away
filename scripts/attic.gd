@@ -15,7 +15,7 @@ const MIN_PLAYER := 2.3       ## не ближе к игроку
 var men := []                 # {q, cool, stare, zone, pose}
 var next_snd := 6.0           ## когда следующий звук чердака
 ## Жуть без скримеров: каждое событие — один раз, в случайном порядке, когда игрок в подходящем месте.
-var events := ["steps", "knock_hatch", "chair", "frame", "closet", "mirror", "giggle", "chandelier", "crate", "books", "drag", "whisper"]
+var events := ["steps", "knock_hatch", "chair", "frame", "closet", "giggle", "chandelier", "crate", "books", "drag", "whisper"]
 var next_ev := 25.0
 var roof: AudioStreamPlayer
 
@@ -121,7 +121,6 @@ func _ev_ok(e: String) -> bool:
 		"chair": var d := _dist("Attic/BChair"); return d > 2.5 and d < 8.0 and not _seen(L.get_node("Attic/BChair").global_position)
 		"frame": return _dist("Attic/FrameGirl") > 2.5 and not _seen(L.get_node("Attic/FrameGirl").global_position + Vector3(0, 0.4, 0))
 		"closet": var d := _dist("Attic/BCloset"); return d > 2.0 and d < 8.0
-		"mirror": var d := _dist("Attic/CovMirror"); return d > 2.0 and d < 7.0
 		"chandelier": return _dist("AChandelier") < 6.0
 	return true
 
@@ -197,6 +196,9 @@ func _event(e: String) -> void:
 				await get_tree().create_timer(t).timeout
 				L._sfx3d("knock", cp, -1.0, 0.9)
 		"mirror":      # простыня сползает с зеркала
+			if sheet_down:
+				return
+			sheet_down = true
 			var cm: Node3D = L.get_node("Attic/CovMirror")
 			L._sfx3d("sheet_rustle", cm.global_position + Vector3(0, 1.2, 0), 0.0, 0.85)
 			L._sfx3d("whoosh", cm.global_position + Vector3(0, 1.0, 0), -10.0, 0.7)
@@ -243,6 +245,15 @@ func _process(delta: float) -> void:
 		return
 	_attic_sounds(delta)
 	_attic_events(delta)
+	# подошёл к зеркалу и смотришь на него — простыня сама сползает
+	if not sheet_down:
+		var mc: Vector3 = L.get_node("Attic/CovMirror").global_position + Vector3(0, 1.0, 0)
+		if _dist("Attic/CovMirror") < 2.8 and _seen(mc):
+			mirror_look += delta
+			if mirror_look > 0.7:
+				_event("mirror")
+		else:
+			mirror_look = 0.0
 	var p = L.player
 	var eye: Vector3 = p.cam.global_position
 	for m in men:
@@ -304,6 +315,8 @@ var photo_seen := false
 const CLOTH_Y := 0.25
 var sheet: MeshInstance3D      ## простыня на зеркале
 var mirror_fx: Node            ## отражение (mirror.gd)
+var sheet_down := false        ## простыня уже сползла
+var mirror_look := 0.0         ## сколько секунд игрок смотрит на зеркало вблизи
 var cloth: MeshInstance3D      ## скомканное платье в сундуке
 var viewer: TextureRect
 var origin := {}             ## где лежала вещь — туда она возвращается, если взять другую
