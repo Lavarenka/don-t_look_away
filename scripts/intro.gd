@@ -464,17 +464,13 @@ func _house() -> void:
 # ---------------- девочка у обочины ----------------
 func _girl() -> void:
 	girl = Node3D.new()
-	var m: Node3D = (load("res://models/ghosts/ghost_girl.glb") as PackedScene).instantiate()
-	m.rotation.y = PI / 2
-	m.scale = Vector3.ONE * 0.0085
-	girl.add_child(m)
+	var sp: Node3D = preload("res://scripts/spirit.gd").new()     # девочка-призрак (CC BY)
+	girl.add_child(sp)
 	girl.visible = false
 	add_child(girl)
-	for ap in m.find_children("*", "AnimationPlayer", true, false):
-		var names: PackedStringArray = ap.get_animation_list()
-		if names.size() > 0:
-			ap.play(names[0])
-			ap.speed_scale = 0.0
+	sp.freeze("idle", 1.0)
+	sp.set_blood(0.3)
+	sp.float_h = 0.12
 
 
 # ---------------- титры и субтитры ----------------

@@ -210,29 +210,15 @@ func _ready() -> void:
 		jump_chapter.call_deferred(ch)
 
 
+## В коридоре на тебя бежит не зомби, а девочка-призрак (spirit.gd, анимация бега).
+var run_girl: Node3D
 func _setup_zombie() -> void:
 	zombie.visible = false
-	var aps := zombie.find_children("*", "AnimationPlayer", true, false)
-	if aps.is_empty():
-		return
-	zombie_anim = aps[0]
-	var run_name := ""
-	for a in zombie_anim.get_animation_list():
-		if zombie_anim.get_animation(a).length < 2.0:
-			run_name = a
-	if run_name == "":
-		run_name = zombie_anim.get_animation_list()[0]
-	zombie_anim.get_animation(run_name).loop_mode = Animation.LOOP_LINEAR
-	# бег в файле сделан с перемещением — убираем его, двигаем зомби сами
-	var sks := zombie.find_children("*", "Skeleton3D", true, false)
-	if not sks.is_empty():
-		var sk: Skeleton3D = sks[0]
-		for b in sk.get_bone_count():
-			if sk.get_bone_name(b).ends_with("Hips"):
-				var rootn: Node = zombie_anim.get_node(zombie_anim.root_node)
-				zombie_anim.root_motion_track = NodePath(String(rootn.get_path_to(sk)) + ":" + sk.get_bone_name(b))
-				break
-	zombie_anim.set_meta("run", run_name)
+	for c in zombie.get_children():
+		c.queue_free()
+	run_girl = preload("res://scripts/spirit.gd").new()
+	zombie.add_child(run_girl)
+	zombie_anim = null
 
 
 func _zombie_start() -> void:
@@ -241,9 +227,9 @@ func _zombie_start() -> void:
 	zombie.global_position = Vector3(0, 0, -17.2)
 	zombie.rotation.y = 0.0
 	zombie.visible = true
-	if zombie_anim:
-		zombie_anim.play(zombie_anim.get_meta("run"), -1, 1.15)
-	_sfx("roar", 2.0)
+	run_girl.play("run", 2.0, 0.0)
+	run_girl.set_blood(0.8)
+	_sfx("scream", -2.0, 1.35)
 	player.flicker = 0.15
 	bulb.light_energy = 0.0
 
@@ -259,7 +245,7 @@ func _update_zombie(delta: float) -> void:
 	zombie_step_t -= delta
 	if zombie_step_t <= 0.0:
 		zombie_step_t = 0.27
-		_sfx3d("thump", zombie.global_position, 2.0, randf_range(0.9, 1.1))
+		_sfx3d("thump", zombie.global_position, -2.0, randf_range(1.3, 1.5))
 	player.shake = max(player.shake, clamp(1.0 - d / 10.0, 0.0, 1.0) * 0.4)
 	if d < 1.3:
 		# в последний момент исчезает
@@ -947,19 +933,18 @@ func _hinge(wall: String, pivot: Node3D) -> void:
 	leaf.reparent(pivot, true)
 
 
+## Девочка-призрак: вместо старой модели — spirit.gd (лицензия CC BY).
+var girl_sp: Node3D
 func _setup_girl() -> void:
 	girl.visible = false
-	for ap in girl.find_children("*", "AnimationPlayer", true, false):
-		var names: PackedStringArray = ap.get_animation_list()
-		if names.size() > 0:
-			ap.get_animation(names[0]).loop_mode = Animation.LOOP_LINEAR
-			ap.play(names[0])
-			ap.speed_scale = 0.0
+	for c in girl.get_children():
+		c.queue_free()
+	girl_sp = preload("res://scripts/spirit.gd").new()
+	girl.add_child(girl_sp)
 
 
 func _girl_anim(speed: float) -> void:
-	for ap in girl.find_children("*", "AnimationPlayer", true, false):
-		ap.speed_scale = speed
+	girl_sp.set_speed(speed)
 
 
 # ---------------- цикл ----------------

@@ -16,12 +16,15 @@ TEXT = ('.tscn', '.tres', '.gd', '.godot', '.gdshader', '.gltf', '.cfg', '.csv')
 RES = re.compile(r'res://([^"\'\)\s%]+)')
 
 used = set()
-queue = ['project.godot', 'CREDITS.txt', 'README.txt', 'tools/git_used.py']
+queue = ['project.godot', 'CREDITS.txt', 'README.txt', 'README.md', 'tools/git_used.py']
 queue += [p for p in ALL if p.startswith(('scenes/', 'scripts/', 'shaders/', 'lang/')) and not p.endswith('.import')]
+fmt_prefixes = set()   # «book%d», «mb_note%d» — имена звуков с номером
 quoted = set()   # все строки в кавычках из скриптов — для путей вида "res://audio/%s.wav"
 for p in ALL:
     if p.endswith('.gd'):
-        quoted |= set(re.findall(r'"([A-Za-z0-9_]+)"', open(p, encoding='utf-8', errors='ignore').read()))
+        txt_ = open(p, encoding='utf-8', errors='ignore').read()
+        quoted |= set(re.findall(r'"([A-Za-z0-9_]+)"', txt_))
+        fmt_prefixes |= set(re.findall(r'"([A-Za-z_]+)%d"', txt_))
 
 def add(p):
     p = os.path.normpath(p).replace('\\', '/')
@@ -29,10 +32,20 @@ def add(p):
         used.add(p); queue.append(p)
 
 # динамические пути из скриптов
+# res://папка/префикс%s.расширение — берём все файлы с таким префиксом и окончанием
+for p in ALL:
+    if p.endswith('.gd'):
+        for pre, suf in re.findall(r'res://([^"%]+)%[sd]([^"]*)"', open(p, encoding='utf-8', errors='ignore').read()):
+            for q in ALL:
+                if q.startswith(pre) and q.endswith(suf) and not q.endswith('.import'):
+                    # вся папка (res://audio/%s.wav) — только файлы, чьи имена встречаются в скриптах строкой
+                    if pre.endswith('/') and os.path.splitext(os.path.basename(q))[0] not in quoted:
+                        continue
+                    used.add(q); queue.append(q)
 for p in ALL:
     stem = os.path.splitext(os.path.basename(p))[0]
     if p.startswith('audio/') and not p.endswith('.import'):
-        if stem in quoted or (p.startswith('audio/intro/i_') and stem[2:] in quoted):
+        if re.sub(r'\d+$', '', stem) in fmt_prefixes or stem in quoted or (p.startswith('audio/intro/i_') and stem[2:] in quoted):
             add(p)
     if re.match(r'models/forest/pine/pine\d\.glb$', p):
         add(p)

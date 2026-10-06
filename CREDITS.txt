@@ -24,14 +24,13 @@
   «Maid Dress Test» — pers, sketchfab.com/persnip (рукава убраны)
 - Туфли «Leather women's shoes» — SUSUSUBE (Sketchfab / Fab), CC BY 4.0.
 - Манекены-люди и их анимации — Mixamo (Adobe), бесплатно для игр.
+- Девочка-призрак «Horror Ghost Character - Blood Stained Spirit» — adhamasalah, sketchfab.com/adhamAsalah, CC BY 4.0
+  (риг и анимации — Mixamo). Заменила «Horror Girl» (CC BY-NC), которая больше не используется.
+- «Horror mask» — Bulat.Shakirov, sketchfab.com/Bulat.Shakirov, CC BY 4.0.
 
 Нужно проверить или заменить:
-- horror_girl.glb («Horror Girl», LostBoyz2078, Sketchfab) — CC BY-NC: НЕКОММЕРЧЕСКАЯ.
-  Для релиза в Steam ЗАМЕНИТЬ или купить лицензию.
 - horror_corridor_1.glb («Horror corridor 1», Katydid, Sketchfab) — Free Standard:
   насколько известно, игры разрешены; перед релизом перечитать условия.
-- horror_ghost_character_-_blood_stained_spirit.glb (Sketchfab) — лицензию проверить на странице модели.
-- horror_mask.glb (Sketchfab) — лицензию проверить на странице модели.
 
 Не использовано: young_marceline_horror.glb — фан-модель персонажа из чужого мультфильма,
 такие нельзя ставить в свою игру.

@@ -200,17 +200,13 @@ func _only_mirror(n: Node) -> void:
 func _scare_girl() -> void:
 	var p: CharacterBody3D = L.player
 	var g := Node3D.new()
-	var m: Node3D = load("res://models/ghosts/ghost_girl.glb").instantiate()
-	m.rotation.y = 1.5708
-	m.scale = Vector3.ONE * 0.0072
-	g.add_child(m)
+	var sp: Node3D = preload("res://scripts/spirit.gd").new()
+	g.add_child(sp)
 	L.add_child(g)
-	_only_mirror(g)
-	for a in g.find_children("*", "AnimationPlayer", true, false):
-		var names: PackedStringArray = (a as AnimationPlayer).get_animation_list()
-		if names.size() > 0:
-			(a as AnimationPlayer).play(names[0])
-			(a as AnimationPlayer).speed_scale = 0.0
+	sp.freeze("idle", 1.5)
+	sp.set_blood(0.35)
+	sp.float_h = 0.12
+	sp.set_layer(1 << (GHOST_LAYER - 1))
 	var right: Vector3 = p.global_basis.x
 	var back: Vector3 = p.global_basis.z
 	g.global_position = p.global_position + back * 0.85 + right * 0.32

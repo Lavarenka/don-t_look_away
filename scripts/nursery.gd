@@ -105,8 +105,9 @@ func start_dance() -> void:
 	g.global_position = Vector3(0.1, 0, -21.4)
 	L._face(g, L.player.global_position)
 	g.visible = true
+	_gpose("idle", -1.0, 0.0)
+	L.girl_sp.float_h = 0.3                  # парит над полом и медленно кружится
 	L._sfx("girl_appear", -4.0)
-	L._girl_anim(1.0)
 	dancing = true
 	dance_t = 0.0
 	dance_seen = 0.0
@@ -283,8 +284,8 @@ func _under_bed() -> void:
 	f.y = 0.0
 	girl.global_position = p.global_position + f.normalized() * 0.6
 	L._face(girl, p.global_position)
+	_gpose("reach", 2.2, 0.6, 0.7)
 	girl.visible = true
-	L._girl_anim(1.2)
 	L._sfx("sting", 2.0)
 	L._sfx("scream", 0.0, 1.25)
 	p.shake = 0.9
@@ -292,7 +293,7 @@ func _under_bed() -> void:
 	create_tween().tween_property(L.red_flash, "color:a", 0.0, 0.8)
 	await get_tree().create_timer(0.55).timeout
 	girl.visible = false
-	L._girl_anim(0.0)
+	_gpose("idle", -1.0, 0.0)
 	await get_tree().create_timer(0.6).timeout
 	L.busy = false
 	p.frozen = false
@@ -333,16 +334,21 @@ func _solve() -> void:
 	f.y = 0.0
 	girl.global_position = p.global_position + f.normalized() * 2.6
 	L._face(girl, p.global_position)
+	_gpose("zidle", 1.0, 0.2)
 	girl.visible = true
 	L._sfx("girl_appear", -2.0)
 	_lock_door()
-	for word in ["NUR_25", "NUR_26", "NUR_27"]:
+	# на каждый счёт пропадает в мигании света и появляется ближе — каждый раз в новой жуткой позе и всё кровавее
+	var poses := [["zidle", 2.7, 0.45, 0.0], ["reach", 1.3, 0.7, 0.0], ["idle", 3.2, 0.9, 0.0]]
+	for k in 3:
+		var word: String = ["NUR_25", "NUR_26", "NUR_27"][k]
 		L._sfx("whisper", -4.0, 1.4)
 		L._say(word, 1.2)
 		p.flicker = 0.35
 		await get_tree().create_timer(1.3).timeout
 		girl.global_position = girl.global_position.lerp(p.global_position, 0.35)
 		L._face(girl, p.global_position)
+		_gpose(poses[k][0], poses[k][1], poses[k][2], poses[k][3])
 	p.light_on = false
 	girl.visible = false
 	await get_tree().create_timer(1.2).timeout
@@ -352,9 +358,9 @@ func _solve() -> void:
 	f.y = 0.0
 	girl.global_position = p.global_position + f.normalized() * 0.55
 	L._face(girl, p.global_position)
-	girl.global_position.y += 0.4            # приподнята: лицо прямо на уровне глаз
+	girl.global_position.y += 0.22           # приподнята: лицо прямо на уровне глаз
+	_gpose("reach", 2.2, 1.0, 1.0)            # тянет руку, вся в крови, волосы дыбом
 	girl.visible = true
-	L._girl_anim(0.0)
 	p.light_on = true
 	p.flicker = 0.0               # фонарь вспыхивает — она прямо перед лицом
 	p.shake = 1.0
@@ -367,6 +373,19 @@ func _solve() -> void:
 	L.fade.color.a = 1.0
 	# она забрала тебя к себе — 4-й уровень, чердак
 	L.attic.enter()
+
+
+## Поза девочки: анимация n на секунде t (t < 0 — играть), кровь, «волосы дыбом».
+func _gpose(n: String, t: float, blood: float, lift := 0.0) -> void:
+	var g = L.girl_sp
+	if t < 0.0:
+		g.play(n, 1.0, 0.0)
+	else:
+		g.freeze(n, t)
+	g.set_blood(blood)
+	g.set_lift(lift)
+	g.float_h = 0.0
+	g._float = 0.0
 
 
 ## Дверь в детскую захлопывается — бежать некуда.
