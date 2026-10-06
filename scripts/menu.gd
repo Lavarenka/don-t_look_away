@@ -22,6 +22,21 @@ const SETTINGS = preload("res://scripts/settings.gd")
 const FLICKER = preload("res://scripts/flicker.gd")
 var _grain_mat: ShaderMaterial
 
+# ---- живой фон: заранее отрендеренный коридор + поверх него 3D-призрак в том же ракурсе ----
+var CAM_XF: Transform3D = str_to_var("Transform3D(0.99782705, -0.0063137123, 0.06558462, 0, 0.9953982, 0.095825166, -0.06588782, -0.09561695, 0.99323523, -0.3, 1.65, 2.5)")
+var FLASH_XF: Transform3D = str_to_var("Transform3D(0.9942423, 0.013865624, -0.10625452, 0, 0.9915928, 0.12939733, 0.10715539, -0.1286523, 0.98588353, -0.07921533, 1.4509205, 2.5046284)")
+var GIRL_XF: Transform3D = str_to_var("Transform3D(0.98412704, 0, -0.17746553, 0, 1, 0, 0.17746553, 0, 0.98412704, 0.25, 0, -0.55)")
+const FLASH_E := 7.0
+var _plate: TextureRect
+var _live: TextureRect
+var _flash: SpotLight3D
+var _girl: Node3D
+var _fl := 1.0            ## яркость фонарика 0..1
+var _fl_t := 0.0
+var _next_fl := 4.0       ## когда следующий сбой фонарика
+var _burst := 0.0         ## сколько ещё длится сбой
+var _deep := false        ## глубокий сбой: фонарик гаснет почти полностью
+
 
 func _ready() -> void:
 	SETTINGS.apply_lang()
@@ -29,12 +44,9 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	get_tree().paused = false
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	var bg := TextureRect.new()
-	bg.texture = load("res://textures/menu_bg.png")
-	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
+	_plate = _cover(load("res://textures/menu_plate.jpg"))
+	add_child(_plate)
+	_build_live()
 	var shade := ColorRect.new()
 	shade.color = Color(0, 0, 0, 0.45)
 	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -99,6 +111,129 @@ func _ready() -> void:
 	if Engine.has_meta("after_intro"):
 		Engine.remove_meta("after_intro")
 		_start()
+
+
+## Картинка на весь экран с обрезкой по краям (как фон).
+func _cover(tex: Texture2D) -> TextureRect:
+	var r := TextureRect.new()
+	r.texture = tex
+	r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	r.set_anchors_preset(Control.PRESET_FULL_RECT)
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return r
+
+
+## Призрак в дверном проёме: свой маленький 3D-мир с прозрачным фоном,
+## камера и фонарик стоят ровно там, где снимался фон, — она «вписана» в картинку.
+func _build_live() -> void:
+	var vp := SubViewport.new()
+	vp.size = Vector2i(1920, 1080)
+	vp.transparent_bg = true
+	vp.own_world_3d = true
+	vp.msaa_3d = Viewport.MSAA_2X
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(vp)
+	var env := Environment.new()
+	env.background_mode = Environment.BG_CLEAR_COLOR
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.35, 0.4, 0.5)
+	env.ambient_light_energy = 0.1
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.tonemap_exposure = 1.1
+	env.adjustment_enabled = true
+	env.adjustment_saturation = 0.75
+	env.adjustment_contrast = 1.1
+	var we := WorldEnvironment.new()
+	we.environment = env
+	vp.add_child(we)
+	var cam := Camera3D.new()
+	cam.fov = 68.0
+	cam.transform = CAM_XF
+	vp.add_child(cam)
+	_flash = SpotLight3D.new()
+	_flash.transform = FLASH_XF
+	_flash.light_color = Color(1, 0.94, 0.82)
+	_flash.light_energy = FLASH_E
+	_flash.shadow_enabled = true
+	_flash.shadow_bias = 0.08
+	_flash.shadow_normal_bias = 2.5
+	_flash.spot_range = 18.0
+	_flash.spot_attenuation = 1.2
+	_flash.spot_angle = 24.0
+	_flash.spot_angle_attenuation = 1.5
+	vp.add_child(_flash)
+	_girl = Node3D.new()
+	_girl.set_script(load("res://scripts/spirit.gd"))
+	_girl.transform = GIRL_XF
+	vp.add_child(_girl)
+	_girl.play("idle", 0.4)
+	_girl.set_blood(0.35)
+	_girl.ap.seek(randf() * 3.0, true)
+	# пылинки в луче фонарика
+	var pm := ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	pm.emission_box_extents = Vector3(1.2, 1.0, 1.6)
+	pm.gravity = Vector3(0, -0.015, 0)
+	pm.initial_velocity_max = 0.05
+	pm.spread = 180.0
+	pm.turbulence_enabled = true
+	pm.turbulence_noise_strength = 0.3
+	var dm := StandardMaterial3D.new()
+	dm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	dm.albedo_color = Color(0.9, 0.88, 0.8, 0.5)
+	dm.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	var q := QuadMesh.new()
+	q.size = Vector2(0.008, 0.008)
+	q.material = dm
+	var dust := GPUParticles3D.new()
+	dust.amount = 250
+	dust.lifetime = 10.0
+	dust.preprocess = 10.0
+	dust.process_material = pm
+	dust.draw_pass_1 = q
+	dust.position = Vector3(0, 1.4, 0.6)
+	dust.visibility_aabb = AABB(Vector3(-3, -3, -3), Vector3(6, 6, 6))
+	vp.add_child(dust)
+	_live = _cover(vp.get_texture())
+	add_child(_live)
+
+
+## Фонарик: почти всегда ровный, иногда коротко «моргает»,
+## изредка гаснет — и в темноте призрак меняет позу или исчезает.
+func _flicker(delta: float) -> void:
+	_fl_t += delta
+	var target := 1.0 - 0.04 * sin(_fl_t * 1.7) * sin(_fl_t * 4.3)
+	if _burst > 0.0:
+		_burst -= delta
+		if randf() < delta * 22.0:
+			_fl = randf_range(0.0, 0.25) if _deep else randf_range(0.25, 0.85)
+		if _burst <= 0.0:
+			if _deep and randf() < 0.5:
+				_ghost_shift()
+			_deep = false
+			_next_fl = _fl_t + randf_range(3.0, 8.0)
+	else:
+		_fl = move_toward(_fl, target, delta * 6.0)
+		if _fl_t > _next_fl:
+			_deep = randf() < 0.3
+			_burst = randf_range(0.5, 0.9) if _deep else randf_range(0.12, 0.35)
+	_flash.light_energy = FLASH_E * _fl
+	var c := Color(_fl, _fl, _fl)
+	_plate.modulate = c
+
+
+## Пока фонарик моргает, она успевает «перемениться».
+func _ghost_shift() -> void:
+	if not _girl.visible:
+		_girl.visible = true
+		_girl.play("idle", 0.4, 0.0)
+	elif randf() < 0.3:
+		_girl.visible = false
+	elif randf() < 0.5:
+		_girl.play_from("zidle", randf() * 2.0, 0.5)
+	else:
+		_girl.play("idle", 0.4, 0.0)
 
 
 func _clear() -> void:
@@ -221,6 +356,7 @@ func _start() -> void:
 
 
 func _process(delta: float) -> void:
+	_flicker(delta)
 	if not _loading_started:
 		return
 	_t_load += delta
