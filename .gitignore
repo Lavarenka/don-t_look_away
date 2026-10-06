@@ -647,6 +647,7 @@
 !/models/spirit/spirit_albedo.png
 !/models/spirit/spirit_albedo.png.import
 !/models/spirit/spirit_mesh.res
+!/models/spirit/tripo_image_2d99349c_0.jpg
 !/models/steel_frame_shelves_01/steel_frame_shelves_01.bin
 !/models/steel_frame_shelves_01/steel_frame_shelves_01_1k.gltf
 !/models/steel_frame_shelves_01/steel_frame_shelves_01_1k.gltf.import
@@ -901,11 +902,13 @@
 !/scripts/settings.gd
 !/scripts/settings.gd.uid
 !/scripts/spirit.gd
+!/scripts/spirit.gd.uid
 !/scripts/vintage.gd
 !/scripts/vintage.gd.uid
 !/shaders/grain.gdshader
 !/shaders/grain.gdshader.uid
 !/shaders/spirit.gdshader
+!/shaders/spirit.gdshader.uid
 !/textures/attic_photo.png
 !/textures/attic_photo.png.import
 !/textures/cobweb.png
