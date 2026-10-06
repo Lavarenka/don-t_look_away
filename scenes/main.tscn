@@ -64,57 +64,56 @@
 [ext_resource type="PackedScene" path="res://models/wine_bottles_01/wine_bottles_01_1k.gltf" id="e62"]
 [ext_resource type="PackedScene" path="res://models/wine_bottles_01/wine_bottles_01_1k.gltf" id="e63"]
 [ext_resource type="PackedScene" path="res://models/wine_bottles_01/wine_bottles_01_1k.gltf" id="e64"]
-[ext_resource type="PackedScene" path="res://models/ghosts/ghost_blood.glb" id="e65"]
-[ext_resource type="PackedScene" path="res://models/ghosts/ghost_mask.glb" id="e66"]
-[ext_resource type="PackedScene" path="res://models/GothicBed_01/GothicBed_01_2k.gltf" id="e67"]
-[ext_resource type="PackedScene" path="res://models/ClassicNightstand_01/ClassicNightstand_01_2k.gltf" id="e68"]
-[ext_resource type="PackedScene" path="res://models/Rockingchair_01/Rockingchair_01_2k.gltf" id="e69"]
-[ext_resource type="PackedScene" path="res://models/detskaya_sf/nameless_doll.glb" id="e70"]
-[ext_resource type="PackedScene" path="res://models/detskaya_sf/wooden_horse.glb" id="e71"]
-[ext_resource type="PackedScene" path="res://models/detskaya_sf/mammy_bearor_cat.glb" id="e72"]
-[ext_resource type="PackedScene" path="res://models/rubber_duck_toy/rubber_duck_toy_2k.gltf" id="e73"]
-[ext_resource type="PackedScene" path="res://models/carved_wooden_elephant/carved_wooden_elephant_2k.gltf" id="e74"]
-[ext_resource type="PackedScene" path="res://models/vintage/curtain_2.fbx" id="e75"]
-[ext_resource type="Texture2D" path="res://textures/drawings/risunok1.png" id="e76"]
-[ext_resource type="Texture2D" path="res://textures/drawings/risunok2.png" id="e77"]
-[ext_resource type="Texture2D" path="res://textures/drawings/risunok3.png" id="e78"]
-[ext_resource type="Texture2D" path="res://textures/drawings/risunok4.png" id="e79"]
-[ext_resource type="Texture2D" path="res://textures/drawings/risunok5.png" id="e80"]
-[ext_resource type="Texture2D" path="res://textures/pbr/wooden_floor_02_diff_2k.jpg" id="e81"]
-[ext_resource type="Texture2D" path="res://textures/pbr/wooden_floor_02_nor_gl_2k.jpg" id="e82"]
-[ext_resource type="Texture2D" path="res://textures/pbr/wooden_floor_02_arm_2k.jpg" id="e83"]
-[ext_resource type="Texture2D" path="res://textures/cobweb.png" id="e84"]
-[ext_resource type="PackedScene" path="res://models/attic/dress_form/dress_form.gltf" id="e85"]
-[ext_resource type="PackedScene" path="res://models/attic/dress/dress_205.glb" id="e86"]
-[ext_resource type="PackedScene" path="res://models/attic/scarf/scarf.gltf" id="e87"]
-[ext_resource type="PackedScene" path="res://models/attic/bow/bow.gltf" id="e88"]
-[ext_resource type="PackedScene" path="res://models/attic/shoes/shoes.gltf" id="e89"]
-[ext_resource type="PackedScene" path="res://models/mannequin/mannequin.scn" id="e90"]
-[ext_resource type="PackedScene" path="res://models/attic/scarf/scarf.gltf" id="e91"]
-[ext_resource type="PackedScene" path="res://models/attic/bow/bow.gltf" id="e92"]
-[ext_resource type="PackedScene" path="res://models/attic/shoes/shoes.gltf" id="e93"]
-[ext_resource type="PackedScene" path="res://models/attic/trunk/trunk.gltf" id="e94"]
-[ext_resource type="PackedScene" path="res://models/vintage_wooden_drawer_01/vintage_wooden_drawer_01_1k.gltf" id="e95"]
-[ext_resource type="PackedScene" path="res://models/GreenChair_01/GreenChair_01_1k.gltf" id="e96"]
-[ext_resource type="PackedScene" path="res://models/Chandelier_03/Chandelier_03_1k.gltf" id="e97"]
-[ext_resource type="PackedScene" path="res://models/attic/sofa/sofa.gltf" id="e98"]
-[ext_resource type="PackedScene" path="res://models/attic/bchair/bchair.gltf" id="e99"]
-[ext_resource type="PackedScene" path="res://models/attic/closet/closet.gltf" id="e100"]
-[ext_resource type="PackedScene" path="res://models/attic/nightstand/nightstand.gltf" id="e101"]
-[ext_resource type="PackedScene" path="res://models/attic/frames/frame03.gltf" id="e102"]
-[ext_resource type="PackedScene" path="res://models/attic/frames/frame1.gltf" id="e103"]
-[ext_resource type="PackedScene" path="res://models/attic/frames/circle_frame.gltf" id="e104"]
-[ext_resource type="PackedScene" path="res://models/attic/frames/frame2.gltf" id="e105"]
-[ext_resource type="PackedScene" path="res://models/vintage/book_1.fbx" id="e106"]
-[ext_resource type="PackedScene" path="res://models/vintage/book_4.fbx" id="e107"]
-[ext_resource type="PackedScene" path="res://models/vintage/book_6.fbx" id="e108"]
-[ext_resource type="Texture2D" path="res://textures/attic_photo.png" id="e109"]
-[ext_resource type="Texture2D" path="res://models/vintage/tex/walls_basecolor.jpg" id="e110"]
-[ext_resource type="Texture2D" path="res://models/vintage/tex/walls_normal.jpg" id="e111"]
-[ext_resource type="PackedScene" path="res://models/vintage/photo_1.fbx" id="e112"]
-[ext_resource type="PackedScene" path="res://models/vintage/photo_2.fbx" id="e113"]
-[ext_resource type="PackedScene" path="res://models/vintage/photo_3.fbx" id="e114"]
-[ext_resource type="PackedScene" path="res://models/vintage/photo_4.fbx" id="e115"]
+[ext_resource type="PackedScene" path="res://models/ghosts/ghost_mask.glb" id="e65"]
+[ext_resource type="PackedScene" path="res://models/GothicBed_01/GothicBed_01_2k.gltf" id="e66"]
+[ext_resource type="PackedScene" path="res://models/ClassicNightstand_01/ClassicNightstand_01_2k.gltf" id="e67"]
+[ext_resource type="PackedScene" path="res://models/Rockingchair_01/Rockingchair_01_2k.gltf" id="e68"]
+[ext_resource type="PackedScene" path="res://models/detskaya_sf/nameless_doll.glb" id="e69"]
+[ext_resource type="PackedScene" path="res://models/detskaya_sf/wooden_horse.glb" id="e70"]
+[ext_resource type="PackedScene" path="res://models/detskaya_sf/mammy_bearor_cat.glb" id="e71"]
+[ext_resource type="PackedScene" path="res://models/rubber_duck_toy/rubber_duck_toy_2k.gltf" id="e72"]
+[ext_resource type="PackedScene" path="res://models/carved_wooden_elephant/carved_wooden_elephant_2k.gltf" id="e73"]
+[ext_resource type="PackedScene" path="res://models/vintage/curtain_2.fbx" id="e74"]
+[ext_resource type="Texture2D" path="res://textures/drawings/risunok1.png" id="e75"]
+[ext_resource type="Texture2D" path="res://textures/drawings/risunok2.png" id="e76"]
+[ext_resource type="Texture2D" path="res://textures/drawings/risunok3.png" id="e77"]
+[ext_resource type="Texture2D" path="res://textures/drawings/risunok4.png" id="e78"]
+[ext_resource type="Texture2D" path="res://textures/drawings/risunok5.png" id="e79"]
+[ext_resource type="Texture2D" path="res://textures/pbr/wooden_floor_02_diff_2k.jpg" id="e80"]
+[ext_resource type="Texture2D" path="res://textures/pbr/wooden_floor_02_nor_gl_2k.jpg" id="e81"]
+[ext_resource type="Texture2D" path="res://textures/pbr/wooden_floor_02_arm_2k.jpg" id="e82"]
+[ext_resource type="Texture2D" path="res://textures/cobweb.png" id="e83"]
+[ext_resource type="PackedScene" path="res://models/attic/dress_form/dress_form.gltf" id="e84"]
+[ext_resource type="PackedScene" path="res://models/attic/dress/dress_205.glb" id="e85"]
+[ext_resource type="PackedScene" path="res://models/attic/scarf/scarf.gltf" id="e86"]
+[ext_resource type="PackedScene" path="res://models/attic/bow/bow.gltf" id="e87"]
+[ext_resource type="PackedScene" path="res://models/attic/shoes/shoes.gltf" id="e88"]
+[ext_resource type="PackedScene" path="res://models/mannequin/mannequin.scn" id="e89"]
+[ext_resource type="PackedScene" path="res://models/attic/scarf/scarf.gltf" id="e90"]
+[ext_resource type="PackedScene" path="res://models/attic/bow/bow.gltf" id="e91"]
+[ext_resource type="PackedScene" path="res://models/attic/shoes/shoes.gltf" id="e92"]
+[ext_resource type="PackedScene" path="res://models/attic/trunk/trunk.gltf" id="e93"]
+[ext_resource type="PackedScene" path="res://models/vintage_wooden_drawer_01/vintage_wooden_drawer_01_1k.gltf" id="e94"]
+[ext_resource type="PackedScene" path="res://models/GreenChair_01/GreenChair_01_1k.gltf" id="e95"]
+[ext_resource type="PackedScene" path="res://models/Chandelier_03/Chandelier_03_1k.gltf" id="e96"]
+[ext_resource type="PackedScene" path="res://models/attic/sofa/sofa.gltf" id="e97"]
+[ext_resource type="PackedScene" path="res://models/attic/bchair/bchair.gltf" id="e98"]
+[ext_resource type="PackedScene" path="res://models/attic/closet/closet.gltf" id="e99"]
+[ext_resource type="PackedScene" path="res://models/attic/nightstand/nightstand.gltf" id="e100"]
+[ext_resource type="PackedScene" path="res://models/attic/frames/frame03.gltf" id="e101"]
+[ext_resource type="PackedScene" path="res://models/attic/frames/frame1.gltf" id="e102"]
+[ext_resource type="PackedScene" path="res://models/attic/frames/circle_frame.gltf" id="e103"]
+[ext_resource type="PackedScene" path="res://models/attic/frames/frame2.gltf" id="e104"]
+[ext_resource type="PackedScene" path="res://models/vintage/book_1.fbx" id="e105"]
+[ext_resource type="PackedScene" path="res://models/vintage/book_4.fbx" id="e106"]
+[ext_resource type="PackedScene" path="res://models/vintage/book_6.fbx" id="e107"]
+[ext_resource type="Texture2D" path="res://textures/attic_photo.png" id="e108"]
+[ext_resource type="Texture2D" path="res://models/vintage/tex/walls_basecolor.jpg" id="e109"]
+[ext_resource type="Texture2D" path="res://models/vintage/tex/walls_normal.jpg" id="e110"]
+[ext_resource type="PackedScene" path="res://models/vintage/photo_1.fbx" id="e111"]
+[ext_resource type="PackedScene" path="res://models/vintage/photo_2.fbx" id="e112"]
+[ext_resource type="PackedScene" path="res://models/vintage/photo_3.fbx" id="e113"]
+[ext_resource type="PackedScene" path="res://models/vintage/photo_4.fbx" id="e114"]
 
 [sub_resource type="ORMMaterial3D" id="m_stone"]
 albedo_color = Color(0.6, 0.55, 0.5, 1)
@@ -526,19 +525,19 @@ height = 0.024
 
 [sub_resource type="ORMMaterial3D" id="m_afloor"]
 albedo_color = Color(0.55, 0.48, 0.42, 1)
-albedo_texture = ExtResource("e81")
+albedo_texture = ExtResource("e80")
 normal_enabled = true
-normal_texture = ExtResource("e82")
-orm_texture = ExtResource("e83")
+normal_texture = ExtResource("e81")
+orm_texture = ExtResource("e82")
 uv1_triplanar = true
 uv1_scale = Vector3(0.55, 0.55, 0.55)
 
 [sub_resource type="ORMMaterial3D" id="m_aboard"]
 albedo_color = Color(0.32, 0.26, 0.21, 1)
-albedo_texture = ExtResource("e81")
+albedo_texture = ExtResource("e80")
 normal_enabled = true
-normal_texture = ExtResource("e82")
-orm_texture = ExtResource("e83")
+normal_texture = ExtResource("e81")
+orm_texture = ExtResource("e82")
 uv1_triplanar = true
 uv1_scale = Vector3(0.8, 0.8, 0.8)
 
@@ -953,12 +952,12 @@ size = Vector2(1.2, 1.2)
 transparency = 1
 cull_mode = 2
 shading_mode = 1
-albedo_texture = ExtResource("e84")
+albedo_texture = ExtResource("e83")
 albedo_color = Color(0.8, 0.8, 0.78, 0.55)
 roughness = 1.0
 
 [sub_resource type="StandardMaterial3D" id="m_aphoto"]
-albedo_texture = ExtResource("e109")
+albedo_texture = ExtResource("e108")
 roughness = 0.85
 
 [sub_resource type="StandardMaterial3D" id="m_aphoto_back"]
@@ -1000,10 +999,10 @@ size = Vector2(0.006, 0.006)
 material = SubResource("m_dust")
 
 [sub_resource type="StandardMaterial3D" id="m_f2wall"]
-albedo_texture = ExtResource("e110")
+albedo_texture = ExtResource("e109")
 albedo_color = Color(0.62, 0.58, 0.55, 1)
 normal_enabled = true
-normal_texture = ExtResource("e111")
+normal_texture = ExtResource("e110")
 roughness = 0.95
 uv1_triplanar = true
 uv1_scale = Vector3(0.6, 0.6, 0.6)
@@ -2334,11 +2333,6 @@ position = Vector3(0, 0.04, -13.3)
 visible = false
 position = Vector3(0, 0, -30)
 
-[node name="Model" parent="GhostBlood" instance=ExtResource("e65")]
-rotation = Vector3(0, -1.5708, 0)
-scale = Vector3(1.75, 1.75, 1.75)
-position = Vector3(0, 0.875, 0)
-
 [node name="GhostGirl" type="Node3D" parent="."]
 visible = false
 position = Vector3(0, 0, -30)
@@ -2466,7 +2460,7 @@ position = Vector3(0, 1.4, -24)
 [node name="Shape" type="CollisionShape3D" parent="ColXm24"]
 shape = SubResource("shape_ColXm24")
 
-[node name="NBed" parent="." instance=ExtResource("e67")]
+[node name="NBed" parent="." instance=ExtResource("e66")]
 rotation = Vector3(0, 0, 0)
 scale = Vector3(1, 1, 1)
 position = Vector3(-1.4, 0, -22.85)
@@ -2478,7 +2472,7 @@ position = Vector3(-1.37, 0.3, -22.88)
 [node name="Shape" type="CollisionShape3D" parent="NBedCol"]
 shape = SubResource("shape_NBedCol")
 
-[node name="NNightstand" parent="." instance=ExtResource("e68")]
+[node name="NNightstand" parent="." instance=ExtResource("e67")]
 rotation = Vector3(0, 0, 0)
 scale = Vector3(1, 1, 1)
 position = Vector3(-0.25, 0, -23.65)
@@ -2490,7 +2484,7 @@ position = Vector3(-0.25, 0.35, -23.65)
 [node name="Shape" type="CollisionShape3D" parent="NNightstandCol"]
 shape = SubResource("shape_NNightstandCol")
 
-[node name="NRockChair" parent="." instance=ExtResource("e69")]
+[node name="NRockChair" parent="." instance=ExtResource("e68")]
 rotation = Vector3(0, -0.785, 0)
 scale = Vector3(1, 1, 1)
 position = Vector3(1.55, -0.1, -23)
@@ -2502,12 +2496,12 @@ position = Vector3(1.50759, 0.5, -22.9576)
 [node name="Shape" type="CollisionShape3D" parent="NRockChairCol"]
 shape = SubResource("shape_NRockChairCol")
 
-[node name="NDoll" parent="NRockChair" instance=ExtResource("e70")]
+[node name="NDoll" parent="NRockChair" instance=ExtResource("e69")]
 rotation = Vector3(0, 0, 0)
 scale = Vector3(0.055, 0.055, 0.055)
 position = Vector3(0, 0.6, 0.02)
 
-[node name="NHorse" parent="." instance=ExtResource("e71")]
+[node name="NHorse" parent="." instance=ExtResource("e70")]
 rotation = Vector3(0, 0, 0)
 scale = Vector3(0.15, 0.15, 0.15)
 position = Vector3(1.45, 0, -20.6)
@@ -2519,17 +2513,17 @@ position = Vector3(1.45, 0.33, -20.6)
 [node name="Shape" type="CollisionShape3D" parent="NHorseCol"]
 shape = SubResource("shape_NHorseCol")
 
-[node name="NBear" parent="." instance=ExtResource("e72")]
+[node name="NBear" parent="." instance=ExtResource("e71")]
 rotation = Vector3(0, 0, 0)
 scale = Vector3(1.5, 1.5, 1.5)
 position = Vector3(-1.45, 0.78, -23.3)
 
-[node name="NDuck" parent="." instance=ExtResource("e73")]
+[node name="NDuck" parent="." instance=ExtResource("e72")]
 rotation = Vector3(0, 0.5, 0)
 scale = Vector3(0.5, 0.5, 0.5)
 position = Vector3(-0.3, 0, -21.2)
 
-[node name="NElephant" parent="." instance=ExtResource("e74")]
+[node name="NElephant" parent="." instance=ExtResource("e73")]
 rotation = Vector3(0, 0.6, 0)
 scale = Vector3(1.4, 1.4, 1.4)
 position = Vector3(-0.04, 0.7, -23.72)
@@ -2551,12 +2545,12 @@ rotation = Vector3(0, 1.5708, 0)
 scale = Vector3(1, 1, 1)
 position = Vector3(0.2, 0, -21)
 
-[node name="NCurtainW" parent="." instance=ExtResource("e75")]
+[node name="NCurtainW" parent="." instance=ExtResource("e74")]
 rotation = Vector3(0, 1.5708, 0)
 scale = Vector3(1, 1, 1)
 position = Vector3(-2.25, 2.25, -21)
 
-[node name="NCurtainE" parent="." instance=ExtResource("e75")]
+[node name="NCurtainE" parent="." instance=ExtResource("e74")]
 rotation = Vector3(0, -1.5708, 0)
 scale = Vector3(1, 1, 1)
 position = Vector3(2.25, 2.25, -21.6)
@@ -2567,7 +2561,7 @@ scale = Vector3(1, 1, 1)
 position = Vector3(2.1, 0.93, -18.55)
 
 [node name="Drawing1" type="Sprite3D" parent="."]
-texture = ExtResource("e76")
+texture = ExtResource("e75")
 pixel_size = 0.00085
 shaded = true
 double_sided = false
@@ -2575,7 +2569,7 @@ rotation = Vector3(0, 1.5708, 0)
 position = Vector3(-2.285, 1.35, -19.2)
 
 [node name="Drawing2" type="Sprite3D" parent="."]
-texture = ExtResource("e77")
+texture = ExtResource("e76")
 pixel_size = 0.00085
 shaded = true
 double_sided = false
@@ -2583,7 +2577,7 @@ rotation = Vector3(-1.5708, -1.5708, 0)
 position = Vector3(1.98, 0.935, -19.1)
 
 [node name="Drawing3" type="Sprite3D" parent="."]
-texture = ExtResource("e78")
+texture = ExtResource("e77")
 pixel_size = 0.00085
 shaded = true
 double_sided = false
@@ -2591,7 +2585,7 @@ rotation = Vector3(0, 0, 0)
 position = Vector3(0.9, 1.45, -23.885)
 
 [node name="Drawing4" type="Sprite3D" parent="."]
-texture = ExtResource("e79")
+texture = ExtResource("e78")
 pixel_size = 0.00085
 shaded = true
 double_sided = false
@@ -2599,7 +2593,7 @@ rotation = Vector3(0, 1.5708, 0)
 position = Vector3(-2.285, 1.85, -22.2)
 
 [node name="Drawing5" type="Sprite3D" parent="."]
-texture = ExtResource("e80")
+texture = ExtResource("e79")
 pixel_size = 0.00085
 shaded = true
 double_sided = false
@@ -3195,7 +3189,7 @@ shape = SubResource("hatch_block")
 rotation = Vector3(0, -0.6, 0)
 position = Vector3(3.4, 0, -40.9)
 
-[node name="Model" parent="Attic/DressForm1" instance=ExtResource("e85")]
+[node name="Model" parent="Attic/DressForm1" instance=ExtResource("e84")]
 position = Vector3(-6.622, -0.414, 0.81)
 
 [node name="Body" type="StaticBody3D" parent="Attic/DressForm1"]
@@ -3208,7 +3202,7 @@ shape = SubResource("df_col_DressForm1")
 rotation = Vector3(0, 1.3, 0)
 position = Vector3(-3.9, 0, -32.4)
 
-[node name="Model" parent="Attic/DressForm2" instance=ExtResource("e85")]
+[node name="Model" parent="Attic/DressForm2" instance=ExtResource("e84")]
 position = Vector3(-6.622, -0.414, 0.81)
 
 [node name="Body" type="StaticBody3D" parent="Attic/DressForm2"]
@@ -3221,7 +3215,7 @@ shape = SubResource("df_col_DressForm2")
 rotation = Vector3(0, 0.3, 0)
 position = Vector3(-3.2, 0, -41.9)
 
-[node name="Model" parent="Attic/PForm1" instance=ExtResource("e85")]
+[node name="Model" parent="Attic/PForm1" instance=ExtResource("e84")]
 position = Vector3(-6.622, -0.414, 0.81)
 
 [node name="Body" type="StaticBody3D" parent="Attic/PForm1"]
@@ -3230,22 +3224,22 @@ position = Vector3(0, 0.72, 0)
 [node name="Shape" type="CollisionShape3D" parent="Attic/PForm1/Body"]
 shape = SubResource("df_col_PForm1")
 
-[node name="Dress" parent="Attic/PForm1" instance=ExtResource("e86")]
+[node name="Dress" parent="Attic/PForm1" instance=ExtResource("e85")]
 visible = false
 scale = Vector3(0.00084, 0.00084, 0.00084)
 position = Vector3(0, 0.0994, 0.0252)
 
-[node name="Scarf" parent="Attic/PForm1" instance=ExtResource("e87")]
+[node name="Scarf" parent="Attic/PForm1" instance=ExtResource("e86")]
 visible = false
 scale = Vector3(0.00235, 0.00235, 0.00235)
 position = Vector3(0.005, 1.2486, 0.7457)
 
-[node name="Bow" parent="Attic/PForm1" instance=ExtResource("e88")]
+[node name="Bow" parent="Attic/PForm1" instance=ExtResource("e87")]
 visible = false
 scale = Vector3(0.000935, 0.000935, 0.000935)
 position = Vector3(-0.0088, -0.0434, 0.1221)
 
-[node name="Shoes" parent="Attic/PForm1" instance=ExtResource("e89")]
+[node name="Shoes" parent="Attic/PForm1" instance=ExtResource("e88")]
 visible = false
 scale = Vector3(0.7, 0.7, 0.7)
 position = Vector3(-0.045, 0.001, 0.32)
@@ -3254,7 +3248,7 @@ position = Vector3(-0.045, 0.001, 0.32)
 rotation = Vector3(0, 0.12, 0)
 position = Vector3(-2.05, 0, -42.2)
 
-[node name="Model" parent="Attic/PForm2" instance=ExtResource("e85")]
+[node name="Model" parent="Attic/PForm2" instance=ExtResource("e84")]
 position = Vector3(-6.622, -0.414, 0.81)
 
 [node name="Body" type="StaticBody3D" parent="Attic/PForm2"]
@@ -3263,22 +3257,22 @@ position = Vector3(0, 0.72, 0)
 [node name="Shape" type="CollisionShape3D" parent="Attic/PForm2/Body"]
 shape = SubResource("df_col_PForm2")
 
-[node name="Dress" parent="Attic/PForm2" instance=ExtResource("e86")]
+[node name="Dress" parent="Attic/PForm2" instance=ExtResource("e85")]
 visible = false
 scale = Vector3(0.00084, 0.00084, 0.00084)
 position = Vector3(0, 0.0994, 0.0252)
 
-[node name="Scarf" parent="Attic/PForm2" instance=ExtResource("e87")]
+[node name="Scarf" parent="Attic/PForm2" instance=ExtResource("e86")]
 visible = false
 scale = Vector3(0.00235, 0.00235, 0.00235)
 position = Vector3(0.005, 1.2486, 0.7457)
 
-[node name="Bow" parent="Attic/PForm2" instance=ExtResource("e88")]
+[node name="Bow" parent="Attic/PForm2" instance=ExtResource("e87")]
 visible = false
 scale = Vector3(0.000935, 0.000935, 0.000935)
 position = Vector3(-0.0088, -0.0434, 0.1221)
 
-[node name="Shoes" parent="Attic/PForm2" instance=ExtResource("e89")]
+[node name="Shoes" parent="Attic/PForm2" instance=ExtResource("e88")]
 visible = false
 scale = Vector3(0.7, 0.7, 0.7)
 position = Vector3(-0.045, 0.001, 0.32)
@@ -3287,7 +3281,7 @@ position = Vector3(-0.045, 0.001, 0.32)
 rotation = Vector3(0, -0.05, 0)
 position = Vector3(-0.9, 0, -42.3)
 
-[node name="Model" parent="Attic/PForm3" instance=ExtResource("e85")]
+[node name="Model" parent="Attic/PForm3" instance=ExtResource("e84")]
 position = Vector3(-6.622, -0.414, 0.81)
 
 [node name="Body" type="StaticBody3D" parent="Attic/PForm3"]
@@ -3296,22 +3290,22 @@ position = Vector3(0, 0.72, 0)
 [node name="Shape" type="CollisionShape3D" parent="Attic/PForm3/Body"]
 shape = SubResource("df_col_PForm3")
 
-[node name="Dress" parent="Attic/PForm3" instance=ExtResource("e86")]
+[node name="Dress" parent="Attic/PForm3" instance=ExtResource("e85")]
 visible = false
 scale = Vector3(0.00084, 0.00084, 0.00084)
 position = Vector3(0, 0.0994, 0.0252)
 
-[node name="Scarf" parent="Attic/PForm3" instance=ExtResource("e87")]
+[node name="Scarf" parent="Attic/PForm3" instance=ExtResource("e86")]
 visible = false
 scale = Vector3(0.00235, 0.00235, 0.00235)
 position = Vector3(0.005, 1.2486, 0.7457)
 
-[node name="Bow" parent="Attic/PForm3" instance=ExtResource("e88")]
+[node name="Bow" parent="Attic/PForm3" instance=ExtResource("e87")]
 visible = false
 scale = Vector3(0.000935, 0.000935, 0.000935)
 position = Vector3(-0.0088, -0.0434, 0.1221)
 
-[node name="Shoes" parent="Attic/PForm3" instance=ExtResource("e89")]
+[node name="Shoes" parent="Attic/PForm3" instance=ExtResource("e88")]
 visible = false
 scale = Vector3(0.7, 0.7, 0.7)
 position = Vector3(-0.045, 0.001, 0.32)
@@ -3320,7 +3314,7 @@ position = Vector3(-0.045, 0.001, 0.32)
 rotation = Vector3(0, -0.2, 0)
 position = Vector3(0.25, 0, -42.2)
 
-[node name="Model" parent="Attic/PForm4" instance=ExtResource("e85")]
+[node name="Model" parent="Attic/PForm4" instance=ExtResource("e84")]
 position = Vector3(-6.622, -0.414, 0.81)
 
 [node name="Body" type="StaticBody3D" parent="Attic/PForm4"]
@@ -3329,22 +3323,22 @@ position = Vector3(0, 0.72, 0)
 [node name="Shape" type="CollisionShape3D" parent="Attic/PForm4/Body"]
 shape = SubResource("df_col_PForm4")
 
-[node name="Dress" parent="Attic/PForm4" instance=ExtResource("e86")]
+[node name="Dress" parent="Attic/PForm4" instance=ExtResource("e85")]
 visible = false
 scale = Vector3(0.00084, 0.00084, 0.00084)
 position = Vector3(0, 0.0994, 0.0252)
 
-[node name="Scarf" parent="Attic/PForm4" instance=ExtResource("e87")]
+[node name="Scarf" parent="Attic/PForm4" instance=ExtResource("e86")]
 visible = false
 scale = Vector3(0.00235, 0.00235, 0.00235)
 position = Vector3(0.005, 1.2486, 0.7457)
 
-[node name="Bow" parent="Attic/PForm4" instance=ExtResource("e88")]
+[node name="Bow" parent="Attic/PForm4" instance=ExtResource("e87")]
 visible = false
 scale = Vector3(0.000935, 0.000935, 0.000935)
 position = Vector3(-0.0088, -0.0434, 0.1221)
 
-[node name="Shoes" parent="Attic/PForm4" instance=ExtResource("e89")]
+[node name="Shoes" parent="Attic/PForm4" instance=ExtResource("e88")]
 visible = false
 scale = Vector3(0.7, 0.7, 0.7)
 position = Vector3(-0.045, 0.001, 0.32)
@@ -3365,15 +3359,15 @@ light_energy = 0.0
 omni_range = 0.9
 position = Vector3(0, 0.15, 0)
 
-[node name="HMan1" parent="Attic" instance=ExtResource("e90")]
+[node name="HMan1" parent="Attic" instance=ExtResource("e89")]
 rotation = Vector3(0, 0.25, 0)
 position = Vector3(-1.3, 0, -35.2)
 
-[node name="HMan2" parent="Attic" instance=ExtResource("e90")]
+[node name="HMan2" parent="Attic" instance=ExtResource("e89")]
 rotation = Vector3(0, -0.2, 0)
 position = Vector3(1.2, 0, -36.6)
 
-[node name="HMan3" parent="Attic" instance=ExtResource("e90")]
+[node name="HMan3" parent="Attic" instance=ExtResource("e89")]
 rotation = Vector3(0, 0.05, 0)
 position = Vector3(-0.4, 0, -40)
 
@@ -3381,7 +3375,7 @@ position = Vector3(-0.4, 0, -40)
 position = Vector3(3.9, 0.5, -38.7)
 rotation = Vector3(0, 0.3, 0)
 
-[node name="Model" parent="Attic/ItemScarf" instance=ExtResource("e91")]
+[node name="Model" parent="Attic/ItemScarf" instance=ExtResource("e90")]
 scale = Vector3(0.0018, 0.0018, 0.0018)
 position = Vector3(0.004, 0.16, 0.548)
 
@@ -3389,7 +3383,7 @@ position = Vector3(0.004, 0.16, 0.548)
 position = Vector3(-4.1, 0.54, -33.5)
 rotation = Vector3(0, 1.2, 0)
 
-[node name="Model" parent="Attic/ItemBow" instance=ExtResource("e92")]
+[node name="Model" parent="Attic/ItemBow" instance=ExtResource("e91")]
 scale = Vector3(0.0009, 0.0009, 0.0009)
 position = Vector3(-0.0085, -1.274, 0.002)
 
@@ -3397,7 +3391,7 @@ position = Vector3(-0.0085, -1.274, 0.002)
 position = Vector3(-4, 0, -36.7)
 rotation = Vector3(0, 1.2, 0)
 
-[node name="Model" parent="Attic/ItemShoes" instance=ExtResource("e93")]
+[node name="Model" parent="Attic/ItemShoes" instance=ExtResource("e92")]
 scale = Vector3(0.7, 0.7, 0.7)
 
 [node name="CovMirror" type="Node3D" parent="Attic"]
@@ -3532,7 +3526,7 @@ shape = SubResource("abox58s")
 rotation = Vector3(0, 0.2, 0)
 position = Vector3(1.6, 0, -40.9)
 
-[node name="Model" parent="Attic/Trunk1" instance=ExtResource("e94")]
+[node name="Model" parent="Attic/Trunk1" instance=ExtResource("e93")]
 scale = Vector3(0.36, 0.36, 0.36)
 
 [node name="Col" type="StaticBody3D" parent="Attic/Trunk1"]
@@ -3576,7 +3570,7 @@ surface_material_override/0 = SubResource("m_iron")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0.3, 0.28, 0)
 
-[node name="ADrawer" parent="." instance=ExtResource("e95")]
+[node name="ADrawer" parent="." instance=ExtResource("e94")]
 rotation = Vector3(0, 1.5708, 0)
 scale = Vector3(1, 1, 1)
 position = Vector3(-4.35, 0, -37.8)
@@ -3588,7 +3582,7 @@ position = Vector3(-4.35, 0.45, -37.8)
 [node name="Shape" type="CollisionShape3D" parent="ADrawerCol"]
 shape = SubResource("shape_ADrawer")
 
-[node name="AChair" parent="." instance=ExtResource("e96")]
+[node name="AChair" parent="." instance=ExtResource("e95")]
 rotation = Vector3(0, 2.6, 0)
 scale = Vector3(1, 1, 1)
 position = Vector3(2.7, 0, -39.2)
@@ -3600,7 +3594,7 @@ position = Vector3(2.7, 0.45, -39.2)
 [node name="Shape" type="CollisionShape3D" parent="AChairCol"]
 shape = SubResource("shape_AChair")
 
-[node name="AChandelier" parent="." instance=ExtResource("e97")]
+[node name="AChandelier" parent="." instance=ExtResource("e96")]
 rotation = Vector3(0, 0.4, 0)
 scale = Vector3(0.8, 0.8, 0.8)
 position = Vector3(2.7, 0, -32.6)
@@ -3641,7 +3635,7 @@ rotation = Vector3(0, 1.5708, 0)
 position = Vector3(-4.15, 0, -35.6)
 metadata/fit_w = 2
 
-[node name="Model" parent="Attic/BSofa" instance=ExtResource("e98")]
+[node name="Model" parent="Attic/BSofa" instance=ExtResource("e97")]
 
 [node name="Col" type="StaticBody3D" parent="Attic/BSofa"]
 position = Vector3(0, 0.4, 0)
@@ -3654,7 +3648,7 @@ rotation = Vector3(0, 1, 0)
 position = Vector3(-3.7, 0, -39.9)
 metadata/fit_h = 0.85
 
-[node name="Model" parent="Attic/BChair" instance=ExtResource("e99")]
+[node name="Model" parent="Attic/BChair" instance=ExtResource("e98")]
 
 [node name="Col" type="StaticBody3D" parent="Attic/BChair"]
 position = Vector3(0, 0.425, 0)
@@ -3667,7 +3661,7 @@ rotation = Vector3(0, 0, 0)
 position = Vector3(2.2, 0, -42.55)
 metadata/fit_h = 2
 
-[node name="Model" parent="Attic/BCloset" instance=ExtResource("e100")]
+[node name="Model" parent="Attic/BCloset" instance=ExtResource("e99")]
 
 [node name="Col" type="StaticBody3D" parent="Attic/BCloset"]
 position = Vector3(0, 1, 0)
@@ -3680,7 +3674,7 @@ rotation = Vector3(0, 3.1416, 0)
 position = Vector3(4.35, 0, -36.4)
 metadata/fit_h = 0.75
 
-[node name="Model" parent="Attic/BNight" instance=ExtResource("e101")]
+[node name="Model" parent="Attic/BNight" instance=ExtResource("e100")]
 
 [node name="Col" type="StaticBody3D" parent="Attic/BNight"]
 position = Vector3(0, 0.375, 0)
@@ -3693,40 +3687,40 @@ rotation = Vector3(0, 0, 0.22)
 position = Vector3(-4.62, 0, -31.9)
 metadata/fit_w = 0.75
 
-[node name="Model" parent="Attic/FrameMona" instance=ExtResource("e102")]
+[node name="Model" parent="Attic/FrameMona" instance=ExtResource("e101")]
 
 [node name="FrameGirl" type="Node3D" parent="Attic"]
 rotation = Vector3(0, 3.1416, 0.22)
 position = Vector3(4.62, 0, -40.2)
 metadata/fit_w = 0.5
 
-[node name="Model" parent="Attic/FrameGirl" instance=ExtResource("e103")]
+[node name="Model" parent="Attic/FrameGirl" instance=ExtResource("e102")]
 
 [node name="FrameRound" type="Node3D" parent="Attic"]
 rotation = Vector3(0, -1.5708, 0)
 position = Vector3(-1.55, 1.9, -42.82)
 metadata/fit_w = 0.8
 
-[node name="Model" parent="Attic/FrameRound" instance=ExtResource("e104")]
+[node name="Model" parent="Attic/FrameRound" instance=ExtResource("e103")]
 
 [node name="FrameSkull" type="Node3D" parent="Attic"]
 rotation = Vector3(0, 1.5708, 0)
 position = Vector3(-2.2, 1.35, -29.12)
 metadata/fit_w = 0.9
 
-[node name="Model" parent="Attic/FrameSkull" instance=ExtResource("e105")]
+[node name="Model" parent="Attic/FrameSkull" instance=ExtResource("e104")]
 
-[node name="ABook0" parent="Attic" instance=ExtResource("e106")]
+[node name="ABook0" parent="Attic" instance=ExtResource("e105")]
 rotation = Vector3(0, 0.4, 0)
 scale = Vector3(1, 1, 1)
 position = Vector3(0.7, 0.02, -37.2)
 
-[node name="ABook1" parent="Attic" instance=ExtResource("e107")]
+[node name="ABook1" parent="Attic" instance=ExtResource("e106")]
 rotation = Vector3(0, 1.9, 0)
 scale = Vector3(1, 1, 1)
 position = Vector3(0.9, 0.02, -37)
 
-[node name="ABook2" parent="Attic" instance=ExtResource("e108")]
+[node name="ABook2" parent="Attic" instance=ExtResource("e107")]
 rotation = Vector3(0, 0.9, 0)
 scale = Vector3(1, 1, 1)
 position = Vector3(-1.6, 0.02, -33.4)
@@ -4389,22 +4383,22 @@ light_energy = 0.0
 omni_range = 1.4
 position = Vector3(-3.2, -3.32, -37.15)
 
-[node name="F2Photo0" parent="." instance=ExtResource("e112")]
+[node name="F2Photo0" parent="." instance=ExtResource("e111")]
 rotation = Vector3(0, 3.14159, 0)
 scale = Vector3(1, 1, 1)
 position = Vector3(-2, -1.8, -34.28)
 
-[node name="F2Photo1" parent="." instance=ExtResource("e113")]
+[node name="F2Photo1" parent="." instance=ExtResource("e112")]
 rotation = Vector3(0, 3.14159, 0)
 scale = Vector3(1, 1, 1)
 position = Vector3(0.4, -1.85, -34.28)
 
-[node name="F2Photo2" parent="." instance=ExtResource("e114")]
+[node name="F2Photo2" parent="." instance=ExtResource("e113")]
 rotation = Vector3(0, 0, 0)
 scale = Vector3(1, 1, 1)
 position = Vector3(-2, -1.8, -36.72)
 
-[node name="F2Photo3" parent="." instance=ExtResource("e115")]
+[node name="F2Photo3" parent="." instance=ExtResource("e114")]
 rotation = Vector3(0, 0, 0)
 scale = Vector3(1, 1, 1)
 position = Vector3(0.4, -1.75, -36.72)
@@ -4440,7 +4434,7 @@ current = true
 visible = false
 position = Vector3(0, -0.03, -0.36)
 
-[node name="Model" parent="Player/Head/Camera3D/ScareMask" instance=ExtResource("e66")]
+[node name="Model" parent="Player/Head/Camera3D/ScareMask" instance=ExtResource("e65")]
 scale = Vector3(1.9, 1.9, 1.9)
 position = Vector3(0, -0.2, 0)
 

@@ -6,7 +6,7 @@ extends Node3D
 ## Анимации: idle — стоит как призрак, zidle — жуткое покачивание, walk — медленный шаг,
 ## run — бег, reach — тянет руку.
 
-const HEIGHT := 1.4          ## рост, м
+const HEIGHT := 1.5          ## рост, м (один для всех появлений призрака)
 const ANIMS := ["idle", "zidle", "walk", "run", "reach"]
 
 var model: Node3D

@@ -941,6 +941,13 @@ func _setup_girl() -> void:
 		c.queue_free()
 	girl_sp = preload("res://scripts/spirit.gd").new()
 	girl.add_child(girl_sp)
+	# призрак, который мелькает в доме (shade) — та же девочка, того же роста
+	for c in shade.get_children():
+		c.queue_free()
+	var sh: Node3D = preload("res://scripts/spirit.gd").new()
+	shade.add_child(sh)
+	sh.play("idle", 0.4)
+	sh.set_blood(0.35)
 
 
 func _girl_anim(speed: float) -> void:

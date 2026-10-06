@@ -2,24 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://4m6eoyt6134"
-path.s3tc="res://.godot/imported/ghost_blood_0.png-436ef6846da319d5e1a6dc9ca783c451.s3tc.ctex"
+uid="uid://1tlhci0bqpto"
+path="res://.godot/imported/tripo_image_2d99349c_0.jpg-eb6de2e5fe8978f9b3c794393a19c945.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
-generator_parameters={
-"md5": "9051211e6b1c5c45001bd7e81e194f65"
+"vram_texture": false
 }
 
 [deps]
 
-source_file="res://models/ghosts/ghost_blood_0.png"
-dest_files=["res://.godot/imported/ghost_blood_0.png-436ef6846da319d5e1a6dc9ca783c451.s3tc.ctex"]
+source_file="res://models/spirit/tripo_image_2d99349c_0.jpg"
+dest_files=["res://.godot/imported/tripo_image_2d99349c_0.jpg-eb6de2e5fe8978f9b3c794393a19c945.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -27,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
@@ -41,4 +37,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=0
+detect_3d/compress_to=1

@@ -546,10 +546,6 @@
 !/models/forest/pine/textures/pine_tree_01_twig_diff_1k.jpg.import
 !/models/forest/pine/textures/pine_tree_01_twig_nor_gl_1k.jpg
 !/models/forest/pine/textures/pine_tree_01_twig_nor_gl_1k.jpg.import
-!/models/ghosts/ghost_blood.glb
-!/models/ghosts/ghost_blood.glb.import
-!/models/ghosts/ghost_blood_0.png
-!/models/ghosts/ghost_blood_0.png.import
 !/models/ghosts/ghost_mask.glb
 !/models/ghosts/ghost_mask.glb.import
 !/models/ghosts/ghost_mask_0.png
@@ -648,6 +644,7 @@
 !/models/spirit/spirit_albedo.png.import
 !/models/spirit/spirit_mesh.res
 !/models/spirit/tripo_image_2d99349c_0.jpg
+!/models/spirit/tripo_image_2d99349c_0.jpg.import
 !/models/steel_frame_shelves_01/steel_frame_shelves_01.bin
 !/models/steel_frame_shelves_01/steel_frame_shelves_01_1k.gltf
 !/models/steel_frame_shelves_01/steel_frame_shelves_01_1k.gltf.import
