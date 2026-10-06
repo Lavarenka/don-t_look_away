@@ -200,13 +200,8 @@ func _event(e: String) -> void:
 			var cm: Node3D = L.get_node("Attic/CovMirror")
 			L._sfx3d("sheet_rustle", cm.global_position + Vector3(0, 1.2, 0), 0.0, 0.85)
 			L._sfx3d("whoosh", cm.global_position + Vector3(0, 1.0, 0), -10.0, 0.7)
-			var tw := create_tween().set_parallel()
-			var top: Node3D = cm.get_node("Top")
-			var base: Node3D = cm.get_node("Base")
-			tw.tween_property(top, "position", Vector3(0.0, 0.12, 0.25), 0.7).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
-			tw.tween_property(top, "scale", Vector3(top.scale.x * 1.2, 0.12, 0.5), 0.7)
-			tw.tween_property(base, "position", Vector3(0.0, 0.05, 0.22), 0.7).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
-			tw.tween_property(base, "scale", Vector3(1.1, 0.07, 4.0), 0.7).set_ease(Tween.EASE_IN)
+			# ткань оседает и сползает вперёд, собираясь в кучу у подножия
+			create_tween().tween_method(func(t: float): sheet.mesh = _sheet_mesh(t), 0.0, 1.0, 1.1).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 		"giggle":      # детский смешок из дальнего тёмного угла
 			var c := Vector3(-4.3 if pp.x > 0 else 4.3, 0.6, -42.0 if pp.z > -36.0 else -30.0)
 			L._sfx3d("giggle", c, -9.0, 0.88)
@@ -306,6 +301,7 @@ var has_key := false
 var board_open := false
 var photo_seen := false
 const CLOTH_Y := 0.25
+var sheet: MeshInstance3D      ## простыня на зеркале
 var cloth: MeshInstance3D      ## скомканное платье в сундуке
 var viewer: TextureRect
 var origin := {}             ## где лежала вещь — туда она возвращается, если взять другую
@@ -328,6 +324,11 @@ func _ready() -> void:
 		for mi in L.get_node("Attic/PForm%d/Dress" % i).find_children("*", "MeshInstance3D", true, false):
 			mi.material_override = dm
 	cloth = _make_cloth()
+	sheet = MeshInstance3D.new()
+	sheet.name = "Sheet"
+	sheet.mesh = _sheet_mesh(0.0)
+	sheet.material_override = _linen(Color(0.5, 0.48, 0.45), 0.45)
+	L.get_node("Attic/CovMirror").add_child(sheet)
 	L.get_node("Attic/Trunk1").add_child(cloth)
 	for it in ["Scarf", "Bow", "Shoes"]:
 		var n: Node3D = L.get_node("Attic/Item" + it)
@@ -347,6 +348,101 @@ func _ready() -> void:
 	viewer.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	viewer.visible = false
 	L.hud.add_child(viewer)
+
+
+## Старый лён (текстура сгенерирована gen_linen.py): tint — оттенок, tile — размер плитки в метрах.
+func _linen(tint: Color, tile: float) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = load("res://textures/linen_diff.jpg")
+	m.albedo_color = tint
+	m.normal_enabled = true
+	m.normal_texture = load("res://textures/linen_nor.jpg")
+	m.normal_scale = 0.35
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	m.roughness_texture = load("res://textures/linen_rough.jpg")
+	m.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_GRAYSCALE
+	m.roughness = 1.0
+	m.uv1_scale = Vector3(1.0 / tile, 1.0 / tile, 1.0)
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return m
+
+
+## Простыня, наброшенная на зеркало (0.7 × 1.72 м). Сетка оборачивает «скруглённый прямоугольник»:
+## сверху натянута и скруглена, книзу расходится складками и ложится волной на пол.
+## t = 0 — висит, t = 1 — сползла и лежит кучей перед зеркалом. UV — в метрах.
+const SH_A := 0.39       # полуширина
+const SH_B := 0.075      # полутолщина
+const SH_H := 1.79       # высота
+func _sheet_mesh(t: float) -> ArrayMesh:
+	var NU := 112
+	var NV := 64
+	var VT := 0.1                      # доля сетки на верхнюю «крышку»
+	var nz := FastNoiseLite.new()
+	nz.seed = 21
+	nz.frequency = 2.2
+	var pts := PackedVector3Array()
+	var uvs := PackedVector2Array()
+	var per := 0.0
+	var prev := Vector2(SH_A, 0)
+	var arc := []                      # длина по периметру для UV
+	for i in NU + 1:
+		var th := TAU * i / NU
+		var c := cos(th)
+		var sn := sin(th)
+		var q := Vector2(SH_A * sign(c) * pow(abs(c), 0.3), SH_B * sign(sn) * pow(abs(sn), 0.3))
+		per += q.distance_to(prev)
+		prev = q
+		arc.append(per)
+	var drop := t * t * (3.0 - 2.0 * t)
+	for j in NV + 1:
+		var v := float(j) / NV
+		for i in NU + 1:
+			var th := TAU * i / NU
+			var c := cos(th)
+			var sn := sin(th)
+			var q := Vector2(SH_A * sign(c) * pow(abs(c), 0.3), SH_B * sign(sn) * pow(abs(sn), 0.3))
+			var n := Vector2(c / SH_A, sn / SH_B).normalized()
+			var p: Vector3
+			if v < VT:
+				var s := v / VT
+				var r := sin(s * PI * 0.5)
+				p = Vector3(q.x * r, SH_H - 0.07 * (1.0 - cos(s * PI * 0.5)) + 0.012 * (1.0 - r), q.y * r)
+			else:
+				var s := (v - VT) / (1.0 - VT)
+				var y := (SH_H - 0.07) * (1.0 - s)
+				var flare := 0.06 * s * s + 0.16 * pow(max(s - 0.86, 0.0) / 0.14, 2.0)
+				# складки: вертикальные волны, книзу глубже; немного «диагональных» натяжений сверху
+				var amp := 0.01 + 0.07 * s * s
+				var w := sin(arc[i] * 26.0 + nz.get_noise_2d(arc[i] * 3.0, y) * 4.0) * 0.6 + sin(arc[i] * 11.0 + 1.3) * 0.4
+				var diag := 0.008 * sin((arc[i] * 9.0 - y * 7.0)) * (1.0 - s)
+				var off := flare + amp * w + diag
+				p = Vector3(q.x + n.x * off, max(y, 0.006 + 0.03 * max(s - 0.92, 0.0) * abs(w)), q.y + n.y * off)
+			# сползание: ткань оседает вниз и вперёд, сминаясь
+			if drop > 0.0:
+				var h := p.y
+				var k := 1.0 - drop * 0.93
+				var crumple := drop * 0.07 * nz.get_noise_3d(p.x * 4.0, p.y * 4.0, p.z * 4.0)
+				var fwd := drop * (0.32 + 0.15 * (1.0 - h / SH_H))
+				var spread := 1.0 + drop * 0.5 * (1.0 - h / SH_H)
+				p = Vector3(p.x * spread, h * k + 0.02 * drop + crumple, p.z * spread + fwd)
+				p.y = max(p.y, 0.008)
+			pts.append(p)
+			uvs.append(Vector2(arc[i], (SH_H - p.y) if v >= VT else v / VT * 0.5))
+	var idx := PackedInt32Array()
+	for j in NV:
+		for i in NU:
+			var a := j * (NU + 1) + i
+			idx.append_array([a, a + 1, a + NU + 1, a + 1, a + NU + 2, a + NU + 1])
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for k in pts.size():
+		st.set_uv(uvs[k])
+		st.add_vertex(pts[k])
+	for k in idx:
+		st.add_index(k)
+	st.generate_normals()
+	st.generate_tangents()
+	return st.commit()
 
 
 ## Скомканное белое платье: сетка с шумом и складками, края заправлены под стенки сундука.
@@ -385,11 +481,7 @@ func _make_cloth() -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	mi.name = "Cloth"
 	mi.mesh = st.commit()
-	var m := StandardMaterial3D.new()
-	m.albedo_color = Color(0.36, 0.34, 0.31)
-	m.roughness = 1.0
-	m.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mi.material_override = m
+	mi.material_override = _linen(Color(0.5, 0.48, 0.45), 0.12)
 	mi.position = Vector3(0, 0, 0.0)
 	return mi
 
