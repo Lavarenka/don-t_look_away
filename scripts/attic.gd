@@ -202,6 +202,7 @@ func _event(e: String) -> void:
 			L._sfx3d("whoosh", cm.global_position + Vector3(0, 1.0, 0), -10.0, 0.7)
 			# ткань оседает и сползает вперёд, собираясь в кучу у подножия
 			create_tween().tween_method(func(t: float): sheet.mesh = _sheet_mesh(t), 0.0, 1.0, 1.1).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+			mirror_fx.open = true
 		"giggle":      # детский смешок из дальнего тёмного угла
 			var c := Vector3(-4.3 if pp.x > 0 else 4.3, 0.6, -42.0 if pp.z > -36.0 else -30.0)
 			L._sfx3d("giggle", c, -9.0, 0.88)
@@ -302,6 +303,7 @@ var board_open := false
 var photo_seen := false
 const CLOTH_Y := 0.25
 var sheet: MeshInstance3D      ## простыня на зеркале
+var mirror_fx: Node            ## отражение (mirror.gd)
 var cloth: MeshInstance3D      ## скомканное платье в сундуке
 var viewer: TextureRect
 var origin := {}             ## где лежала вещь — туда она возвращается, если взять другую
@@ -329,6 +331,9 @@ func _ready() -> void:
 	sheet.mesh = _sheet_mesh(0.0)
 	sheet.material_override = _linen(Color(0.5, 0.48, 0.45), 0.45)
 	L.get_node("Attic/CovMirror").add_child(sheet)
+	mirror_fx = preload("res://scripts/mirror.gd").new()
+	add_child(mirror_fx)
+	mirror_fx.setup(L, L.get_node("Attic/CovMirror/Mirror"))
 	L.get_node("Attic/Trunk1").add_child(cloth)
 	for it in ["Scarf", "Bow", "Shoes"]:
 		var n: Node3D = L.get_node("Attic/Item" + it)

@@ -61,6 +61,12 @@ while queue:
                     add(q)
     if p.endswith('.obj'):
         add(p[:-4] + '.mtl')
+    # текстуры, которые Godot достаёт из FBX/GLB при импорте: <имя>_0.png, <имя>_alpha_1.png …
+    if p.endswith(('.fbx', '.glb')):
+        stem = os.path.splitext(p)[0] + '_'
+        for q in ALL:
+            if q.startswith(stem) and q.lower().endswith(('.png', '.jpg')):
+                add(q)
     # бинарные сцены Godot (.scn/.res): ссылки res:// внутри
     if p.endswith(('.scn', '.res')):
         for r in re.findall(rb'res://([A-Za-z0-9_./-]+)', open(p, 'rb').read()):
