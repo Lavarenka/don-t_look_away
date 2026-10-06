@@ -11,6 +11,8 @@ const GH := 1.5             ## высота стекла, м
 const EYE := 3.47           ## высота глаз модели Remy в её единицах
 const BODY_LAYER := 2       ## слой «тело игрока»
 const REFL_H := 900         ## разрешение отражения по высоте (ширина — по пропорции)
+const GHOST_LAYER := 3      ## слой «только в зеркале»: призрак и двойник
+const STILL_T := 2.5        ## сколько стоять неподвижно перед зеркалом до испуга
 
 var L: Node                 ## level.gd
 var glass: MeshInstance3D
@@ -23,6 +25,11 @@ var bones := {}
 var open := false           ## простыня снята — зеркало работает
 var _anim := ""
 var _speed := 0.0
+## Испуги в зеркале: 0 — девочка за плечом, 1 — двойник бросается из зеркала, 2 — всё
+var stage := 0
+var still := 0.0
+var cooldown := 0.0
+var _lib: AnimationLibrary
 
 
 func setup(level: Node, mirror: Node3D) -> void:
@@ -96,12 +103,13 @@ func _setup_body() -> void:
 		(mi as MeshInstance3D).layers = 1 << (BODY_LAYER - 1)
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF   # фонарь светит «из головы»
 	p.cam.cull_mask &= ~(1 << (BODY_LAYER - 1))
+	p.cam.cull_mask &= ~(1 << (GHOST_LAYER - 1))
 	# свет фонаря «отражается» на самом игроке — мягкая подсветка, которая освещает только тело
 	var spill := OmniLight3D.new()
 	spill.light_color = Color(1.0, 0.9, 0.75)
 	spill.light_energy = 0.9
 	spill.omni_range = 1.8
-	spill.light_cull_mask = 1 << (BODY_LAYER - 1)
+	spill.light_cull_mask = (1 << (BODY_LAYER - 1)) | (1 << (GHOST_LAYER - 1))
 	spill.shadow_enabled = false
 	spill.position = Vector3(0, 1.25, -0.55)
 	p.add_child(spill)
@@ -121,6 +129,7 @@ func _setup_body() -> void:
 		lib.add_animation(pair[0], a)
 		src.free()
 	ap.add_animation_library("m", lib)
+	_lib = lib
 	ap.play("m/idle")
 	# фонарик в правой руке (виден только в отражении)
 	var ba := BoneAttachment3D.new()
@@ -153,6 +162,148 @@ func _process(delta: float) -> void:
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS if active else SubViewport.UPDATE_DISABLED
 	if active:
 		_place_camera()
+	_scares(delta, active)
+
+
+# ---------------- испуги в зеркале ----------------
+func _scares(delta: float, active: bool) -> void:
+	cooldown -= delta
+	if stage >= 2 or L.busy:
+		return
+	var p: CharacterBody3D = L.player
+	var cam: Camera3D = p.cam
+	var to: Vector3 = glass.global_position - cam.global_position
+	var looking: bool = active and to.length() < 3.6 and p.forward().angle_to(to) < 0.42
+	if looking and Vector2(p.velocity.x, p.velocity.z).length() < 0.15:
+		still += delta
+	else:
+		still = 0.0
+	if still < STILL_T or cooldown > 0.0:
+		return
+	still = 0.0
+	if stage == 0:
+		stage = 1
+		cooldown = 22.0
+		_scare_girl()
+	else:
+		stage = 2
+		_scare_double()
+
+
+func _only_mirror(n: Node) -> void:
+	for mi in n.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).layers = 1 << (GHOST_LAYER - 1)
+		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+## 1) Девочка стоит у тебя за плечом — только в отражении. Обернёшься или моргнёт свет — её нет.
+func _scare_girl() -> void:
+	var p: CharacterBody3D = L.player
+	var g := Node3D.new()
+	var m: Node3D = load("res://models/ghosts/ghost_girl.glb").instantiate()
+	m.rotation.y = 1.5708
+	m.scale = Vector3.ONE * 0.0072
+	g.add_child(m)
+	L.add_child(g)
+	_only_mirror(g)
+	for a in g.find_children("*", "AnimationPlayer", true, false):
+		var names: PackedStringArray = (a as AnimationPlayer).get_animation_list()
+		if names.size() > 0:
+			(a as AnimationPlayer).play(names[0])
+			(a as AnimationPlayer).speed_scale = 0.0
+	var right: Vector3 = p.global_basis.x
+	var back: Vector3 = p.global_basis.z
+	g.global_position = p.global_position + back * 0.85 + right * 0.32
+	L._face(g, glass.global_position)
+	var gl := OmniLight3D.new()                       # холодный свет только на неё (слой зеркала)
+	gl.light_color = Color(0.6, 0.7, 1.0)
+	gl.light_energy = 1.6
+	gl.omni_range = 2.2
+	gl.light_cull_mask = 1 << (GHOST_LAYER - 1)
+	g.add_child(gl)
+	gl.position = Vector3(0, 1.3, 0)
+	gl.global_position = gl.global_position + (glass.global_position - g.global_position).normalized() * 0.7
+	L._sfx("whisper_harsh", -8.0, 0.8)
+	var t := 0.0
+	while t < 1.6:
+		await get_tree().process_frame
+		t += get_process_delta_time()
+		var to: Vector3 = glass.global_position - p.cam.global_position
+		if p.forward().angle_to(to) > 0.7:          # отвернулся — её уже нет
+			break
+	L._sfx("sting", -12.0, 0.7)
+	g.queue_free()
+
+
+## 2) Отражение замирает, наклоняет голову… и бросается на тебя из зеркала.
+func _scare_double() -> void:
+	var p: CharacterBody3D = L.player
+	var d: Node3D = load("res://models/player/remy.fbx").instantiate()
+	d.scale = body.scale
+	L.add_child(d)
+	d.global_transform = body.global_transform
+	_only_mirror(d)
+	var dark := StandardMaterial3D.new()
+	dark.albedo_color = Color(0, 0, 0, 0.4)
+	dark.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	dark.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	for mi in d.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).material_overlay = dark
+	var dap: AnimationPlayer = d.get_node("AnimationPlayer")
+	dap.add_animation_library("m", _lib)
+	dap.play("m/idle")
+	dap.speed_scale = 0.0
+	var dsk: Skeleton3D = d.get_node("Skeleton3D")
+	# настоящее тело пропадает из отражения — в зеркале остаётся двойник, который больше не повторяет за тобой
+	mcam.cull_mask &= ~(1 << (BODY_LAYER - 1))
+	L.busy = true
+	await get_tree().create_timer(0.9).timeout
+	# медленно наклоняет голову набок
+	var hb := dsk.find_bone("mixamorig_Head")
+	var h0 := dsk.get_bone_pose_rotation(hb)
+	L._sfx("tinnitus", -14.0)
+	var t := 0.0
+	while t < 1.1:
+		await get_tree().process_frame
+		t += get_process_delta_time()
+		dsk.set_bone_pose_rotation(hb, h0 * Quaternion(Vector3.FORWARD, deg_to_rad(38.0) * minf(t / 1.1, 1.0)))
+	await get_tree().create_timer(0.35).timeout
+	# рывок к стеклу
+	p.frozen = true
+	dap.play("m/back", 0.0, -3.0, true)
+	dap.speed_scale = 1.0
+	L._sfx("scream", 1.0)
+	var start: Vector3 = d.global_position
+	var aim: Vector3 = glass.global_position - glass.global_basis.z * 0.0
+	aim.y = start.y
+	var dir: Vector3 = (aim - start)
+	var end: Vector3 = start + dir.normalized() * maxf(dir.length() - 0.55, 0.0)
+	t = 0.0
+	while t < 0.38:
+		await get_tree().process_frame
+		t += get_process_delta_time()
+		d.global_position = start.lerp(end, t / 0.38)
+	# …и выскакивает: на долю секунды — прямо перед лицом
+	for mi in d.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).layers = 1
+	var cam: Camera3D = p.cam
+	var fw: Vector3 = -cam.global_basis.z
+	fw.y = 0.0
+	fw = fw.normalized()
+	d.global_position = cam.global_position + fw * 0.45 - Vector3(0, body.scale.y * EYE, 0)
+	L._face(d, cam.global_position)
+	L.red_flash.color.a = 0.55
+	p.shake = 1.0
+	await get_tree().create_timer(0.28).timeout
+	d.queue_free()
+	L.fade.color.a = 1.0
+	await get_tree().create_timer(0.35).timeout
+	create_tween().tween_property(L.fade, "color:a", 0.0, 0.6)
+	create_tween().tween_property(L.red_flash, "color:a", 0.0, 0.8)
+	mcam.cull_mask |= 1 << (BODY_LAYER - 1)       # отражение снова твоё
+	L._sfx("heartbeat", -6.0)
+	p.frozen = false
+	L.busy = false
 
 
 ## Видно ли зеркало игроку (близко и спереди) — иначе не тратим кадр на отражение.

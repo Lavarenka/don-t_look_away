@@ -15,8 +15,8 @@ const MIN_PLAYER := 2.3       ## не ближе к игроку
 var men := []                 # {q, cool, stare, zone, pose}
 var next_snd := 6.0           ## когда следующий звук чердака
 ## Жуть без скримеров: каждое событие — один раз, в случайном порядке, когда игрок в подходящем месте.
-var events := ["steps", "knock_hatch", "chair", "frame", "closet", "giggle", "chandelier", "crate", "books", "drag", "whisper"]
-var next_ev := 25.0
+var events := ["steps", "knock_hatch", "chair", "frame", "closet", "ball", "lamp", "form", "giggle", "chandelier", "crate", "books", "drag", "whisper"]
+var next_ev := 12.0
 var roof: AudioStreamPlayer
 
 
@@ -109,6 +109,12 @@ func _fit(h: Node3D) -> void:
 	m.position = Vector3(-c.x, -lo.y * k, -c.z)
 
 
+## Краем глаза: предмет либо вне взгляда, либо на самом краю поля зрения.
+func _corner(pos: Vector3) -> bool:
+	var p = L.player
+	return p.forward().angle_to(pos - p.cam.global_position) > 0.5
+
+
 func _dist(path: String) -> float:
 	var n: Node3D = L.get_node(path)
 	var pp: Vector3 = L.player.global_position
@@ -118,7 +124,15 @@ func _dist(path: String) -> float:
 func _ev_ok(e: String) -> bool:
 	match e:
 		"knock_hatch": return _dist("Attic/Hatch") > 3.0 and _dist("Attic/Hatch") < 10.0
-		"chair": var d := _dist("Attic/BChair"); return d > 2.5 and d < 8.0 and not _seen(L.get_node("Attic/BChair").global_position)
+		"chair": var d := _dist("Attic/BChair"); return d > 2.5 and d < 8.0 and _corner(L.get_node("Attic/BChair").global_position + Vector3(0, 0.5, 0))
+		"ball": var d := _dist("Attic/BSofa"); return d > 2.5 and d < 8.0
+		"lamp": var d := _dist("Attic/ALamp"); return d > 1.5 and d < 7.0 and _corner(L.get_node("Attic/ALamp").global_position + Vector3(0, -1.0, 0))
+		"form":
+			for f in ["DressForm1", "DressForm2"]:
+				var n: Node3D = L.get_node("Attic/" + f)
+				if _dist("Attic/" + f) > 2.5 and _dist("Attic/" + f) < 9.0 and not _seen(n.global_position + Vector3(0, 1.2, 0)):
+					return true
+			return false
 		"frame": return _dist("Attic/FrameGirl") > 2.5 and not _seen(L.get_node("Attic/FrameGirl").global_position + Vector3(0, 0.4, 0))
 		"closet": var d := _dist("Attic/BCloset"); return d > 2.0 and d < 8.0
 		"chandelier": return _dist("AChandelier") < 6.0
@@ -139,7 +153,7 @@ func _attic_events(delta: float) -> void:
 		return
 	var e: String = ok.pick_random()
 	events.erase(e)
-	next_ev = randf_range(22.0, 40.0)
+	next_ev = randf_range(13.0, 24.0)
 	_event(e)
 
 
@@ -205,6 +219,55 @@ func _event(e: String) -> void:
 			# ткань оседает и сползает вперёд, собираясь в кучу у подножия
 			create_tween().tween_method(func(t: float): sheet.mesh = _sheet_mesh(t), 0.0, 1.0, 1.1).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 			mirror_fx.open = true
+		"ball":        # из-под дивана выкатывается детский мячик — прямо к тебе
+			var b := MeshInstance3D.new()
+			var sm := SphereMesh.new()
+			sm.radius = 0.09
+			sm.height = 0.18
+			b.mesh = sm
+			var bm := StandardMaterial3D.new()
+			bm.albedo_color = Color(0.45, 0.06, 0.05)
+			bm.roughness = 0.6
+			b.material_override = bm
+			L.get_node("Attic").add_child(b)
+			var so: Node3D = L.get_node("Attic/BSofa")
+			var start: Vector3 = so.global_position + so.global_basis.z * 0.45 + Vector3(0, 0.09, 0)
+			var to: Vector3 = pp - start
+			to.y = 0.0
+			var end: Vector3 = start + to.normalized() * minf(to.length() - 1.0, 3.0)
+			b.global_position = start
+			L._sfx3d("squeak", start, -10.0, 1.4)
+			L._sfx3d("thump", start, -12.0, 1.6)
+			var axis: Vector3 = Vector3.UP.cross(to.normalized())
+			var dist: float = start.distance_to(end)
+			create_tween().tween_method(func(k: float):
+				b.global_position = start.lerp(end, k)
+				b.global_basis = Basis(axis, dist * k / 0.09), 0.0, 1.0, 2.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+		"lamp":        # голая лампочка на проводе начинает раскачиваться и на миг загорается
+			var lp: Node3D = L.get_node("Attic/ALamp")
+			var bulb: OmniLight3D = lp.get_node("Glow")
+			var bmat: StandardMaterial3D = (lp.get_node("Bulb") as MeshInstance3D).get_surface_override_material(0)
+			L._sfx3d("creak", lp.global_position, -8.0, 1.7)
+			create_tween().tween_method(func(t: float):
+				var a := 0.32 * sin(t * 3.1) * exp(-t * 0.28)
+				lp.rotation = Vector3(a, 0.0, a * 0.45), 0.0, 12.0, 12.0)
+			await get_tree().create_timer(1.6).timeout
+			L._sfx3d("buzz", bulb.global_position, -10.0, 1.0)
+			for k in [0.0, 0.08, 0.15, 0.05, 0.5, 0.12]:
+				bulb.light_energy = 1.4 if bulb.light_energy == 0.0 else 0.0
+				bmat.emission_energy_multiplier = 3.0 if bulb.light_energy > 0.0 else 0.0
+				await get_tree().create_timer(k + 0.06).timeout
+			bulb.light_energy = 0.0
+			bmat.emission_energy_multiplier = 0.0
+			L._sfx3d("spark", bulb.global_position, -10.0, 1.2)
+		"form":        # старый портновский манекен развернулся к тебе, пока не смотрел
+			for f in ["DressForm1", "DressForm2"]:
+				var n: Node3D = L.get_node("Attic/" + f)
+				if _dist("Attic/" + f) > 2.5 and _dist("Attic/" + f) < 9.0 and not _seen(n.global_position + Vector3(0, 1.2, 0)):
+					var d: Vector3 = pp - n.global_position
+					n.rotation.y = atan2(d.x, d.z)
+					L._sfx3d("creak", n.global_position + Vector3(0, 0.6, 0), -14.0, 0.8)
+					break
 		"giggle":      # детский смешок из дальнего тёмного угла
 			var c := Vector3(-4.3 if pp.x > 0 else 4.3, 0.6, -42.0 if pp.z > -36.0 else -30.0)
 			L._sfx3d("giggle", c, -9.0, 0.88)

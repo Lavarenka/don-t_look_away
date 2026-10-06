@@ -115,6 +115,8 @@
 !/audio/scream_mask.wav.import
 !/audio/sheet_rustle.wav
 !/audio/sheet_rustle.wav.import
+!/audio/spark.wav
+!/audio/spark.wav.import
 !/audio/squeak.wav
 !/audio/squeak.wav.import
 !/audio/sting.wav
@@ -870,6 +872,7 @@
 !/scripts/menu.gd
 !/scripts/menu.gd.uid
 !/scripts/mirror.gd
+!/scripts/mirror.gd.uid
 !/scripts/nursery.gd
 !/scripts/nursery.gd.uid
 !/scripts/pause.gd
