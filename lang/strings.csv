@@ -3,7 +3,10 @@ CH_1,1. The House,1. Дом
 CH_2,2. Candle Corridor,2. Коридор со свечами
 CH_3,3. The Nursery,3. Детская
 CH_4,4. The Attic,4. Чердак
+CH_5,5. The Second Floor,5. Второй этаж
 CH_LOCKED,— locked —,— закрыто —
+F2_SIGN_ANYA,ANYA\nKNOCK FIRST!,АНЯ\nСТУЧАТЬ!
+F2_SIGN_BATH,BATH,ВАННАЯ
 HAUNT_01,Someone is pounding on the front door. Then — silence.,Кто-то ломится во входную дверь. Потом — тишина.
 HAUNT_02,The record stopped by itself.,Пластинка остановилась сама.
 HAUNT_03,E — pick up the phone,E — снять трубку
@@ -84,6 +87,17 @@ LVL_59,The key fits. Below: darkness and a ladder.,Ключ подошёл. Вн
 LVL_60,Taken: %s.,Взял: %s.
 LVL_61,I put the dress back in the trunk.,Платье положил обратно в сундук.
 LVL_62,E — pick up the photo,E — поднять фотографию
+LVL_63,Something clicked under the floor. The hatch... it opened by itself.,Под полом что-то щёлкнуло. Люк… открылся сам.
+LVL_64,Go down through the hatch,Спустись через люк
+LVL_65,E — go down,E — спуститься
+LVL_66,The second floor. Grandma's rooms...,Второй этаж. Комнаты бабушки…
+LVL_67,Explore the second floor,Осмотри второй этаж
+LVL_68,E — open,E — открыть
+LVL_69,Grandma's bedroom. Locked.,Спальня бабушки. Заперто.
+LVL_70,The bathroom. Locked... water is dripping inside.,Ванная. Заперто… внутри капает вода.
+LVL_71,Grandpa's study. Locked.,Кабинет деда. Заперто.
+LVL_72,Anya's room. Locked.,Комната Ани. Заперто.
+LVL_73,Locked.,Заперто.
 LVL_PORTRAIT_1,Vera\n1938 – 2026,Вера\n1938 – 2026
 LVL_PORTRAIT_2,Stepan\n1935 – 1991,Степан\n1935 – 1991
 LVL_PORTRAIT_3,Anya\n1998 – 2004,Аня\n1998 – 2004

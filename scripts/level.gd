@@ -54,6 +54,7 @@ var exit_glow: StandardMaterial3D
 var haunts: Node
 var nursery: Node
 var attic: Node
+var floor2: Node
 var events := {}            ## какие сценки уже случились
 var shade_mode := ""        ## что сейчас делает призрак
 var shade_t := 0.0
@@ -196,6 +197,9 @@ func _ready() -> void:
 	attic = preload("res://scripts/attic.gd").new()
 	attic.L = self
 	add_child(attic)
+	floor2 = preload("res://scripts/floor2.gd").new()
+	add_child(floor2)
+	floor2.setup(self)
 	_setup_zombie()
 	player.mouse_sens *= SETTINGS.get_sens()
 	SETTINGS.apply_general()
@@ -474,6 +478,8 @@ func _target_ok(id: String) -> bool:
 		return nursery.target_ok(id)
 	if id.begins_with("a_"):
 		return attic.target_ok(id)
+	if id.begins_with("f_"):
+		return floor2.target_ok(id)
 	match id:
 		"tv_off": return tv_on
 		"servant": return phase == "intro" or phase == "hall"
@@ -541,6 +547,7 @@ func _interact() -> void:
 			haunts.interact(t)
 			nursery.interact(t)
 			attic.interact(t)
+			floor2.interact(t)
 
 
 func _show_note(text: String) -> void:
@@ -1061,6 +1068,11 @@ func jump_chapter(n: int) -> void:
 			exit_door.rotation.y = 0.0
 			_say("LVL_41", 2.0)
 			attic.enter()
+		5:
+			_cheat_corridor()
+			events["nursery_open"] = true
+			exit_door.rotation.y = 0.0
+			floor2.enter_direct()
 
 ## Чит для теста: F9 — сразу в коридор со свечами.
 func _cheat_corridor() -> void:

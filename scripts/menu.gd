@@ -118,7 +118,7 @@ func _page_main() -> void:
 ## Выбор главы: сразу загружает уровень (без заставки) и переносит в начало главы.
 func _page_chapters() -> void:
 	_clear()
-	for n in range(1, 5):
+	for n in range(1, 6):
 		var open: bool = SETTINGS.UNLOCK_ALL or n <= SETTINGS.reached()
 		var b := _button("CH_%d" % n if open else "CH_LOCKED", func():
 			Engine.set_meta("chapter", n)

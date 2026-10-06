@@ -110,7 +110,13 @@
 [ext_resource type="PackedScene" path="res://models/vintage/book_4.fbx" id="e108"]
 [ext_resource type="PackedScene" path="res://models/vintage/book_6.fbx" id="e109"]
 [ext_resource type="Texture2D" path="res://textures/attic_photo.png" id="e110"]
-[ext_resource type="PackedScene" path="res://models/zombie/zombie_run.glb" id="e111"]
+[ext_resource type="Texture2D" path="res://models/vintage/tex/walls_basecolor.jpg" id="e111"]
+[ext_resource type="Texture2D" path="res://models/vintage/tex/walls_normal.jpg" id="e112"]
+[ext_resource type="PackedScene" path="res://models/vintage/photo_1.fbx" id="e113"]
+[ext_resource type="PackedScene" path="res://models/vintage/photo_2.fbx" id="e114"]
+[ext_resource type="PackedScene" path="res://models/vintage/photo_3.fbx" id="e115"]
+[ext_resource type="PackedScene" path="res://models/vintage/photo_4.fbx" id="e116"]
+[ext_resource type="PackedScene" path="res://models/zombie/zombie_run.glb" id="e117"]
 
 [sub_resource type="ORMMaterial3D" id="m_stone"]
 albedo_color = Color(0.6, 0.55, 0.5, 1)
@@ -576,33 +582,51 @@ albedo_color = Color(0.35, 0.4, 0.45, 0.25)
 roughness = 0.4
 
 [sub_resource type="BoxMesh" id="abox0"]
-size = Vector3(10, 0.2, 14)
+size = Vector3(7.55, 0.2, 14)
 
 [sub_resource type="BoxShape3D" id="abox0s"]
-size = Vector3(10, 0.2, 14)
+size = Vector3(7.55, 0.2, 14)
 
 [sub_resource type="BoxMesh" id="abox1"]
-size = Vector3(0.15, 1, 14)
+size = Vector3(1.55, 0.2, 14)
 
 [sub_resource type="BoxShape3D" id="abox1s"]
-size = Vector3(0.15, 1, 14)
+size = Vector3(1.55, 0.2, 14)
 
 [sub_resource type="BoxMesh" id="abox2"]
-size = Vector3(6.44649, 0.12, 14.4)
+size = Vector3(0.9, 0.2, 0.925)
 
 [sub_resource type="BoxShape3D" id="abox2s"]
-size = Vector3(6.44649, 0.12, 14.4)
+size = Vector3(0.9, 0.2, 0.925)
 
 [sub_resource type="BoxMesh" id="abox3"]
-size = Vector3(0.15, 1, 14)
+size = Vector3(0.9, 0.2, 11.375)
 
 [sub_resource type="BoxShape3D" id="abox3s"]
-size = Vector3(0.15, 1, 14)
+size = Vector3(0.9, 0.2, 11.375)
 
 [sub_resource type="BoxMesh" id="abox4"]
-size = Vector3(6.44649, 0.12, 14.4)
+size = Vector3(0.15, 1, 14)
 
 [sub_resource type="BoxShape3D" id="abox4s"]
+size = Vector3(0.15, 1, 14)
+
+[sub_resource type="BoxMesh" id="abox5"]
+size = Vector3(6.44649, 0.12, 14.4)
+
+[sub_resource type="BoxShape3D" id="abox5s"]
+size = Vector3(6.44649, 0.12, 14.4)
+
+[sub_resource type="BoxMesh" id="abox6"]
+size = Vector3(0.15, 1, 14)
+
+[sub_resource type="BoxShape3D" id="abox6s"]
+size = Vector3(0.15, 1, 14)
+
+[sub_resource type="BoxMesh" id="abox7"]
+size = Vector3(6.44649, 0.12, 14.4)
+
+[sub_resource type="BoxShape3D" id="abox7s"]
 size = Vector3(6.44649, 0.12, 14.4)
 
 [sub_resource type="TorusMesh" id="win_ring_GableN"]
@@ -611,10 +635,10 @@ outer_radius = 0.47
 rings = 24
 ring_segments = 8
 
-[sub_resource type="BoxMesh" id="abox5"]
+[sub_resource type="BoxMesh" id="abox8"]
 size = Vector3(0.04, 0.84, 0.04)
 
-[sub_resource type="BoxMesh" id="abox6"]
+[sub_resource type="BoxMesh" id="abox9"]
 size = Vector3(0.84, 0.04, 0.04)
 
 [sub_resource type="CylinderMesh" id="win_glass_GableN"]
@@ -628,25 +652,16 @@ outer_radius = 0.47
 rings = 24
 ring_segments = 8
 
-[sub_resource type="BoxMesh" id="abox7"]
+[sub_resource type="BoxMesh" id="abox10"]
 size = Vector3(0.04, 0.84, 0.04)
 
-[sub_resource type="BoxMesh" id="abox8"]
+[sub_resource type="BoxMesh" id="abox11"]
 size = Vector3(0.84, 0.04, 0.04)
 
 [sub_resource type="CylinderMesh" id="win_glass_GableS"]
 top_radius = 0.42
 bottom_radius = 0.42
 height = 0.01
-
-[sub_resource type="BoxMesh" id="abox9"]
-size = Vector3(6.04649, 0.18, 0.12)
-
-[sub_resource type="BoxMesh" id="abox10"]
-size = Vector3(6.04649, 0.18, 0.12)
-
-[sub_resource type="BoxMesh" id="abox11"]
-size = Vector3(4.2, 0.14, 0.1)
 
 [sub_resource type="BoxMesh" id="abox12"]
 size = Vector3(6.04649, 0.18, 0.12)
@@ -655,13 +670,13 @@ size = Vector3(6.04649, 0.18, 0.12)
 size = Vector3(6.04649, 0.18, 0.12)
 
 [sub_resource type="BoxMesh" id="abox14"]
-size = Vector3(6.04649, 0.18, 0.12)
+size = Vector3(4.2, 0.14, 0.1)
 
 [sub_resource type="BoxMesh" id="abox15"]
 size = Vector3(6.04649, 0.18, 0.12)
 
 [sub_resource type="BoxMesh" id="abox16"]
-size = Vector3(4.2, 0.14, 0.1)
+size = Vector3(6.04649, 0.18, 0.12)
 
 [sub_resource type="BoxMesh" id="abox17"]
 size = Vector3(6.04649, 0.18, 0.12)
@@ -670,13 +685,13 @@ size = Vector3(6.04649, 0.18, 0.12)
 size = Vector3(6.04649, 0.18, 0.12)
 
 [sub_resource type="BoxMesh" id="abox19"]
-size = Vector3(6.04649, 0.18, 0.12)
+size = Vector3(4.2, 0.14, 0.1)
 
 [sub_resource type="BoxMesh" id="abox20"]
 size = Vector3(6.04649, 0.18, 0.12)
 
 [sub_resource type="BoxMesh" id="abox21"]
-size = Vector3(4.2, 0.14, 0.1)
+size = Vector3(6.04649, 0.18, 0.12)
 
 [sub_resource type="BoxMesh" id="abox22"]
 size = Vector3(6.04649, 0.18, 0.12)
@@ -685,13 +700,13 @@ size = Vector3(6.04649, 0.18, 0.12)
 size = Vector3(6.04649, 0.18, 0.12)
 
 [sub_resource type="BoxMesh" id="abox24"]
-size = Vector3(6.04649, 0.18, 0.12)
+size = Vector3(4.2, 0.14, 0.1)
 
 [sub_resource type="BoxMesh" id="abox25"]
 size = Vector3(6.04649, 0.18, 0.12)
 
 [sub_resource type="BoxMesh" id="abox26"]
-size = Vector3(4.2, 0.14, 0.1)
+size = Vector3(6.04649, 0.18, 0.12)
 
 [sub_resource type="BoxMesh" id="abox27"]
 size = Vector3(6.04649, 0.18, 0.12)
@@ -700,13 +715,13 @@ size = Vector3(6.04649, 0.18, 0.12)
 size = Vector3(6.04649, 0.18, 0.12)
 
 [sub_resource type="BoxMesh" id="abox29"]
-size = Vector3(6.04649, 0.18, 0.12)
+size = Vector3(4.2, 0.14, 0.1)
 
 [sub_resource type="BoxMesh" id="abox30"]
 size = Vector3(6.04649, 0.18, 0.12)
 
 [sub_resource type="BoxMesh" id="abox31"]
-size = Vector3(4.2, 0.14, 0.1)
+size = Vector3(6.04649, 0.18, 0.12)
 
 [sub_resource type="BoxMesh" id="abox32"]
 size = Vector3(6.04649, 0.18, 0.12)
@@ -715,25 +730,16 @@ size = Vector3(6.04649, 0.18, 0.12)
 size = Vector3(6.04649, 0.18, 0.12)
 
 [sub_resource type="BoxMesh" id="abox34"]
-size = Vector3(0.16, 0.22, 14)
+size = Vector3(4.2, 0.14, 0.1)
 
 [sub_resource type="BoxMesh" id="abox35"]
-size = Vector3(0.16, 3.212, 0.16)
-
-[sub_resource type="BoxShape3D" id="abox35s"]
-size = Vector3(0.16, 3.212, 0.16)
+size = Vector3(6.04649, 0.18, 0.12)
 
 [sub_resource type="BoxMesh" id="abox36"]
-size = Vector3(0.16, 3.212, 0.16)
-
-[sub_resource type="BoxShape3D" id="abox36s"]
-size = Vector3(0.16, 3.212, 0.16)
+size = Vector3(6.04649, 0.18, 0.12)
 
 [sub_resource type="BoxMesh" id="abox37"]
-size = Vector3(0.16, 3.212, 0.16)
-
-[sub_resource type="BoxShape3D" id="abox37s"]
-size = Vector3(0.16, 3.212, 0.16)
+size = Vector3(0.16, 0.22, 14)
 
 [sub_resource type="BoxMesh" id="abox38"]
 size = Vector3(0.16, 3.212, 0.16)
@@ -753,24 +759,48 @@ size = Vector3(0.16, 3.212, 0.16)
 [sub_resource type="BoxShape3D" id="abox40s"]
 size = Vector3(0.16, 3.212, 0.16)
 
+[sub_resource type="BoxMesh" id="abox41"]
+size = Vector3(0.16, 3.212, 0.16)
+
+[sub_resource type="BoxShape3D" id="abox41s"]
+size = Vector3(0.16, 3.212, 0.16)
+
+[sub_resource type="BoxMesh" id="abox42"]
+size = Vector3(0.16, 3.212, 0.16)
+
+[sub_resource type="BoxShape3D" id="abox42s"]
+size = Vector3(0.16, 3.212, 0.16)
+
+[sub_resource type="BoxMesh" id="abox43"]
+size = Vector3(0.16, 3.212, 0.16)
+
+[sub_resource type="BoxShape3D" id="abox43s"]
+size = Vector3(0.16, 3.212, 0.16)
+
 [sub_resource type="BoxShape3D" id="shape_ColXm43"]
 size = Vector3(10, 2.8, 0.2)
 
 [sub_resource type="BoxShape3D" id="shape_ColXm29"]
 size = Vector3(10, 2.8, 0.2)
 
-[sub_resource type="BoxMesh" id="abox41"]
-size = Vector3(0.9, 0.05, 0.9)
+[sub_resource type="BoxMesh" id="abox44"]
+size = Vector3(0.9, 0.05, 1.7)
 
-[sub_resource type="BoxMesh" id="abox42"]
-size = Vector3(0.06, 0.06, 0.92)
+[sub_resource type="BoxMesh" id="abox45"]
+size = Vector3(0.92, 0.06, 0.06)
 
-[sub_resource type="BoxMesh" id="abox43"]
-size = Vector3(0.06, 0.06, 0.92)
+[sub_resource type="BoxMesh" id="abox46"]
+size = Vector3(0.92, 0.06, 0.06)
+
+[sub_resource type="BoxMesh" id="abox47"]
+size = Vector3(0.92, 0.06, 0.06)
 
 [sub_resource type="TorusMesh" id="hatch_ring"]
 inner_radius = 0.035
 outer_radius = 0.05
+
+[sub_resource type="BoxShape3D" id="hatch_block"]
+size = Vector3(0.9, 0.2, 1.7)
 
 [sub_resource type="BoxShape3D" id="df_col_DressForm1"]
 size = Vector3(0.42, 1.45, 0.36)
@@ -795,13 +825,13 @@ size = Vector3(0.42, 1.45, 0.36)
 [sub_resource type="BoxShape3D" id="df_col_PForm4"]
 size = Vector3(0.42, 1.45, 0.36)
 
-[sub_resource type="BoxMesh" id="abox44"]
+[sub_resource type="BoxMesh" id="abox48"]
 size = Vector3(0.18, 0.03, 1.1)
 
 [sub_resource type="BoxShape3D" id="mirror_cs"]
 size = Vector3(0.75, 1.8, 0.14)
 
-[sub_resource type="BoxMesh" id="abox45"]
+[sub_resource type="BoxMesh" id="abox49"]
 size = Vector3(0.7, 1.72, 0.08)
 
 [sub_resource type="StandardMaterial3D" id="m_oldmirror"]
@@ -809,73 +839,73 @@ albedo_color = Color(0.12, 0.13, 0.14, 1)
 metallic = 1.0
 roughness = 0.18
 
-[sub_resource type="BoxMesh" id="abox46"]
+[sub_resource type="BoxMesh" id="abox50"]
 size = Vector3(0.56, 1.5, 0.01)
 
-[sub_resource type="BoxMesh" id="abox47"]
-size = Vector3(0.6, 0.5, 0.5)
-
-[sub_resource type="BoxShape3D" id="abox47s"]
-size = Vector3(0.6, 0.5, 0.5)
-
-[sub_resource type="BoxMesh" id="abox48"]
-size = Vector3(0.5, 0.45, 0.5)
-
-[sub_resource type="BoxShape3D" id="abox48s"]
-size = Vector3(0.5, 0.45, 0.5)
-
-[sub_resource type="BoxMesh" id="abox49"]
-size = Vector3(0.7, 0.55, 0.55)
-
-[sub_resource type="BoxShape3D" id="abox49s"]
-size = Vector3(0.7, 0.55, 0.55)
-
-[sub_resource type="BoxMesh" id="abox50"]
-size = Vector3(0.45, 0.4, 0.45)
-
-[sub_resource type="BoxShape3D" id="abox50s"]
-size = Vector3(0.45, 0.4, 0.45)
-
 [sub_resource type="BoxMesh" id="abox51"]
-size = Vector3(0.55, 0.45, 0.5)
+size = Vector3(0.6, 0.5, 0.5)
 
 [sub_resource type="BoxShape3D" id="abox51s"]
-size = Vector3(0.55, 0.45, 0.5)
+size = Vector3(0.6, 0.5, 0.5)
 
 [sub_resource type="BoxMesh" id="abox52"]
-size = Vector3(0.4, 0.35, 0.4)
+size = Vector3(0.5, 0.45, 0.5)
 
 [sub_resource type="BoxShape3D" id="abox52s"]
-size = Vector3(0.4, 0.35, 0.4)
+size = Vector3(0.5, 0.45, 0.5)
 
 [sub_resource type="BoxMesh" id="abox53"]
-size = Vector3(0.6, 0.5, 0.6)
+size = Vector3(0.7, 0.55, 0.55)
 
 [sub_resource type="BoxShape3D" id="abox53s"]
-size = Vector3(0.6, 0.5, 0.6)
+size = Vector3(0.7, 0.55, 0.55)
 
 [sub_resource type="BoxMesh" id="abox54"]
-size = Vector3(0.5, 0.4, 0.5)
+size = Vector3(0.45, 0.4, 0.45)
 
 [sub_resource type="BoxShape3D" id="abox54s"]
+size = Vector3(0.45, 0.4, 0.45)
+
+[sub_resource type="BoxMesh" id="abox55"]
+size = Vector3(0.55, 0.45, 0.5)
+
+[sub_resource type="BoxShape3D" id="abox55s"]
+size = Vector3(0.55, 0.45, 0.5)
+
+[sub_resource type="BoxMesh" id="abox56"]
+size = Vector3(0.4, 0.35, 0.4)
+
+[sub_resource type="BoxShape3D" id="abox56s"]
+size = Vector3(0.4, 0.35, 0.4)
+
+[sub_resource type="BoxMesh" id="abox57"]
+size = Vector3(0.6, 0.5, 0.6)
+
+[sub_resource type="BoxShape3D" id="abox57s"]
+size = Vector3(0.6, 0.5, 0.6)
+
+[sub_resource type="BoxMesh" id="abox58"]
+size = Vector3(0.5, 0.4, 0.5)
+
+[sub_resource type="BoxShape3D" id="abox58s"]
 size = Vector3(0.5, 0.4, 0.5)
 
 [sub_resource type="BoxShape3D" id="chest_shape"]
 size = Vector3(0.9468, 0.378, 0.4716)
 
-[sub_resource type="BoxMesh" id="abox55"]
+[sub_resource type="BoxMesh" id="abox59"]
 size = Vector3(0.9, 0.42, 0.5)
 
-[sub_resource type="BoxShape3D" id="abox55s"]
+[sub_resource type="BoxShape3D" id="abox59s"]
 size = Vector3(0.9, 0.42, 0.5)
 
-[sub_resource type="BoxMesh" id="abox56"]
+[sub_resource type="BoxMesh" id="abox60"]
 size = Vector3(0.92, 0.12, 0.52)
 
-[sub_resource type="BoxMesh" id="abox57"]
+[sub_resource type="BoxMesh" id="abox61"]
 size = Vector3(0.05, 0.56, 0.54)
 
-[sub_resource type="BoxMesh" id="abox58"]
+[sub_resource type="BoxMesh" id="abox62"]
 size = Vector3(0.05, 0.56, 0.54)
 
 [sub_resource type="BoxShape3D" id="shape_ADrawer"]
@@ -970,6 +1000,189 @@ distance_fade_max_distance = 1.6
 [sub_resource type="QuadMesh" id="dust_quad"]
 size = Vector2(0.006, 0.006)
 material = SubResource("m_dust")
+
+[sub_resource type="StandardMaterial3D" id="m_f2wall"]
+albedo_texture = ExtResource("e111")
+albedo_color = Color(0.62, 0.58, 0.55, 1)
+normal_enabled = true
+normal_texture = ExtResource("e112")
+roughness = 0.95
+uv1_triplanar = true
+uv1_scale = Vector3(0.6, 0.6, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="m_step"]
+albedo_color = Color(0.24, 0.17, 0.12, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="abox63"]
+size = Vector3(0.9, 0.06, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2StepCol1"]
+size = Vector3(0.9, 3.1875, 0.17)
+
+[sub_resource type="BoxMesh" id="abox64"]
+size = Vector3(0.9, 0.06, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2StepCol2"]
+size = Vector3(0.9, 2.975, 0.17)
+
+[sub_resource type="BoxMesh" id="abox65"]
+size = Vector3(0.9, 0.06, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2StepCol3"]
+size = Vector3(0.9, 2.7625, 0.17)
+
+[sub_resource type="BoxMesh" id="abox66"]
+size = Vector3(0.9, 0.06, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2StepCol4"]
+size = Vector3(0.9, 2.55, 0.17)
+
+[sub_resource type="BoxMesh" id="abox67"]
+size = Vector3(0.9, 0.06, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2StepCol5"]
+size = Vector3(0.9, 2.3375, 0.17)
+
+[sub_resource type="BoxMesh" id="abox68"]
+size = Vector3(0.9, 0.06, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2StepCol6"]
+size = Vector3(0.9, 2.125, 0.17)
+
+[sub_resource type="BoxMesh" id="abox69"]
+size = Vector3(0.9, 0.06, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2StepCol7"]
+size = Vector3(0.9, 1.9125, 0.17)
+
+[sub_resource type="BoxMesh" id="abox70"]
+size = Vector3(0.9, 0.06, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2StepCol8"]
+size = Vector3(0.9, 1.7, 0.17)
+
+[sub_resource type="BoxMesh" id="abox71"]
+size = Vector3(0.9, 0.06, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2StepCol9"]
+size = Vector3(0.9, 1.4875, 0.17)
+
+[sub_resource type="BoxMesh" id="abox72"]
+size = Vector3(0.9, 0.06, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2StepCol10"]
+size = Vector3(0.9, 1.275, 0.17)
+
+[sub_resource type="BoxMesh" id="abox73"]
+size = Vector3(0.9, 0.06, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2StepCol11"]
+size = Vector3(0.9, 1.0625, 0.17)
+
+[sub_resource type="BoxMesh" id="abox74"]
+size = Vector3(0.9, 0.06, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2StepCol12"]
+size = Vector3(0.9, 0.85, 0.17)
+
+[sub_resource type="BoxMesh" id="abox75"]
+size = Vector3(0.9, 0.06, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2StepCol13"]
+size = Vector3(0.9, 0.6375, 0.17)
+
+[sub_resource type="BoxMesh" id="abox76"]
+size = Vector3(0.9, 0.06, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2StepCol14"]
+size = Vector3(0.9, 0.425, 0.17)
+
+[sub_resource type="BoxMesh" id="abox77"]
+size = Vector3(0.9, 0.06, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2StepCol15"]
+size = Vector3(0.9, 0.2125, 0.17)
+
+[sub_resource type="BoxMesh" id="abox78"]
+size = Vector3(0.05, 0.22, 4.35412)
+
+[sub_resource type="BoxMesh" id="abox79"]
+size = Vector3(0.05, 0.22, 4.35412)
+
+[sub_resource type="BoxMesh" id="abox80"]
+size = Vector3(0.1, 3.2, 2.87)
+
+[sub_resource type="BoxShape3D" id="abox80s"]
+size = Vector3(0.1, 3.2, 2.87)
+
+[sub_resource type="BoxMesh" id="abox81"]
+size = Vector3(0.1, 3.2, 2.87)
+
+[sub_resource type="BoxShape3D" id="abox81s"]
+size = Vector3(0.1, 3.2, 2.87)
+
+[sub_resource type="BoxMesh" id="abox82"]
+size = Vector3(1.2, 3.2, 0.1)
+
+[sub_resource type="BoxShape3D" id="abox82s"]
+size = Vector3(1.2, 3.2, 0.1)
+
+[sub_resource type="BoxMesh" id="abox83"]
+size = Vector3(1.2, 0.4, 0.1)
+
+[sub_resource type="BoxMesh" id="abox84"]
+size = Vector3(0.45, 2.8, 0.1)
+
+[sub_resource type="BoxShape3D" id="abox84s"]
+size = Vector3(0.45, 2.8, 0.1)
+
+[sub_resource type="BoxMesh" id="abox85"]
+size = Vector3(0.45, 2.8, 0.1)
+
+[sub_resource type="BoxShape3D" id="abox85s"]
+size = Vector3(0.45, 2.8, 0.1)
+
+[sub_resource type="SphereMesh" id="f2_bulb"]
+radius = 0.04
+height = 0.08
+
+[sub_resource type="BoxShape3D" id="shape_F2Slab"]
+size = Vector3(9.6, 0.2, 4.6)
+
+[sub_resource type="BoxShape3D" id="shape_F2ColN"]
+size = Vector3(9.2, 2.8, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2ColW"]
+size = Vector3(0.2, 2.8, 2.6)
+
+[sub_resource type="BoxShape3D" id="shape_F2ColE"]
+size = Vector3(0.2, 2.8, 2.6)
+
+[sub_resource type="BoxShape3D" id="shape_F2ColSa"]
+size = Vector3(7.1, 2.8, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2ColSb"]
+size = Vector3(1.1, 2.8, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2ColSc"]
+size = Vector3(1, 0.86, 0.2)
+
+[sub_resource type="BoxShape3D" id="shape_F2ColLW"]
+size = Vector3(0.2, 2.8, 1.6)
+
+[sub_resource type="BoxShape3D" id="shape_F2ColLE"]
+size = Vector3(0.2, 2.8, 1.6)
+
+[sub_resource type="BoxShape3D" id="shape_f2door"]
+size = Vector3(0.87, 1.87, 0.08)
+
+[sub_resource type="QuadMesh" id="f2_night"]
+size = Vector2(2.4, 2.2)
+
+[sub_resource type="StandardMaterial3D" id="m_night"]
+shading_mode = 0
+albedo_color = Color(0.03, 0.045, 0.08, 1)
 
 [sub_resource type="ParticleProcessMaterial" id="dust_pm"]
 emission_shape = 3
@@ -2510,17 +2723,56 @@ position = Vector3(0, 2.4, -21)
 mesh = SubResource("abox0")
 surface_material_override/0 = SubResource("m_afloor")
 rotation = Vector3(0, 0, 0)
-position = Vector3(0, -0.1, -36)
+position = Vector3(-1.225, -0.1, -36)
 
 [node name="FloorCol" type="StaticBody3D" parent="Attic"]
 rotation = Vector3(0, 0, 0)
-position = Vector3(0, -0.1, -36)
+position = Vector3(-1.225, -0.1, -36)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/FloorCol"]
 shape = SubResource("abox0s")
 
-[node name="KneeW" type="MeshInstance3D" parent="Attic"]
+[node name="FloorE" type="MeshInstance3D" parent="Attic"]
 mesh = SubResource("abox1")
+surface_material_override/0 = SubResource("m_afloor")
+rotation = Vector3(0, 0, 0)
+position = Vector3(4.225, -0.1, -36)
+
+[node name="FloorECol" type="StaticBody3D" parent="Attic"]
+rotation = Vector3(0, 0, 0)
+position = Vector3(4.225, -0.1, -36)
+
+[node name="Shape" type="CollisionShape3D" parent="Attic/FloorECol"]
+shape = SubResource("abox1s")
+
+[node name="FloorS" type="MeshInstance3D" parent="Attic"]
+mesh = SubResource("abox2")
+surface_material_override/0 = SubResource("m_afloor")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -0.1, -29.4625)
+
+[node name="FloorSCol" type="StaticBody3D" parent="Attic"]
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -0.1, -29.4625)
+
+[node name="Shape" type="CollisionShape3D" parent="Attic/FloorSCol"]
+shape = SubResource("abox2s")
+
+[node name="FloorN" type="MeshInstance3D" parent="Attic"]
+mesh = SubResource("abox3")
+surface_material_override/0 = SubResource("m_afloor")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -0.1, -37.3125)
+
+[node name="FloorNCol" type="StaticBody3D" parent="Attic"]
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -0.1, -37.3125)
+
+[node name="Shape" type="CollisionShape3D" parent="Attic/FloorNCol"]
+shape = SubResource("abox3s")
+
+[node name="KneeW" type="MeshInstance3D" parent="Attic"]
+mesh = SubResource("abox4")
 surface_material_override/0 = SubResource("m_aboard")
 rotation = Vector3(0, 0, 0)
 position = Vector3(-5.075, 0.45, -36)
@@ -2530,10 +2782,10 @@ rotation = Vector3(0, 0, 0)
 position = Vector3(-5.075, 0.45, -36)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/KneeWCol"]
-shape = SubResource("abox1s")
+shape = SubResource("abox4s")
 
 [node name="RoofW" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox2")
+mesh = SubResource("abox5")
 surface_material_override/0 = SubResource("m_aboard")
 rotation = Vector3(0, 0, 0.597177)
 position = Vector3(-2.53374, 2.64962, -36)
@@ -2543,10 +2795,10 @@ rotation = Vector3(0, 0, 0.597177)
 position = Vector3(-2.53374, 2.64962, -36)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/RoofWCol"]
-shape = SubResource("abox2s")
+shape = SubResource("abox5s")
 
 [node name="KneeE" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox3")
+mesh = SubResource("abox6")
 surface_material_override/0 = SubResource("m_aboard")
 rotation = Vector3(0, 0, 0)
 position = Vector3(5.075, 0.45, -36)
@@ -2556,10 +2808,10 @@ rotation = Vector3(0, 0, 0)
 position = Vector3(5.075, 0.45, -36)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/KneeECol"]
-shape = SubResource("abox3s")
+shape = SubResource("abox6s")
 
 [node name="RoofE" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox4")
+mesh = SubResource("abox7")
 surface_material_override/0 = SubResource("m_aboard")
 rotation = Vector3(0, 0, -0.597177)
 position = Vector3(2.53374, 2.64962, -36)
@@ -2569,7 +2821,7 @@ rotation = Vector3(0, 0, -0.597177)
 position = Vector3(2.53374, 2.64962, -36)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/RoofECol"]
-shape = SubResource("abox4s")
+shape = SubResource("abox7s")
 
 [node name="GableN" type="CSGCombiner3D" parent="Attic"]
 use_collision = true
@@ -2596,13 +2848,13 @@ scale = Vector3(1, 1, 1)
 position = Vector3(0, 2.75, -42.99)
 
 [node name="GableNBarV" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox5")
+mesh = SubResource("abox8")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0, 2.75, -43.05)
 
 [node name="GableNBarH" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox6")
+mesh = SubResource("abox9")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0, 2.75, -43.05)
@@ -2639,13 +2891,13 @@ scale = Vector3(1, 1, 1)
 position = Vector3(0, 2.75, -29.01)
 
 [node name="GableSBarV" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox7")
+mesh = SubResource("abox10")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0, 2.75, -28.95)
 
 [node name="GableSBarH" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox8")
+mesh = SubResource("abox11")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0, 2.75, -28.95)
@@ -2658,163 +2910,163 @@ scale = Vector3(1, 1, 1)
 position = Vector3(0, 2.75, -28.9)
 
 [node name="Rafter0W" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox9")
+mesh = SubResource("abox12")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0.597177)
 position = Vector3(-2.44939, 2.52558, -42.3)
 
 [node name="Rafter0E" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox10")
+mesh = SubResource("abox13")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, -0.597177)
 position = Vector3(2.44939, 2.52558, -42.3)
 
 [node name="Collar0" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox11")
+mesh = SubResource("abox14")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0, 2.95, -42.3)
 
 [node name="Rafter1W" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox12")
+mesh = SubResource("abox15")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0.597177)
 position = Vector3(-2.44939, 2.52558, -40.9)
 
 [node name="Rafter1E" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox13")
+mesh = SubResource("abox16")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, -0.597177)
 position = Vector3(2.44939, 2.52558, -40.9)
 
 [node name="Rafter2W" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox14")
+mesh = SubResource("abox17")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0.597177)
 position = Vector3(-2.44939, 2.52558, -39.5)
 
 [node name="Rafter2E" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox15")
+mesh = SubResource("abox18")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, -0.597177)
 position = Vector3(2.44939, 2.52558, -39.5)
 
 [node name="Collar2" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox16")
+mesh = SubResource("abox19")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0, 2.95, -39.5)
 
 [node name="Rafter3W" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox17")
+mesh = SubResource("abox20")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0.597177)
 position = Vector3(-2.44939, 2.52558, -38.1)
 
 [node name="Rafter3E" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox18")
+mesh = SubResource("abox21")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, -0.597177)
 position = Vector3(2.44939, 2.52558, -38.1)
 
 [node name="Rafter4W" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox19")
+mesh = SubResource("abox22")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0.597177)
 position = Vector3(-2.44939, 2.52558, -36.7)
 
 [node name="Rafter4E" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox20")
+mesh = SubResource("abox23")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, -0.597177)
 position = Vector3(2.44939, 2.52558, -36.7)
 
 [node name="Collar4" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox21")
+mesh = SubResource("abox24")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0, 2.95, -36.7)
 
 [node name="Rafter5W" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox22")
+mesh = SubResource("abox25")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0.597177)
 position = Vector3(-2.44939, 2.52558, -35.3)
 
 [node name="Rafter5E" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox23")
+mesh = SubResource("abox26")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, -0.597177)
 position = Vector3(2.44939, 2.52558, -35.3)
 
 [node name="Rafter6W" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox24")
+mesh = SubResource("abox27")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0.597177)
 position = Vector3(-2.44939, 2.52558, -33.9)
 
 [node name="Rafter6E" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox25")
+mesh = SubResource("abox28")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, -0.597177)
 position = Vector3(2.44939, 2.52558, -33.9)
 
 [node name="Collar6" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox26")
+mesh = SubResource("abox29")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0, 2.95, -33.9)
 
 [node name="Rafter7W" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox27")
+mesh = SubResource("abox30")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0.597177)
 position = Vector3(-2.44939, 2.52558, -32.5)
 
 [node name="Rafter7E" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox28")
+mesh = SubResource("abox31")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, -0.597177)
 position = Vector3(2.44939, 2.52558, -32.5)
 
 [node name="Rafter8W" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox29")
+mesh = SubResource("abox32")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0.597177)
 position = Vector3(-2.44939, 2.52558, -31.1)
 
 [node name="Rafter8E" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox30")
+mesh = SubResource("abox33")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, -0.597177)
 position = Vector3(2.44939, 2.52558, -31.1)
 
 [node name="Collar8" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox31")
+mesh = SubResource("abox34")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0, 2.95, -31.1)
 
 [node name="Rafter9W" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox32")
+mesh = SubResource("abox35")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0.597177)
 position = Vector3(-2.44939, 2.52558, -29.7)
 
 [node name="Rafter9E" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox33")
+mesh = SubResource("abox36")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, -0.597177)
 position = Vector3(2.44939, 2.52558, -29.7)
 
 [node name="Ridge" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox34")
+mesh = SubResource("abox37")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0, 4.15, -36)
 
 [node name="Post0W" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox35")
+mesh = SubResource("abox38")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(-1.6, 1.606, -40.2)
@@ -2824,10 +3076,10 @@ rotation = Vector3(0, 0, 0)
 position = Vector3(-1.6, 1.606, -40.2)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/Post0WCol"]
-shape = SubResource("abox35s")
+shape = SubResource("abox38s")
 
 [node name="Post0E" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox36")
+mesh = SubResource("abox39")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(1.6, 1.606, -40.2)
@@ -2837,10 +3089,10 @@ rotation = Vector3(0, 0, 0)
 position = Vector3(1.6, 1.606, -40.2)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/Post0ECol"]
-shape = SubResource("abox36s")
+shape = SubResource("abox39s")
 
 [node name="Post1W" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox37")
+mesh = SubResource("abox40")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(-1.6, 1.606, -35.8)
@@ -2850,10 +3102,10 @@ rotation = Vector3(0, 0, 0)
 position = Vector3(-1.6, 1.606, -35.8)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/Post1WCol"]
-shape = SubResource("abox37s")
+shape = SubResource("abox40s")
 
 [node name="Post1E" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox38")
+mesh = SubResource("abox41")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(1.6, 1.606, -35.8)
@@ -2863,10 +3115,10 @@ rotation = Vector3(0, 0, 0)
 position = Vector3(1.6, 1.606, -35.8)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/Post1ECol"]
-shape = SubResource("abox38s")
+shape = SubResource("abox41s")
 
 [node name="Post2W" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox39")
+mesh = SubResource("abox42")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(-1.6, 1.606, -31.6)
@@ -2876,10 +3128,10 @@ rotation = Vector3(0, 0, 0)
 position = Vector3(-1.6, 1.606, -31.6)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/Post2WCol"]
-shape = SubResource("abox39s")
+shape = SubResource("abox42s")
 
 [node name="Post2E" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox40")
+mesh = SubResource("abox43")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(1.6, 1.606, -31.6)
@@ -2889,7 +3141,7 @@ rotation = Vector3(0, 0, 0)
 position = Vector3(1.6, 1.606, -31.6)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/Post2ECol"]
-shape = SubResource("abox40s")
+shape = SubResource("abox43s")
 
 [node name="ColXm43" type="StaticBody3D" parent="."]
 rotation = Vector3(0, 0, 0)
@@ -2906,32 +3158,44 @@ position = Vector3(0, 1.4, -29)
 shape = SubResource("shape_ColXm29")
 
 [node name="Hatch" type="Node3D" parent="Attic"]
-position = Vector3(3, 0, -30.4)
+position = Vector3(2.55, 0, -30.775)
 
 [node name="Lid" type="MeshInstance3D" parent="Attic/Hatch"]
-mesh = SubResource("abox41")
+mesh = SubResource("abox44")
 surface_material_override/0 = SubResource("m_crate")
 rotation = Vector3(0, 0, 0)
-position = Vector3(0, 0.025, 0)
+position = Vector3(0.45, 0.025, 0)
 
 [node name="Strap0" type="MeshInstance3D" parent="Attic/Hatch"]
-mesh = SubResource("abox42")
+mesh = SubResource("abox45")
 surface_material_override/0 = SubResource("m_iron")
 rotation = Vector3(0, 0, 0)
-position = Vector3(-0.3, 0.03, 0)
+position = Vector3(0.45, 0.03, -0.6)
 
 [node name="Strap1" type="MeshInstance3D" parent="Attic/Hatch"]
-mesh = SubResource("abox43")
+mesh = SubResource("abox46")
 surface_material_override/0 = SubResource("m_iron")
 rotation = Vector3(0, 0, 0)
-position = Vector3(0.3, 0.03, 0)
+position = Vector3(0.45, 0.03, 0)
+
+[node name="Strap2" type="MeshInstance3D" parent="Attic/Hatch"]
+mesh = SubResource("abox47")
+surface_material_override/0 = SubResource("m_iron")
+rotation = Vector3(0, 0, 0)
+position = Vector3(0.45, 0.03, 0.6)
 
 [node name="Ring" type="MeshInstance3D" parent="Attic/Hatch"]
 mesh = SubResource("hatch_ring")
 surface_material_override/0 = SubResource("m_iron")
 rotation = Vector3(0, 0, 0)
 scale = Vector3(1, 1, 1)
-position = Vector3(0, 0.06, 0.25)
+position = Vector3(0.75, 0.06, 0)
+
+[node name="HatchBlock" type="StaticBody3D" parent="Attic"]
+position = Vector3(3, -0.1, -30.775)
+
+[node name="Shape" type="CollisionShape3D" parent="Attic/HatchBlock"]
+shape = SubResource("hatch_block")
 
 [node name="DressForm1" type="Node3D" parent="Attic"]
 rotation = Vector3(0, -0.6, 0)
@@ -3096,7 +3360,7 @@ position = Vector3(-1.3, 0, -36.9)
 rotation = Vector3(0, 0.08, 0)
 
 [node name="Plank" type="MeshInstance3D" parent="Attic/Board"]
-mesh = SubResource("abox44")
+mesh = SubResource("abox48")
 surface_material_override/0 = SubResource("m_crate")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0, 0.016, 0)
@@ -3155,19 +3419,19 @@ shape = SubResource("mirror_cs")
 [node name="Mirror" type="Node3D" parent="Attic/CovMirror"]
 
 [node name="Frame" type="MeshInstance3D" parent="Attic/CovMirror/Mirror"]
-mesh = SubResource("abox45")
+mesh = SubResource("abox49")
 surface_material_override/0 = SubResource("m_beam")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0, 0.86, 0)
 
 [node name="Glass" type="MeshInstance3D" parent="Attic/CovMirror/Mirror"]
-mesh = SubResource("abox46")
+mesh = SubResource("abox50")
 surface_material_override/0 = SubResource("m_oldmirror")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0, 0.88, 0.045)
 
 [node name="Crate0" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox47")
+mesh = SubResource("abox51")
 surface_material_override/0 = SubResource("m_crate")
 rotation = Vector3(0, 0.2, 0)
 position = Vector3(4.1, 0.25, -41.8)
@@ -3177,10 +3441,10 @@ rotation = Vector3(0, 0.2, 0)
 position = Vector3(4.1, 0.25, -41.8)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/Crate0Col"]
-shape = SubResource("abox47s")
+shape = SubResource("abox51s")
 
 [node name="Crate1" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox48")
+mesh = SubResource("abox52")
 surface_material_override/0 = SubResource("m_crate")
 rotation = Vector3(0, 0.5, 0)
 position = Vector3(4.2, 0.725, -41.7)
@@ -3190,10 +3454,10 @@ rotation = Vector3(0, 0.5, 0)
 position = Vector3(4.2, 0.725, -41.7)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/Crate1Col"]
-shape = SubResource("abox48s")
+shape = SubResource("abox52s")
 
 [node name="Crate2" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox49")
+mesh = SubResource("abox53")
 surface_material_override/0 = SubResource("m_crate")
 rotation = Vector3(0, -0.3, 0)
 position = Vector3(3.8, 0.275, -33.4)
@@ -3203,10 +3467,10 @@ rotation = Vector3(0, -0.3, 0)
 position = Vector3(3.8, 0.275, -33.4)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/Crate2Col"]
-shape = SubResource("abox49s")
+shape = SubResource("abox53s")
 
 [node name="Crate3" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox50")
+mesh = SubResource("abox54")
 surface_material_override/0 = SubResource("m_crate")
 rotation = Vector3(0, 0.1, 0)
 position = Vector3(4.3, 0.2, -32.6)
@@ -3216,10 +3480,10 @@ rotation = Vector3(0, 0.1, 0)
 position = Vector3(4.3, 0.2, -32.6)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/Crate3Col"]
-shape = SubResource("abox50s")
+shape = SubResource("abox54s")
 
 [node name="Crate4" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox51")
+mesh = SubResource("abox55")
 surface_material_override/0 = SubResource("m_crate")
 rotation = Vector3(0, 0.6, 0)
 position = Vector3(-4.2, 0.225, -30.6)
@@ -3229,10 +3493,10 @@ rotation = Vector3(0, 0.6, 0)
 position = Vector3(-4.2, 0.225, -30.6)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/Crate4Col"]
-shape = SubResource("abox51s")
+shape = SubResource("abox55s")
 
 [node name="Crate5" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox52")
+mesh = SubResource("abox56")
 surface_material_override/0 = SubResource("m_crate")
 rotation = Vector3(0, 0.1, 0)
 position = Vector3(-4.1, 0.625, -30.5)
@@ -3242,10 +3506,10 @@ rotation = Vector3(0, 0.1, 0)
 position = Vector3(-4.1, 0.625, -30.5)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/Crate5Col"]
-shape = SubResource("abox52s")
+shape = SubResource("abox56s")
 
 [node name="Crate6" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox53")
+mesh = SubResource("abox57")
 surface_material_override/0 = SubResource("m_crate")
 rotation = Vector3(0, 0, 0)
 position = Vector3(3.9, 0.25, -38.7)
@@ -3255,10 +3519,10 @@ rotation = Vector3(0, 0, 0)
 position = Vector3(3.9, 0.25, -38.7)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/Crate6Col"]
-shape = SubResource("abox53s")
+shape = SubResource("abox57s")
 
 [node name="Crate7" type="MeshInstance3D" parent="Attic"]
-mesh = SubResource("abox54")
+mesh = SubResource("abox58")
 surface_material_override/0 = SubResource("m_crate")
 rotation = Vector3(0, 0.7, 0)
 position = Vector3(1, 0.2, -30)
@@ -3268,7 +3532,7 @@ rotation = Vector3(0, 0.7, 0)
 position = Vector3(1, 0.2, -30)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/Crate7Col"]
-shape = SubResource("abox54s")
+shape = SubResource("abox58s")
 
 [node name="Trunk1" type="Node3D" parent="Attic"]
 rotation = Vector3(0, 0.2, 0)
@@ -3288,7 +3552,7 @@ rotation = Vector3(0, 1.5708, 0)
 position = Vector3(-4.1, 0, -33.6)
 
 [node name="Box" type="MeshInstance3D" parent="Attic/Trunk0"]
-mesh = SubResource("abox55")
+mesh = SubResource("abox59")
 surface_material_override/0 = SubResource("m_trunk")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0, 0.21, 0)
@@ -3298,22 +3562,22 @@ rotation = Vector3(0, 0, 0)
 position = Vector3(0, 0.21, 0)
 
 [node name="Shape" type="CollisionShape3D" parent="Attic/Trunk0/BoxCol"]
-shape = SubResource("abox55s")
+shape = SubResource("abox59s")
 
 [node name="Lid" type="MeshInstance3D" parent="Attic/Trunk0"]
-mesh = SubResource("abox56")
+mesh = SubResource("abox60")
 surface_material_override/0 = SubResource("m_trunk")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0, 0.48, 0)
 
 [node name="Band0" type="MeshInstance3D" parent="Attic/Trunk0"]
-mesh = SubResource("abox57")
+mesh = SubResource("abox61")
 surface_material_override/0 = SubResource("m_iron")
 rotation = Vector3(0, 0, 0)
 position = Vector3(-0.3, 0.28, 0)
 
 [node name="Band1" type="MeshInstance3D" parent="Attic/Trunk0"]
-mesh = SubResource("abox58")
+mesh = SubResource("abox62")
 surface_material_override/0 = SubResource("m_iron")
 rotation = Vector3(0, 0, 0)
 position = Vector3(0.3, 0.28, 0)
@@ -3604,7 +3868,557 @@ position = Vector3(0.3, 1.6, -33.5)
 [node name="AtticSpawn" type="Marker3D" parent="."]
 position = Vector3(0.2, 0.05, -30.6)
 
-[node name="Zombie" parent="." instance=ExtResource("e111")]
+[node name="Floor2" type="Node3D" parent="."]
+
+[node name="Step1" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox63")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -0.2425, -30.035)
+
+[node name="F2StepCol1" type="StaticBody3D" parent="."]
+position = Vector3(3, -1.80625, -30.035)
+
+[node name="Shape" type="CollisionShape3D" parent="F2StepCol1"]
+shape = SubResource("shape_F2StepCol1")
+
+[node name="Step2" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox64")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -0.455, -30.205)
+
+[node name="F2StepCol2" type="StaticBody3D" parent="."]
+position = Vector3(3, -1.9125, -30.205)
+
+[node name="Shape" type="CollisionShape3D" parent="F2StepCol2"]
+shape = SubResource("shape_F2StepCol2")
+
+[node name="Step3" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox65")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -0.6675, -30.375)
+
+[node name="F2StepCol3" type="StaticBody3D" parent="."]
+position = Vector3(3, -2.01875, -30.375)
+
+[node name="Shape" type="CollisionShape3D" parent="F2StepCol3"]
+shape = SubResource("shape_F2StepCol3")
+
+[node name="Step4" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox66")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -0.88, -30.545)
+
+[node name="F2StepCol4" type="StaticBody3D" parent="."]
+position = Vector3(3, -2.125, -30.545)
+
+[node name="Shape" type="CollisionShape3D" parent="F2StepCol4"]
+shape = SubResource("shape_F2StepCol4")
+
+[node name="Step5" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox67")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -1.0925, -30.715)
+
+[node name="F2StepCol5" type="StaticBody3D" parent="."]
+position = Vector3(3, -2.23125, -30.715)
+
+[node name="Shape" type="CollisionShape3D" parent="F2StepCol5"]
+shape = SubResource("shape_F2StepCol5")
+
+[node name="Step6" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox68")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -1.305, -30.885)
+
+[node name="F2StepCol6" type="StaticBody3D" parent="."]
+position = Vector3(3, -2.3375, -30.885)
+
+[node name="Shape" type="CollisionShape3D" parent="F2StepCol6"]
+shape = SubResource("shape_F2StepCol6")
+
+[node name="Step7" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox69")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -1.5175, -31.055)
+
+[node name="F2StepCol7" type="StaticBody3D" parent="."]
+position = Vector3(3, -2.44375, -31.055)
+
+[node name="Shape" type="CollisionShape3D" parent="F2StepCol7"]
+shape = SubResource("shape_F2StepCol7")
+
+[node name="Step8" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox70")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -1.73, -31.225)
+
+[node name="F2StepCol8" type="StaticBody3D" parent="."]
+position = Vector3(3, -2.55, -31.225)
+
+[node name="Shape" type="CollisionShape3D" parent="F2StepCol8"]
+shape = SubResource("shape_F2StepCol8")
+
+[node name="Step9" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox71")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -1.9425, -31.395)
+
+[node name="F2StepCol9" type="StaticBody3D" parent="."]
+position = Vector3(3, -2.65625, -31.395)
+
+[node name="Shape" type="CollisionShape3D" parent="F2StepCol9"]
+shape = SubResource("shape_F2StepCol9")
+
+[node name="Step10" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox72")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -2.155, -31.565)
+
+[node name="F2StepCol10" type="StaticBody3D" parent="."]
+position = Vector3(3, -2.7625, -31.565)
+
+[node name="Shape" type="CollisionShape3D" parent="F2StepCol10"]
+shape = SubResource("shape_F2StepCol10")
+
+[node name="Step11" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox73")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -2.3675, -31.735)
+
+[node name="F2StepCol11" type="StaticBody3D" parent="."]
+position = Vector3(3, -2.86875, -31.735)
+
+[node name="Shape" type="CollisionShape3D" parent="F2StepCol11"]
+shape = SubResource("shape_F2StepCol11")
+
+[node name="Step12" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox74")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -2.58, -31.905)
+
+[node name="F2StepCol12" type="StaticBody3D" parent="."]
+position = Vector3(3, -2.975, -31.905)
+
+[node name="Shape" type="CollisionShape3D" parent="F2StepCol12"]
+shape = SubResource("shape_F2StepCol12")
+
+[node name="Step13" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox75")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -2.7925, -32.075)
+
+[node name="F2StepCol13" type="StaticBody3D" parent="."]
+position = Vector3(3, -3.08125, -32.075)
+
+[node name="Shape" type="CollisionShape3D" parent="F2StepCol13"]
+shape = SubResource("shape_F2StepCol13")
+
+[node name="Step14" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox76")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -3.005, -32.245)
+
+[node name="F2StepCol14" type="StaticBody3D" parent="."]
+position = Vector3(3, -3.1875, -32.245)
+
+[node name="Shape" type="CollisionShape3D" parent="F2StepCol14"]
+shape = SubResource("shape_F2StepCol14")
+
+[node name="Step15" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox77")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -3.2175, -32.415)
+
+[node name="F2StepCol15" type="StaticBody3D" parent="."]
+position = Vector3(3, -3.29375, -32.415)
+
+[node name="Shape" type="CollisionShape3D" parent="F2StepCol15"]
+shape = SubResource("shape_F2StepCol15")
+
+[node name="Stringer-1" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox78")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(-0.896055, 0, 0)
+position = Vector3(2.53, -1.75, -31.31)
+
+[node name="Stringer1" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox79")
+surface_material_override/0 = SubResource("m_step")
+rotation = Vector3(-0.896055, 0, 0)
+position = Vector3(3.47, -1.75, -31.31)
+
+[node name="ShaftW" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox80")
+surface_material_override/0 = SubResource("m_f2wall")
+rotation = Vector3(0, 0, 0)
+position = Vector3(2.45, -1.8, -31.26)
+
+[node name="ShaftWCol" type="StaticBody3D" parent="Floor2"]
+rotation = Vector3(0, 0, 0)
+position = Vector3(2.45, -1.8, -31.26)
+
+[node name="Shape" type="CollisionShape3D" parent="Floor2/ShaftWCol"]
+shape = SubResource("abox80s")
+
+[node name="ShaftE" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox81")
+surface_material_override/0 = SubResource("m_f2wall")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3.55, -1.8, -31.26)
+
+[node name="ShaftECol" type="StaticBody3D" parent="Floor2"]
+rotation = Vector3(0, 0, 0)
+position = Vector3(3.55, -1.8, -31.26)
+
+[node name="Shape" type="CollisionShape3D" parent="Floor2/ShaftECol"]
+shape = SubResource("abox81s")
+
+[node name="ShaftEnd" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox82")
+surface_material_override/0 = SubResource("m_f2wall")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -1.8, -29.83)
+
+[node name="ShaftEndCol" type="StaticBody3D" parent="Floor2"]
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -1.8, -29.83)
+
+[node name="Shape" type="CollisionShape3D" parent="Floor2/ShaftEndCol"]
+shape = SubResource("abox82s")
+
+[node name="ShaftLintel" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox83")
+surface_material_override/0 = SubResource("m_f2wall")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3, -0.4, -32.55)
+
+[node name="LandSW" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox84")
+surface_material_override/0 = SubResource("m_f2wall")
+rotation = Vector3(0, 0, 0)
+position = Vector3(2.225, -2, -32.55)
+
+[node name="LandSWCol" type="StaticBody3D" parent="Floor2"]
+rotation = Vector3(0, 0, 0)
+position = Vector3(2.225, -2, -32.55)
+
+[node name="Shape" type="CollisionShape3D" parent="Floor2/LandSWCol"]
+shape = SubResource("abox84s")
+
+[node name="LandSE" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("abox85")
+surface_material_override/0 = SubResource("m_f2wall")
+rotation = Vector3(0, 0, 0)
+position = Vector3(3.775, -2, -32.55)
+
+[node name="LandSECol" type="StaticBody3D" parent="Floor2"]
+rotation = Vector3(0, 0, 0)
+position = Vector3(3.775, -2, -32.55)
+
+[node name="Shape" type="CollisionShape3D" parent="Floor2/LandSECol"]
+shape = SubResource("abox85s")
+
+[node name="LandBulb" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("f2_bulb")
+surface_material_override/0 = SubResource("m_iron")
+rotation = Vector3(0, 0, 0)
+scale = Vector3(1, 1, 1)
+position = Vector3(3, -0.95, -33.4)
+
+[node name="F2Wall43" parent="." instance=ExtResource("e15")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.125, 1, 0.5)
+position = Vector3(2.1, -3.4, -34.2085)
+
+[node name="F2DoorLandingB" parent="." instance=ExtResource("e16")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(1, 1, 0.5)
+position = Vector3(2.401, -3.4, -34.2085)
+
+[node name="F2Wall44" parent="." instance=ExtResource("e15")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.125, 1, 0.5)
+position = Vector3(3.6, -3.4, -34.2085)
+
+[node name="F2Wall45" parent="." instance=ExtResource("e15")]
+rotation = Vector3(0, 1.5708, 0)
+scale = Vector3(0.583333, 1, 0.5)
+position = Vector3(1.9915, -3.4, -32.7)
+
+[node name="F2Wall46" parent="." instance=ExtResource("e15")]
+rotation = Vector3(0, -1.5708, 0)
+scale = Vector3(0.583333, 1, 0.5)
+position = Vector3(4.0085, -3.4, -34.1)
+
+[node name="F2LandFloor00" parent="." instance=ExtResource("e18")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.796813, 1, 0.63745)
+position = Vector3(3, -3.44, -33.4)
+
+[node name="F2LandCeil00" parent="." instance=ExtResource("e19")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.796813, 1, 0.63745)
+position = Vector3(3, -0.6, -33.4)
+
+[node name="F2Wall47" parent="." instance=ExtResource("e15")]
+rotation = Vector3(0, 3.14159, 0)
+scale = Vector3(0.958333, 1, 0.5)
+position = Vector3(-2.2, -3.4, -34.1915)
+
+[node name="F2Wall48" parent="." instance=ExtResource("e15")]
+rotation = Vector3(0, 3.14159, 0)
+scale = Vector3(0.958333, 1, 0.5)
+position = Vector3(0.1, -3.4, -34.1915)
+
+[node name="F2Wall49" parent="." instance=ExtResource("e15")]
+rotation = Vector3(0, 3.14159, 0)
+scale = Vector3(0.958333, 1, 0.5)
+position = Vector3(2.4, -3.4, -34.1915)
+
+[node name="F2DoorLanding" parent="." instance=ExtResource("e16")]
+rotation = Vector3(0, 3.14159, 0)
+scale = Vector3(1, 1, 0.5)
+position = Vector3(3.599, -3.4, -34.1915)
+
+[node name="F2Wall50" parent="." instance=ExtResource("e15")]
+rotation = Vector3(0, 3.14159, 0)
+scale = Vector3(0.375, 1, 0.5)
+position = Vector3(4.5, -3.4, -34.1915)
+
+[node name="F2Wall51" parent="." instance=ExtResource("e15")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.291667, 1, 0.5)
+position = Vector3(-4.5, -3.4, -36.8085)
+
+[node name="F2DoorBed" parent="." instance=ExtResource("e16")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(1, 1, 0.5)
+position = Vector3(-3.799, -3.4, -36.8085)
+
+[node name="F2Wall52" parent="." instance=ExtResource("e15")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.5, 1, 0.5)
+position = Vector3(-2.6, -3.4, -36.8085)
+
+[node name="F2DoorBath" parent="." instance=ExtResource("e16")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(1, 1, 0.5)
+position = Vector3(-1.399, -3.4, -36.8085)
+
+[node name="F2Wall53" parent="." instance=ExtResource("e15")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.5, 1, 0.5)
+position = Vector3(-0.2, -3.4, -36.8085)
+
+[node name="F2DoorStudy" parent="." instance=ExtResource("e16")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(1, 1, 0.5)
+position = Vector3(1.001, -3.4, -36.8085)
+
+[node name="F2Wall54" parent="." instance=ExtResource("e15")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.958333, 1, 0.5)
+position = Vector3(2.2, -3.4, -36.8085)
+
+[node name="F2Wall55" parent="." instance=ExtResource("e15")]
+rotation = Vector3(0, 1.5708, 0)
+scale = Vector3(0.25, 1, 0.5)
+position = Vector3(-4.6085, -3.4, -36.1)
+
+[node name="F2Window" parent="." instance=ExtResource("e17")]
+rotation = Vector3(0, 1.5708, 0)
+scale = Vector3(1, 1, 0.5)
+position = Vector3(-4.6085, -3.4, -34.9)
+
+[node name="F2Wall56" parent="." instance=ExtResource("e15")]
+rotation = Vector3(0, 1.5708, 0)
+scale = Vector3(0.25, 1, 0.5)
+position = Vector3(-4.6085, -3.4, -34.3)
+
+[node name="F2Wall57" parent="." instance=ExtResource("e15")]
+rotation = Vector3(0, -1.5708, 0)
+scale = Vector3(0.25, 1, 0.5)
+position = Vector3(4.6085, -3.4, -36.7)
+
+[node name="F2DoorAnya" parent="." instance=ExtResource("e16")]
+rotation = Vector3(0, -1.5708, 0)
+scale = Vector3(1, 1, 0.5)
+position = Vector3(4.6085, -3.4, -36.099)
+
+[node name="F2Wall58" parent="." instance=ExtResource("e15")]
+rotation = Vector3(0, -1.5708, 0)
+scale = Vector3(0.25, 1, 0.5)
+position = Vector3(4.6085, -3.4, -34.9)
+
+[node name="F2HallFloor00" parent="." instance=ExtResource("e18")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.916335, 1, 1.03586)
+position = Vector3(-3.45, -3.44, -35.5)
+
+[node name="F2HallCeil00" parent="." instance=ExtResource("e19")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.916335, 1, 1.03586)
+position = Vector3(-3.45, -0.6, -35.5)
+
+[node name="F2HallFloor10" parent="." instance=ExtResource("e18")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.916335, 1, 1.03586)
+position = Vector3(-1.15, -3.44, -35.5)
+
+[node name="F2HallCeil10" parent="." instance=ExtResource("e19")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.916335, 1, 1.03586)
+position = Vector3(-1.15, -0.6, -35.5)
+
+[node name="F2HallFloor20" parent="." instance=ExtResource("e18")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.916335, 1, 1.03586)
+position = Vector3(1.15, -3.44, -35.5)
+
+[node name="F2HallCeil20" parent="." instance=ExtResource("e19")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.916335, 1, 1.03586)
+position = Vector3(1.15, -0.6, -35.5)
+
+[node name="F2HallFloor30" parent="." instance=ExtResource("e18")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.916335, 1, 1.03586)
+position = Vector3(3.45, -3.44, -35.5)
+
+[node name="F2HallCeil30" parent="." instance=ExtResource("e19")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(0.916335, 1, 1.03586)
+position = Vector3(3.45, -0.6, -35.5)
+
+[node name="F2Slab" type="StaticBody3D" parent="."]
+position = Vector3(0, -3.5, -34.7)
+
+[node name="Shape" type="CollisionShape3D" parent="F2Slab"]
+shape = SubResource("shape_F2Slab")
+
+[node name="F2ColN" type="StaticBody3D" parent="."]
+position = Vector3(0, -2, -36.8)
+
+[node name="Shape" type="CollisionShape3D" parent="F2ColN"]
+shape = SubResource("shape_F2ColN")
+
+[node name="F2ColW" type="StaticBody3D" parent="."]
+position = Vector3(-4.6, -2, -35.5)
+
+[node name="Shape" type="CollisionShape3D" parent="F2ColW"]
+shape = SubResource("shape_F2ColW")
+
+[node name="F2ColE" type="StaticBody3D" parent="."]
+position = Vector3(4.6, -2, -35.5)
+
+[node name="Shape" type="CollisionShape3D" parent="F2ColE"]
+shape = SubResource("shape_F2ColE")
+
+[node name="F2ColSa" type="StaticBody3D" parent="."]
+position = Vector3(-1.05, -2, -34.2)
+
+[node name="Shape" type="CollisionShape3D" parent="F2ColSa"]
+shape = SubResource("shape_F2ColSa")
+
+[node name="F2ColSb" type="StaticBody3D" parent="."]
+position = Vector3(4.05, -2, -34.2)
+
+[node name="Shape" type="CollisionShape3D" parent="F2ColSb"]
+shape = SubResource("shape_F2ColSb")
+
+[node name="F2ColSc" type="StaticBody3D" parent="."]
+position = Vector3(3, -1.03, -34.2)
+
+[node name="Shape" type="CollisionShape3D" parent="F2ColSc"]
+shape = SubResource("shape_F2ColSc")
+
+[node name="F2ColLW" type="StaticBody3D" parent="."]
+position = Vector3(2, -2, -33.4)
+
+[node name="Shape" type="CollisionShape3D" parent="F2ColLW"]
+shape = SubResource("shape_F2ColLW")
+
+[node name="F2ColLE" type="StaticBody3D" parent="."]
+position = Vector3(4, -2, -33.4)
+
+[node name="Shape" type="CollisionShape3D" parent="F2ColLE"]
+shape = SubResource("shape_F2ColLE")
+
+[node name="F2LandPivot" type="Node3D" parent="."]
+position = Vector3(2.566, -3.4, -34.2)
+
+[node name="Body" type="StaticBody3D" parent="F2LandPivot"]
+position = Vector3(0.435, 0.935, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="F2LandPivot/Body"]
+shape = SubResource("shape_f2door")
+
+[node name="F2Night" type="MeshInstance3D" parent="."]
+mesh = SubResource("f2_night")
+surface_material_override/0 = SubResource("m_night")
+rotation = Vector3(0, 1.5708, 0)
+position = Vector3(-5.2, -2, -35.5)
+
+[node name="F2Moon" type="SpotLight3D" parent="."]
+rotation = Vector3(-0.453678, -1.6557, 0)
+position = Vector3(-5.8, -1.1, -35.5)
+light_color = Color(0.5, 0.6, 0.95, 1)
+light_energy = 5.0
+spot_range = 9.0
+spot_angle = 24.0
+shadow_enabled = true
+
+[node name="F2Fill" type="OmniLight3D" parent="."]
+light_color = Color(0.4, 0.45, 0.65, 1)
+light_energy = 0.25
+omni_range = 7.0
+position = Vector3(0, -1.1, -35.5)
+
+[node name="F2BedGlow" type="OmniLight3D" parent="."]
+light_color = Color(1, 0.65, 0.35, 1)
+light_energy = 0.0
+omni_range = 1.4
+position = Vector3(-3.2, -3.32, -37.15)
+
+[node name="F2Photo0" parent="." instance=ExtResource("e113")]
+rotation = Vector3(0, 3.14159, 0)
+scale = Vector3(1, 1, 1)
+position = Vector3(-2, -1.8, -34.28)
+
+[node name="F2Photo1" parent="." instance=ExtResource("e114")]
+rotation = Vector3(0, 3.14159, 0)
+scale = Vector3(1, 1, 1)
+position = Vector3(0.4, -1.85, -34.28)
+
+[node name="F2Photo2" parent="." instance=ExtResource("e115")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(1, 1, 1)
+position = Vector3(-2, -1.8, -36.72)
+
+[node name="F2Photo3" parent="." instance=ExtResource("e116")]
+rotation = Vector3(0, 0, 0)
+scale = Vector3(1, 1, 1)
+position = Vector3(0.4, -1.75, -36.72)
+
+[node name="F2Spawn" type="Marker3D" parent="."]
+position = Vector3(3, -3.35, -35.4)
+
+[node name="Zombie" parent="." instance=ExtResource("e117")]
 visible = false
 position = Vector3(0, 0, -17.2)
 

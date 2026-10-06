@@ -701,6 +701,14 @@
 !/models/vintage/painting_6.fbx.import
 !/models/vintage/phone.fbx
 !/models/vintage/phone.fbx.import
+!/models/vintage/photo_1.fbx
+!/models/vintage/photo_1.fbx.import
+!/models/vintage/photo_2.fbx
+!/models/vintage/photo_2.fbx.import
+!/models/vintage/photo_3.fbx
+!/models/vintage/photo_3.fbx.import
+!/models/vintage/photo_4.fbx
+!/models/vintage/photo_4.fbx.import
 !/models/vintage/photo_frame_desk.fbx
 !/models/vintage/photo_frame_desk.fbx.import
 !/models/vintage/sofa_big.fbx
@@ -861,6 +869,7 @@
 !/scripts/creature.gd.uid
 !/scripts/flicker.gd
 !/scripts/flicker.gd.uid
+!/scripts/floor2.gd
 !/scripts/haunts.gd
 !/scripts/haunts.gd.uid
 !/scripts/intro.gd

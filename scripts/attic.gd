@@ -391,7 +391,7 @@ func _ready() -> void:
 			_fit(n)
 	_setup_men()
 	var h: Node3D = L.get_node("Attic/Hatch")
-	_target("a_hatch", h.global_position + Vector3(0, 0.05, 0), 0.45, 2.6, "LVL_38")
+	_target("a_hatch", h.global_position + Vector3(0.45, 0.05, 0), 0.45, 2.6, "LVL_38")
 	_target("a_trunk", L.get_node("Attic/Trunk1").global_position + Vector3(0, 0.35, 0), 0.45, 2.4, "LVL_42")
 	# у модели платья белый материал по умолчанию — под фонарём он «светится». Приглушённая старая ткань:
 	var dm := StandardMaterial3D.new()
@@ -597,7 +597,7 @@ func target_ok(id: String) -> bool:
 	if id.begins_with("a_form"):
 		return not dressed.has(int(id.right(1))) and not solved
 	if id == "a_board":
-		return solved and not board_open
+		return false                      # ключа больше нет — люк открывается сам
 	if id == "a_trunk":
 		return not trunk_open or (cloth.visible and carry != "Dress")
 	return true
@@ -779,9 +779,18 @@ func _finale() -> void:
 	await get_tree().create_timer(1.4).timeout
 	p.flicker = 0.25
 	L.drone.play()
-	(board.get_node("KeyGlint") as OmniLight3D).light_energy = 0.35
-	L._say("LVL_54", 3.5)
-	L._set_objective("LVL_54")
+	# скрип под полом… и крышка люка сама откидывается
+	await get_tree().create_timer(1.2).timeout
+	var h: Node3D = L.get_node("Attic/Hatch")
+	L._sfx3d("click", h.global_position, -2.0, 0.6)
+	await get_tree().create_timer(0.7).timeout
+	L._sfx3d("door", h.global_position, -2.0, 0.7)
+	create_tween().tween_property(h, "rotation:z", 1.75, 1.6).set_trans(Tween.TRANS_SINE)
+	await get_tree().create_timer(1.0).timeout
+	L._sfx3d("whoosh", h.global_position, -8.0, 0.6)
+	L._say("LVL_63", 3.5)
+	L._set_objective("LVL_64")
+	L.extra_hints["a_hatch"] = "LVL_65"
 	p.frozen = false
 	L.busy = false
 
@@ -802,20 +811,10 @@ func _open_board() -> void:
 
 func _hatch() -> void:
 	var h: Node3D = L.get_node("Attic/Hatch")
-	if not has_key:
+	if not solved:
 		L._sfx3d("knock", h.global_position, -4.0, 0.9)
 		L._say("LVL_39", 3.5)
 		return
-	L.busy = true
-	L.player.frozen = true
-	L._sfx3d("latch_thunk" if ResourceLoader.exists("res://audio/latch_thunk.wav") else "click", h.global_position, -4.0)
-	create_tween().tween_property(h, "rotation:z", -1.7, 1.2).set_trans(Tween.TRANS_SINE)
-	L._sfx3d("door", h.global_position, -4.0, 0.8)
-	L._say("LVL_59", 3.5)
-	await get_tree().create_timer(3.0).timeout
-	create_tween().tween_property(L.fade, "color:a", 1.0, 1.5)
-	await get_tree().create_timer(1.6).timeout
-	L.end_title.text = tr("LVL_30")
-	L.end_text.text = tr("LVL_31")
-	L.end_box.visible = true
-	L.phase = "end"
+	if L.busy:
+		return
+	L.floor2.descend()
