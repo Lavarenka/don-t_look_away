@@ -1,0 +1,37 @@
+АССЕТЫ И ЛИЦЕНЗИИ (проверить всё перед релизом в Steam!)
+
+Свободно, можно в коммерческой игре:
+- Мебель, лампы, бочка, бутылки, текстуры пола/стен/металла — Poly Haven, CC0.
+- Зомби (Run.fbx) — Mixamo (Adobe), бесплатно для игр.
+- Звуки заставки (audio/intro), дома (audio/house) и большинство эффектов в audio/ — Sonniss «GDC 2026 Game Audio Bundle», royalty-free:
+  можно в коммерческих играх, указывать авторов не обязательно. Авторы: 344 Audio, Epic Stock Media,
+  Jake Fielding, Federico Soler, Cinematic Sound Design, InMotionAudio, SoundBits, The Noisery,
+  Alexander Kopeikin, Ivo Vicic, Sonic Bat. Исходники: assets/zvuki/sonniss_vybor/_istochniki.txt
+- Шрифт названия Cormorant SC (fonts/) — Google Fonts, SIL Open Font License 1.1:
+  можно в коммерческой игре, файл лицензии лежит рядом (OFL_CormorantSC.txt).
+- Остальные звуки, обои, портреты, лицо скримера, надписи — сделаны для игры (свои).
+
+- Дом в заставке «Abandoned House» — Leon.com, sketchfab.com/Leone.com, CC BY 4.0.
+- Чердак (CC BY 4.0 — указать авторов):
+  «1890 dress form (size 40)» — Aleksei Moskvin, sketchfab.com/alekseimoskvin1
+  «Red Bow tie» — Obridje, sketchfab.com/Obridje
+  «Treasure Chest» — Multipainkiller Studio, sketchfab.com/Multipainkiller_Studio (CC BY 4.0)
+  «horror_frame» (4 картины) — Kim Pham, sketchfab.com/kimphamjiny
+  «Bloody post-apocalyptic sofa», «Post-apocalyptic bloody chair» — Sousinho, sketchfab.com/sousinho
+  «Closet dusty for a horror game» — Renee Beenen, sketchfab.com/reneetjuhh
+  «Horror night stand» — SmolShadyStudios, sketchfab.com/SmolShadyStudios
+  «Scarf for ZD (TFP)» — Elite Catoy, sketchfab.com/Jerry.com
+  «Maid Dress Test» — pers, sketchfab.com/persnip (рукава убраны)
+- Туфли (leather women's shoes) — Fab, бесплатно; лицензию уточнить на странице Fab.
+- Манекены-люди и их анимации — Mixamo (Adobe), бесплатно для игр.
+
+Нужно проверить или заменить:
+- horror_girl.glb («Horror Girl», LostBoyz2078, Sketchfab) — CC BY-NC: НЕКОММЕРЧЕСКАЯ.
+  Для релиза в Steam ЗАМЕНИТЬ или купить лицензию.
+- horror_corridor_1.glb («Horror corridor 1», Katydid, Sketchfab) — Free Standard:
+  насколько известно, игры разрешены; перед релизом перечитать условия.
+- horror_ghost_character_-_blood_stained_spirit.glb (Sketchfab) — лицензию проверить на странице модели.
+- horror_mask.glb (Sketchfab) — лицензию проверить на странице модели.
+
+Не использовано: young_marceline_horror.glb — фан-модель персонажа из чужого мультфильма,
+такие нельзя ставить в свою игру.

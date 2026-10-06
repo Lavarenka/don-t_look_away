@@ -1,0 +1,143 @@
+keys,en,ru
+CH_1,1. The House,1. Дом
+CH_2,2. Candle Corridor,2. Коридор со свечами
+CH_3,3. The Nursery,3. Детская
+CH_4,4. The Attic,4. Чердак
+CH_LOCKED,— locked —,— закрыто —
+HAUNT_01,Someone is pounding on the front door. Then — silence.,Кто-то ломится во входную дверь. Потом — тишина.
+HAUNT_02,The record stopped by itself.,Пластинка остановилась сама.
+HAUNT_03,E — pick up the phone,E — снять трубку
+HAUNT_04,Someone is breathing heavily on the line...,В трубке кто-то тяжело дышит...
+HAUNT_05,"A child's whisper: ""Misha, are you running away again?""","Детский шёпот: «Миша, ты опять убежишь?»"
+HAUNT_06,Dial tone.,Гудки.
+HAUNT_07,The clock struck three times and stopped.,Часы пробили три раза и встали.
+HAUNT_08,MISHA,Миша
+HAUNT_09,Someone on the line is laughing. Laughing like a madman.,В трубке кто-то хохочет. Хохочет как сумасшедший.
+INTRO_01,Space — skip,Пробел — пропустить
+INTRO_02,"Sukhoy Log, Russia.\nOctober 2026",Сухой Лог.\nОктябрь 2026
+INTRO_03,"Voicemail: ""Mr. Kornev, hello. This is the notary in Sukhoy Log…""","Автоответчик: «Михаил Степанович, здравствуйте. Это нотариус из Сухого Лога…»"
+INTRO_04,"""…Your grandmother, Vera Korneva, passed away last week. I'm sorry for your loss.""","«…Ваша бабушка, Вера Корнева, скончалась на прошлой неделе. Соболезную.»"
+INTRO_05,"""The house on Lipovaya Street is yours now. She left the papers in the china cabinet…""","«Дом на Липовой, семь, теперь ваш. Документы она оставила в серванте…»"
+INTRO_06,"""…And she asked me to pass on something strange: 'Tell Misha not to look away.'""",«…И она просила передать странное: „Пусть Миша не отворачивается“.»
+INTRO_07,"Through the static: ""Misha…""",Сквозь помехи: «Миша…»
+ITEM_BOW,the red bow,красный бант
+ITEM_DRESS,the white dress,белое платье
+ITEM_SCARF,the red scarf,красный шарф
+ITEM_SHOES,the black shoes,чёрные туфли
+LVL_01,"Misha, if you're reading this, the power's out again.\n\nDon't be afraid of them. They won't hurt you, they only watch. The Guest in the living room is still waiting for his show.\n\nThe papers are in the china cabinet. The lock opens if you show three channels on the TV in the right order. I wrote the channels on the back of the photos, by year.\n\nAnd don't turn around if you hear breathing behind you.\n\nGrandma","Миша, если читаешь это, значит свет опять выбило.\n\nНе бойся их. Они ничего тебе не сделают, они только смотрят. Гость в зале всё ещё ждёт свою передачу.\n\nДокументы в серванте. Замок откроется, если показать на телевизоре три канала в правильном порядке. Каналы я записала на обороте фотографий, по годам.\n\nИ не оборачивайся, если услышишь дыхание за спиной.\n\nБабушка"
+LVL_02,"Key to the hallway.\n\nOur portraits hang in the hallway. Light the candles in the order we left you. Then the door at the end will open.\n\nIf you get it wrong, they'll blow the candles out themselves.","Ключ от коридора.\n\nВ коридоре висят наши портреты. Зажги свечи в том порядке, в каком мы ушли. Тогда дверь в конце откроется.\n\nЕсли ошибёшься, они задуют свечи сами."
+LVL_03,E — read the note,E — прочитать записку
+LVL_04,E — look at the photo,E — посмотреть фотографию
+LVL_05,E — change the channel,E — переключить канал
+LVL_06,E — turn off the TV,E — выключить телевизор
+LVL_07,E — open the cabinet,E — открыть сервант
+LVL_08,E — take the key,E — взять ключ
+LVL_09,E — open the door,E — открыть дверь
+LVL_10,E — light the candle,E — зажечь свечу
+LVL_11,Look around the entryway,Осмотрись в прихожей
+LVL_12,OBJECTIVE:  ,ЗАДАЧА:  
+LVL_13,"Photo, 1975: Grandma on the porch. On the back: ""Channel 3"".",Фото 1975 года: бабушка у крыльца. На обороте: «Канал 3».
+LVL_14,"Photo, 1976: Grandpa up a power pole. On the back: ""Channel 7"".",Фото 1976 года: дед с проводами на столбе. На обороте: «Канал 7».
+LVL_15,"Photo, 1977: a man in this very armchair. On the back: ""Channel 5"".",Фото 1977 года: мужчина в этом же кресле. На обороте: «Канал 5».
+LVL_16,"Locked. Scratched into the lock: ""TV"".",Заперто. На замке нацарапано: «Телевизор».
+LVL_17,The hallway key and a shard of mirror. There's a note under the key.,Ключ от коридора и осколок зеркала. Под ключом записка.
+LVL_18,Open the door to the hallway,Открой дверь в коридор
+LVL_19,Locked. The key must be in the cabinet.,Заперто. Ключ должен быть в серванте.
+LVL_20,Light the candles under the portraits in the right order,Зажги свечи у портретов в правильном порядке
+LVL_21,Locked. The candles first.,Заперто. Сначала свечи.
+LVL_22,Find the right channels on the TV,Найди на телевизоре нужные каналы
+LVL_23,The armchair is empty. The cabinet doors opened by themselves.,Кресло пустое. Дверцы серванта открылись сами.
+LVL_24,Take the key from the cabinet,Возьми ключ из серванта
+LVL_25,Someone blew out the candles.,Кто-то задул свечи.
+LVL_26,A lock clicked at the end of the hallway.,В конце коридора щёлкнул замок.
+LVL_27,Go through the door at the end of the hallway,Выйди через дверь в конце коридора
+LVL_28,Don't turn around.,Не оборачивайся.
+LVL_29,Search Anya's room,Осмотри детскую Ани
+LVL_30,End of the demo,Конец тестовой версии
+LVL_31,To be continued…\nPress R to play again,"Продолжение следует…\nНажмите R, чтобы начать заново"
+LVL_32,"The fuses blew. The papers are in the cabinet, in the living room.","Выбило пробки. Документы в серванте, в зале."
+LVL_33,Find the papers in the cabinet (living room),Найди документы в серванте (зал)
+LVL_34,[F10] Jump to the nursery,[F10] Перенос в детскую
+LVL_35,[F9] Jump to the hallway,[F9] Перенос в коридор
+LVL_36,Find a way out of the attic,Найди выход с чердака
+LVL_37,...The attic? How did I get up here?,...Чердак? Как я сюда попал?
+LVL_38,E — open the hatch,E — открыть люк
+LVL_39,The hatch won't budge. It's locked from below.,Люк не поддаётся. Заперт снизу.
+LVL_40,Something is breathing on the other side of the hatch.,С той стороны люка кто-то дышит.
+LVL_41,[F11] Jump to the attic,[F11] Переход на чердак
+LVL_42,E — open the trunk,E — открыть сундук
+LVL_43,Inside: a crumpled white dress. Who was it for?,Внутри скомканное белое платье. Для кого оно?
+LVL_44,E — take,E — взять
+LVL_47,E — look at the photo again,E — ещё раз посмотреть фото
+LVL_48,E — put it on,E — надеть
+LVL_49,No. In the photo it had something else on.,Не то. На фотографии на нём было другое.
+LVL_50,Something used to be on this one. The photo will tell me what.,На нём что-то было. Фотография подскажет что.
+LVL_51,Dress the mannequins as in Grandma's photo,"Одень манекены, как на фотографии бабушки"
+LVL_52,"Photo, 1979. Grandma's mannequins, left to right: the white dress, the red scarf, the red bow, the black shoes. On the back: ""They always look where it's hidden.""","Фото, 1979. Манекены бабушки, слева направо: белое платье, красный шарф, красный бант, чёрные туфли. На обороте: «Они всегда смотрят туда, где спрятано»."
+LVL_53,All four are dressed. They're... turning.,Все четверо одеты. Они... поворачиваются.
+LVL_54,Look where they're looking,"Посмотри, куда они смотрят"
+LVL_55,E — lift the loose floorboard,E — поднять расшатанную половицу
+LVL_56,Under the floorboard — a rusty key.,Под половицей — ржавый ключ.
+LVL_57,Open the hatch in the floor,Открой люк в полу
+LVL_58,E — unlock the hatch,E — отпереть люк
+LVL_59,The key fits. Below: darkness and a ladder.,Ключ подошёл. Внизу темнота и лестница.
+LVL_60,Taken: %s.,Взял: %s.
+LVL_61,I put the dress back in the trunk.,Платье положил обратно в сундук.
+LVL_62,E — pick up the photo,E — поднять фотографию
+LVL_PORTRAIT_1,Vera\n1938 – 2026,Вера\n1938 – 2026
+LVL_PORTRAIT_2,Stepan\n1935 – 1991,Степан\n1935 – 1991
+LVL_PORTRAIT_3,Anya\n1998 – 2004,Аня\n1998 – 2004
+MENU_01,Don't turn around if you hear breathing behind you.,"Не оборачивайтесь, если слышите дыхание за спиной."
+MENU_02,They don't move while your light is on them.,"Они не двигаются, пока на них светят."
+MENU_03,Grandma's notes will help with the puzzles.,Записки бабушки помогут с загадками.
+MENU_04,Play with headphones.,Играйте в наушниках.
+MENU_05,DON'T LOOK AWAY,НЕ ОТВОРАЧИВАЙСЯ
+MENU_06,demo,тестовая версия
+MENU_07,New Game,Начать игру
+MENU_08,Graphics: ,Графика: 
+MENU_09,Quit,Выход
+MENU_10,WASD — move   Mouse — look   E — interact   F — flashlight   Esc — pause,WASD — ходить   мышь — смотреть   E — действие   F — фонарь   Esc — пауза
+MENU_11,Loading…,Загрузка…
+MENU_12,Failed to load the level.,Не удалось загрузить уровень.
+MENU_BACK,Back,Назад
+MENU_CHAPTERS,Chapters,Главы
+MENU_FS,Fullscreen: ,Полный экран: 
+MENU_LANG,Language: English,Язык: Русский
+MENU_OFF,Off,Выкл
+MENU_ON,On,Вкл
+MENU_SENS,Mouse sensitivity: ,Чувствительность мыши: 
+MENU_SETTINGS,Settings,Настройки
+MENU_VOL,Volume: ,Громкость: 
+NUR_01,yellow,жёлтая
+NUR_02,red,красная
+NUR_03,blue,синяя
+NUR_04,green,зелёная
+NUR_05,white,белая
+NUR_06,"Anya's drawing: a yellow sun. In the corner, the number 1.",Рисунок Ани: жёлтое солнышко. В углу цифра 1.
+NUR_07,"Anya's drawing: Grandma's red house, and the two of us. Number 2.",Рисунок Ани: красный бабушкин дом и мы с ней. Цифра 2.
+NUR_08,Anya's drawing: a blue river. Number 3.,Рисунок Ани: синяя речка. Цифра 3.
+NUR_09,Anya's drawing: a green forest. Someone tall stands between the trees. Number 4.,Рисунок Ани: зелёный лес. Между ёлками стоит кто-то высокий. Цифра 4.
+NUR_10,"White chalk on black paper: ""Don't look away"". Number 5.",Белым мелом на чёрной бумаге: «Не отворачивайся». Цифра 5.
+NUR_11,A note taped to the music box. A child's handwriting:\n\nMISHA IF YOU COME BACK\nPLAY MY SONG\nBY MY DRAWINGS\nIN ORDER\n\nAnd I'll hide.,"Записка, приклеенная к шкатулке. Детский почерк:\n\nМИША ЕСЛИ ТЫ ВЕРНЁШЬСЯ\nСЫГРАЙ МОЮ ПЕСЕНКУ\nПО МОИМ РИСУНКАМ\nПО ПОРЯДКУ\n\nА я спрячусь."
+NUR_12,E — look at the drawing,E — посмотреть рисунок
+NUR_13,E — reach for the drawing under the bed,E — достать рисунок из-под кровати
+NUR_14,E — read the note on the music box,E — прочитать записку на шкатулке
+NUR_15,E — %s key,E — %s клавиша
+NUR_16,E or click — close,E или клик мышью — закрыть
+NUR_17,The nursery. Someone is... dancing in the middle of the room.,Детская. Посреди комнаты кто-то... танцует.
+NUR_18,Quiet laughter. The music box falls silent.,Тихий смех. Шкатулка замолчала.
+NUR_19,Play Anya's song on the music box,Сыграй мелодию Ани на шкатулке
+NUR_20,E — reread the note,E — перечитать записку
+NUR_21,The music box plays out of tune. Something creaked in the room.,Шкатулка фальшивит. Где-то в комнате скрипнуло.
+NUR_22,"A whisper from under the bed: ""Found you...""",Шёпот из-под кровати: «Нашла...»
+NUR_23,The music box plays by itself. All the toys are looking at me.,Шкатулка играет сама. Все игрушки смотрят на меня.
+NUR_24,"""Now you're it, Misha.""","«Теперь ты водишь, Миша»."
+NUR_25,One...,Раз...
+NUR_26,Two...,Два...
+NUR_27,Three...,Три...
+PAUSE_01,PAUSED,ПАУЗА
+PAUSE_02,Resume,Продолжить
+PAUSE_03,Main Menu,В главное меню
+SET_01,Low,Низкое
+SET_02,Medium,Среднее
+SET_03,High,Высокое
