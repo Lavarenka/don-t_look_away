@@ -372,7 +372,7 @@ func _drawer_open() -> void:
 		create_tween().tween_property(dr, "position:z", dr.position.z - 0.03, 0.06)
 		_once3d("knock", dr.global_position, -6.0, 1.6)
 		await _wait(0.3)
-	_once3d("drag", dr.global_position, -6.0, 1.5)
+	_once3d("drawer", dr.global_position, -4.0, 1.0)
 	create_tween().tween_property(dr, "position:z", dr.position.z + 0.32, 1.2).set_trans(Tween.TRANS_SINE)
 
 

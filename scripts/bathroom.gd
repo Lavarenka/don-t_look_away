@@ -432,7 +432,7 @@ func _open_drawer() -> void:
 	await get_tree().create_timer(0.5).timeout
 	# ящик со скрипом выезжает
 	drawer_hole.visible = true
-	L._sfx3d("drag", DRAWER, -4.0, 1.3)
+	L._sfx3d("drawer", DRAWER, -2.0, 0.95)
 	L._sfx3d("creak", DRAWER, -8.0, 1.7)
 	var out := create_tween()
 	out.tween_property(drawer, "position:x", DRAWER.x + 0.33, 1.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)

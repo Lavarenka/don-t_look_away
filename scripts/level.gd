@@ -428,10 +428,17 @@ func _loop_stream(n: String) -> AudioStream:
 	return st
 
 
+## Звук по имени; если есть варианты (giggle_2.wav, giggle_3.wav…) — каждый раз случайный.
 func _stream(n: String) -> AudioStream:
 	if not sfx_cache.has(n):
-		sfx_cache[n] = load("res://audio/%s.wav" % n)
-	return sfx_cache[n]
+		var v := [load("res://audio/%s.wav" % n)]
+		for i in range(2, 6):
+			var pth := "res://audio/%s_%d.wav" % [n, i]
+			if ResourceLoader.exists(pth):
+				v.append(load(pth))
+		sfx_cache[n] = v
+	var arr: Array = sfx_cache[n]
+	return arr[randi() % arr.size()]
 
 
 func _sfx(n: String, db := 0.0, pitch := 1.0) -> void:
