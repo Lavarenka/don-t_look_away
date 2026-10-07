@@ -86,7 +86,7 @@ var amb_layers := {}
 var tv_static: AudioStreamPlayer3D
 var sfx_cache := {}
 var last_loud := -100.0      ## когда звучал последний громкий звук (крик, скример, удар)
-const LOUD := ["scream", "scream_mask", "sting", "bang", "whisper_harsh", "roar", "girl_appear", "phone_call", "gurgle", "pipes", "heartbeat", "far_moan", "far_whisper", "far_scream"]
+const LOUD := ["scream", "scream_mask", "sting", "bang", "whisper_harsh", "girl_appear", "phone_call", "gurgle", "pipes", "heartbeat", "far_moan", "far_whisper", "far_scream"]
 var tv_mat: StandardMaterial3D
 
 const NOTE_TEXT := "LVL_01"
