@@ -193,9 +193,6 @@ func _show(i: int) -> void:
 
 # ---------------- шкатулка ----------------
 func _press(k: int) -> void:
-	# стоило тронуть шкатулку — дверь детской захлопывается: убежать уже не выйдет
-	if not door_locked:
-		_lock_door()
 	var key: Node3D = L.get_node("MusicBox/Key%d" % k)
 	var tw := create_tween()
 	tw.tween_property(key, "position:y", 0.1, 0.06)
@@ -309,6 +306,9 @@ func _solve() -> void:
 	solved = true
 	L.busy = true
 	var p = L.player
+	# мелодия сыграна — дверь детской тут же захлопывается: убежать уже не выйдет
+	if not door_locked:
+		_lock_door()
 	L._sfx3d("mb_windup", L.get_node("MusicBox").global_position, -2.0)   # шкатулка заводится сама
 	await get_tree().create_timer(1.6).timeout
 	# шкатулка играет мелодию сама, все игрушки разом поворачиваются к игроку

@@ -33,6 +33,9 @@ var _chair_tv := 0.0
 var _anya: Node3D
 var _anya_seen := 0.0
 var _anya_step := 0
+var _anya_gone := false        ## скример в осколке уже был
+var _anya_alive := false
+var _anya_lunge := false
 var _corr_hint_t := -1.0
 
 
@@ -130,6 +133,47 @@ func candle_mistake() -> void:
 		var rest := 0.0 if _candle_mist < 2 else randf_range(-0.12, 0.12)
 		tw.tween_method(_tilt.bind(p), randf_range(-0.05, 0.05), rest, 0.1)
 		L._sfx3d("knock", fr.global_position, -6.0, randf_range(1.4, 1.8))
+
+
+## Скример: призрак резко прыгает в лицо и пропадает. g — узел spirit.gd.
+func ghost_lunge(g: Node3D, after := Callable(), keep_pos := false) -> void:
+	var cam: Camera3D = L.player.cam
+	var fwd: Vector3 = L.player.forward()
+	fwd.y = 0.0
+	fwd = fwd.normalized()
+	var feet_y: float = cam.global_position.y - 1.52
+	g.set_layer(1 | MIRROR_LAYER)          # теперь её видно и без осколка
+	g.visible = true
+	if not keep_pos:                       # иначе прыгает оттуда, где уже стоит
+		var from := cam.global_position + fwd * 1.3
+		g.global_position = Vector3(from.x, feet_y, from.z)
+	else:
+		var d: Vector3 = g.global_position - cam.global_position
+		d.y = 0.0
+		fwd = d.normalized()
+	g.rotation.y = atan2(-fwd.x, -fwd.z)
+	g.play_from("reach", 1.2, 1.4)
+	g.set_blood(1.0)
+	# мертвенный свет на лице — чтобы в темноте её было видно целиком
+	var face := OmniLight3D.new()
+	face.light_color = Color(0.75, 0.82, 1.0)
+	face.light_energy = 1.6
+	face.omni_range = 1.6
+	face.position = Vector3(0, 1.45, 0.55)
+	g.add_child(face)
+	L._sfx("scream", 0.0, 1.25)
+	L._sfx("sting", 0.0)
+	var to := cam.global_position + fwd * 0.38
+	create_tween().tween_property(g, "global_position", Vector3(to.x, feet_y + 0.06, to.z), 0.16).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	L.player.shake = 1.0
+	L.red_flash.color.a = 0.3
+	create_tween().tween_property(L.red_flash, "color:a", 0.0, 0.9)
+	await get_tree().create_timer(0.75).timeout
+	L.player.flicker = 0.7
+	g.visible = false
+	face.queue_free()
+	if after.is_valid():
+		after.call()
 
 
 ## Наклон портрета в раме (рамка и картинка вместе).
@@ -284,7 +328,9 @@ func _update_corridor(delta: float) -> void:
 		_anya.visible = false
 		_turn_t = 0.0
 		return
-	_anya.visible = true
+	if _anya_lunge:
+		return
+	_anya.visible = not _anya_gone
 	_anya.look_at(Vector3(L.player.global_position.x, 0, L.player.global_position.z), Vector3.UP, true)
 	# подсказка, если игрок долго не поднимает осколок
 	if _corr_hint_t < 0.0:
@@ -294,11 +340,32 @@ func _update_corridor(delta: float) -> void:
 		if _corr_hint_t > 25.0:
 			_corr_hint_t = -1000.0
 			L._say("PZ_SHARD_NAG", 4.5)
-	# Аня в осколке: увидел — опусти стекло, и она уже в другом месте
-	if _raise >= 1.0 and L._sees(_anya.global_position + Vector3(0, 1.2, 0), 0.25, false):
+	# Аня в осколке: пока на неё смотришь — оживает и медленно идёт к тебе;
+	# смотришь слишком долго — прыгает в лицо (один раз за игру).
+	# Опустил стекло — она уже в другом месте.
+	if _anya_gone:
+		pass
+	elif _raise >= 1.0 and L._sees(_anya.global_position + Vector3(0, 1.2, 0), 0.3, false):
 		_anya_seen += delta
-	elif _anya_seen > 0.8 and _raise <= 0.0:
+		if _anya_seen > 0.6 and not _anya_alive:
+			_anya_alive = true
+			_anya.play_from("zidle", 0.3, 0.55)
+			_anya.set_blood(0.6)
+			L._sfx("heartbeat", -8.0)
+		if _anya_alive:
+			var to: Vector3 = L.player.global_position - _anya.global_position
+			to.y = 0.0
+			if to.length() > 1.3:
+				_anya.global_position += to.normalized() * delta * 0.35
+		if _anya_seen > 3.2:
+			_anya_lunge = true
+			holding = false
+			ghost_lunge(_anya, func(): _anya_gone = true; _anya_lunge = false)
+	elif _anya_seen > 0.6 and _raise <= 0.0:
 		_anya_seen = 0.0
+		_anya_alive = false
+		_anya.play("idle", 0.4)
+		_anya.set_blood(0.3)
 		_anya_step += 1
 		var spots := [Vector3(-0.55, 0, -9.55), Vector3(0.55, 0, -13.2), Vector3(-0.4, 0, -16.6)]
 		_anya.position = spots[_anya_step % spots.size()]

@@ -22,7 +22,7 @@ const TAP := Vector3(-0.46, Y2 + 1.0, -38.62)     ## кран раковины
 const MIRROR_C := Vector3(-0.455, Y2 + 1.5, -38.57)
 const LOCK := Vector3(-0.46, Y2 + 0.62, -39.3)
 const TUB := Vector3(0.285, Y2, -40.95)          ## центр ванны (на уровне пола)
-const WATER_TOP := 0.72
+const WATER_TOP := 0.64
 const WATER_LOW := 0.2
 const INNER_HINGE := Vector3(-1.685, Y2, -38.47)  ## петля двери между тамбуром и ванной
 const INNER_C := Vector3(-2.115, Y2 + 1.0, -38.455)
@@ -44,6 +44,7 @@ var has_hook := false
 var drained := false
 var key_taken := false
 var has_bedkey := false
+var exit_scare := 0       ## 0 — ещё нет, 1 — дверь захлопнется, 4 — захлопывается, 2 — ждёт за дверью, 3 — было
 var mistakes := 0
 var digits := [0, 0, 0]
 var sel := 0
@@ -188,18 +189,13 @@ func _build_door() -> void:
 func _build_props() -> void:
 	# чёрная вода в ванне
 	water = MeshInstance3D.new()
-	var cm := CylinderMesh.new()
-	cm.top_radius = 0.5
-	cm.bottom_radius = 0.5
-	cm.height = 0.004
-	cm.radial_segments = 40
-	water.mesh = cm
-	water.scale = Vector3(0.6, 1, 1.42)
-	var wm := StandardMaterial3D.new()
-	wm.albedo_color = Color(0.012, 0.01, 0.01)
-	wm.roughness = 0.04
-	wm.metallic = 0.4
+	var pmw := PlaneMesh.new()
+	pmw.size = Vector2(0.7, 1.5)
+	water.mesh = pmw
+	var wm := ShaderMaterial.new()
+	wm.shader = load("res://shaders/murky_water.gdshader")
 	water.material_override = wm
+	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	water.position = TUB + Vector3(0, WATER_TOP, 0)
 	L.add_child(water)
 	# струя из крана
@@ -547,6 +543,7 @@ func interact(id: String) -> void:
 			L._sfx("pickup", -6.0)
 			L._say("B_KEY", 4.5)
 			L._set_objective("B_OBJ4")
+			exit_scare = 1
 
 
 ## Дверь ванной открывается сама (когда игрок подёргал несколько дверей).
@@ -592,6 +589,7 @@ func _drain() -> void:
 	L._sfx3d("gurgle", TUB + Vector3(0, 0.5, 0), 2.0)
 	var tw := create_tween()
 	tw.tween_property(water, "position:y", TUB.y + WATER_LOW, 6.0).set_trans(Tween.TRANS_SINE)
+	tw.parallel().tween_property(water, "scale", Vector3(0.82, 1, 0.9), 6.0)   # ко дну ванна уже
 	# ключ на дне
 	key_mesh = L.key_node.duplicate()
 	key_mesh.visible = true
@@ -638,6 +636,8 @@ func try_bedroom() -> bool:
 func _process(delta: float) -> void:
 	if L == null or L.phase != "floor2":
 		return
+	if exit_scare in [1, 2]:
+		_update_exit_scare()
 	# капает кран (слышно и из холла)
 	if not running and not drained:
 		next_drip -= delta
@@ -669,6 +669,47 @@ func _process(delta: float) -> void:
 		if look_t > 2.2:
 			ghost_done = true
 			_mirror_ghost()
+
+
+## Уходишь из ванной с ключом: дверь в тамбур захлопывается, а когда её откроешь —
+## за ней стоит она, вплотную, и прыгает в лицо.
+func _update_exit_scare() -> void:
+	match exit_scare:
+		1:
+			var p: Vector3 = L.player.global_position
+			if Vector2(p.x - INNER_C.x, p.z - INNER_C.z).length() > 1.4 and not L.busy:
+				exit_scare = 4          # дверь захлопывается
+				var tw := create_tween()
+				tw.tween_property(inner_pivot, "rotation:y", INNER_CLOSED, 0.3).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+				await tw.finished
+				exit_scare = 2
+				L._sfx3d("door", INNER_C, 2.0, 1.3)
+				L._sfx("bang", -4.0, 0.9)
+				L.player.shake = 0.35
+				L.player.flicker = 0.4
+				_candle(false)
+				L._say("B_SLAM", 3.0)
+		2:
+			if L.doors.is_open("bath_in"):
+				exit_scare = 3
+				_exit_ghost()
+
+
+func _exit_ghost() -> void:
+	var g: Node3D = SPIRIT.new()
+	L.add_child(g)
+	g.set_layer(1 | MIRROR_LAYER)
+	g.global_position = Vector3(INNER_C.x - 0.1, Y2, INNER_C.z + 0.45)
+	var to: Vector3 = L.player.global_position - g.global_position
+	g.rotation.y = atan2(to.x, to.z)
+	g.play_from("zidle", 2.2, 0.35)
+	g.set_blood(1.0)
+	L._sfx("heartbeat", 0.0, 1.2)
+	await get_tree().create_timer(0.75).timeout
+	await L.hallp.ghost_lunge(g, Callable(), true)
+	g.queue_free()
+	await get_tree().create_timer(1.2).timeout
+	_candle(true)
 
 
 func _mirror_ghost() -> void:

@@ -984,6 +984,8 @@
 !/scripts/vintage.gd.uid
 !/shaders/grain.gdshader
 !/shaders/grain.gdshader.uid
+!/shaders/murky_water.gdshader
+!/shaders/murky_water.gdshader.uid
 !/shaders/spirit.gdshader
 !/shaders/spirit.gdshader.uid
 !/textures/attic_photo.png
