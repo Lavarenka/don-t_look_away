@@ -46,6 +46,12 @@
 !/audio/drip.wav.import
 !/audio/drone.wav
 !/audio/drone.wav.import
+!/audio/far_moan.wav
+!/audio/far_moan.wav.import
+!/audio/far_scream.wav
+!/audio/far_scream.wav.import
+!/audio/far_whisper.wav
+!/audio/far_whisper.wav.import
 !/audio/giggle.wav
 !/audio/giggle.wav.import
 !/audio/giggle_2.wav
@@ -134,6 +140,8 @@
 !/audio/pickup.wav.import
 !/audio/pipes.wav
 !/audio/pipes.wav.import
+!/audio/roar.wav
+!/audio/roar.wav.import
 !/audio/scratch.wav
 !/audio/scratch.wav.import
 !/audio/scream.wav
@@ -958,6 +966,8 @@
 !/scripts/bathroom.gd.uid
 !/scripts/creature.gd
 !/scripts/creature.gd.uid
+!/scripts/distant.gd
+!/scripts/distant.gd.uid
 !/scripts/doors.gd
 !/scripts/doors.gd.uid
 !/scripts/flicker.gd

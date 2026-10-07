@@ -85,6 +85,8 @@ var drone: AudioStreamPlayer
 var amb_layers := {}
 var tv_static: AudioStreamPlayer3D
 var sfx_cache := {}
+var last_loud := -100.0      ## когда звучал последний громкий звук (крик, скример, удар)
+const LOUD := ["scream", "scream_mask", "sting", "bang", "whisper_harsh", "roar", "girl_appear", "phone_call", "gurgle", "pipes", "heartbeat", "far_moan", "far_whisper", "far_scream"]
 var tv_mat: StandardMaterial3D
 
 const NOTE_TEXT := "LVL_01"
@@ -205,6 +207,9 @@ func _ready() -> void:
 	attic = preload("res://scripts/attic.gd").new()
 	attic.L = self
 	add_child(attic)
+	var distant := preload("res://scripts/distant.gd").new()
+	distant.L = self
+	add_child(distant)
 	hallp = preload("res://scripts/hall_puzzle.gd").new()
 	hallp.L = self
 	add_child(hallp)
@@ -428,6 +433,11 @@ func _loop_stream(n: String) -> AudioStream:
 	return st
 
 
+## Вокруг тихо уже sec секунд: нет громких звуков, катсцен и скримеров.
+func quiet_for(sec: float) -> bool:
+	return time_now - last_loud > sec and not busy and scare_t < 0.0 and not shade.visible
+
+
 ## Звук по имени; если есть варианты (giggle_2.wav, giggle_3.wav…) — каждый раз случайный.
 func _stream(n: String) -> AudioStream:
 	if not sfx_cache.has(n):
@@ -442,6 +452,8 @@ func _stream(n: String) -> AudioStream:
 
 
 func _sfx(n: String, db := 0.0, pitch := 1.0) -> void:
+	if n in LOUD and db > -12.0:
+		last_loud = time_now
 	var p := AudioStreamPlayer.new()
 	p.stream = _stream(n)
 	p.volume_db = db
@@ -452,6 +464,8 @@ func _sfx(n: String, db := 0.0, pitch := 1.0) -> void:
 
 
 func _sfx3d(n: String, pos: Vector3, db := 0.0, pitch := 1.0) -> void:
+	if n in LOUD and db > -12.0:
+		last_loud = time_now
 	var p := AudioStreamPlayer3D.new()
 	p.stream = _stream(n)
 	p.volume_db = db
