@@ -6,7 +6,7 @@ B_KEY,"A key on a faded ribbon. The tag says: ""Vera"". Grandma's bedroom.",Кл
 B_KEY_H,E — take the key,E — взять ключ
 B_LOCK_H,E — the combination padlock,E — кодовый замок
 B_LOCK_KEYS,A/D — wheel   W/S — digit   E — pull   Esc — back,A/D — колесо   W/S — цифра   E — дёрнуть   Esc — назад
-B_LOCK_OK,Click. In the cabinet: Grandpa's long wire hook.,Щёлк. В шкафчике — дедов длинный проволочный крюк.
+B_LOCK_OK,"Click. The drawer slides out... Grandpa's long wire hook, wrapped in a rag.","Щёлк. Ящик выезжает... Дедов длинный проволочный крюк, завёрнутый в тряпку."
 B_LOCK_TITLE,Combination padlock,Кодовый замок
 B_LOCK_TRY,Pull,Дёрнуть
 B_LOCK_WRONG,Won't open.,Не открывается.
@@ -14,7 +14,7 @@ B_MIRROR0,Small handprints on the glass. The mirror is cold as ice — it needs 
 B_MIRROR1,"Numbers, drawn with a finger... backwards. As if someone wrote them from the other side of the glass.","Цифры, нарисованные пальцем... задом наперёд. Будто кто-то писал их с той стороны стекла."
 B_MIRROR_H,E — look at the mirror,E — посмотреть в зеркало
 B_OBJ1,Look around the bathroom,Осмотри ванную
-B_OBJ2,Open the padlock on the sink cabinet,Открой кодовый замок на шкафчике под раковиной
+B_OBJ2,Open the padlock on the vanity drawer,Открой кодовый замок на ящике тумбы
 B_OBJ3,Pull the plug out of the bath,Вытащи пробку из ванны
 B_OBJ4,Open Grandma's bedroom,Открой спальню бабушки
 B_OPEN,A click... The bathroom door opened by itself.,Щелчок... Дверь ванной открылась сама.

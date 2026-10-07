@@ -19,7 +19,8 @@ const MIRROR_LAYER := 1 << 10
 const REAL_LAYER := 1 << 11
 const TAP := Vector3(-0.46, Y2 + 1.0, -38.62)     ## кран раковины
 const MIRROR_C := Vector3(-0.455, Y2 + 1.5, -38.57)
-const LOCK := Vector3(-0.46, Y2 + 0.62, -39.3)
+const LOCK := Vector3(-3.035, Y2 + 0.6, -40.23)    ## замок висит на ящике тумбы у западной стены
+const DRAWER := Vector3(-3.058, Y2 + 0.61, -40.23)  ## центр лицевой панели ящика (смотрит в +X)
 const TUB := Vector3(0.285, Y2, -40.95)          ## центр ванны (на уровне пола)
 const WATER_TOP := 0.53
 const WATER_LOW := 0.2
@@ -63,6 +64,9 @@ var fig_mat: StandardMaterial3D
 var candle_light: OmniLight3D
 var candle_flame: MeshInstance3D
 var key_mesh: Node3D
+var drawer: Node3D
+var drawer_hole: MeshInstance3D
+var hook: Node3D
 var panel: PanelContainer
 var digit_labels: Array[Label] = []
 
@@ -278,9 +282,11 @@ func _build_props() -> void:
 	water_snd.volume_db = -6.0
 	water_snd.position = TAP
 	L.add_child(water_snd)
-	# кодовый замок на дверцах шкафчика
+	_build_drawer()
+	# кодовый замок на ящике тумбы
 	var lock := Node3D.new()
 	lock.position = LOCK
+	lock.rotation.y = -PI / 2
 	L.add_child(lock)
 	var brass := StandardMaterial3D.new()
 	brass.albedo_color = Color(0.55, 0.42, 0.2)
@@ -317,6 +323,136 @@ func _build_props() -> void:
 		wheel.material_override = wmat
 		lock.add_child(wheel)
 	lock.name = "BathLock"
+
+
+## Выдвижной ящик тумбы: лицевая панель — снимок настоящей панели модели (textures/vanity_drawer.jpg),
+## за ней «дыра» (видна, когда ящик выдвинут), внутри — дедов проволочный крюк на тряпице.
+func _build_drawer() -> void:
+	var wood := StandardMaterial3D.new()
+	wood.albedo_color = Color(0.2, 0.12, 0.07)
+	wood.roughness = 0.8
+	drawer_hole = MeshInstance3D.new()
+	var hq := QuadMesh.new()
+	hq.size = Vector2(0.93, 0.12)
+	drawer_hole.mesh = hq
+	var hm := StandardMaterial3D.new()
+	hm.albedo_color = Color(0.01, 0.008, 0.006)
+	drawer_hole.material_override = hm
+	drawer_hole.position = DRAWER + Vector3(0.001, 0, 0)
+	drawer_hole.rotation.y = PI / 2
+	drawer_hole.visible = false
+	L.add_child(drawer_hole)
+	drawer = Node3D.new()
+	drawer.position = DRAWER + Vector3(0.002, 0, 0)
+	L.add_child(drawer)
+	var front := MeshInstance3D.new()
+	var fq := QuadMesh.new()
+	fq.size = Vector2(0.952, 0.132)
+	front.mesh = fq
+	var fmat := StandardMaterial3D.new()
+	fmat.albedo_texture = load("res://textures/vanity_drawer.jpg")
+	fmat.roughness = 0.75
+	front.material_override = fmat
+	front.rotation.y = PI / 2
+	drawer.add_child(front)
+	# короб ящика: дно, бока, задняя стенка (уходят внутрь тумбы, в −X)
+	for b in [[Vector3(0.38, 0.012, 0.9), Vector3(-0.2, -0.055, 0)], [Vector3(0.38, 0.11, 0.015), Vector3(-0.2, 0, 0.44)],
+			[Vector3(0.38, 0.11, 0.015), Vector3(-0.2, 0, -0.44)], [Vector3(0.015, 0.11, 0.9), Vector3(-0.39, 0, 0)],
+			[Vector3(0.015, 0.125, 0.94), Vector3(-0.008, 0, 0)]]:
+		var m := MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = b[0]
+		m.mesh = bm
+		m.position = b[1]
+		m.material_override = wood
+		drawer.add_child(m)
+	# тряпица и крюк внутри
+	var cloth := MeshInstance3D.new()
+	var cm := BoxMesh.new()
+	cm.size = Vector3(0.28, 0.004, 0.5)
+	cloth.mesh = cm
+	var clm := StandardMaterial3D.new()
+	clm.albedo_color = Color(0.3, 0.26, 0.2)
+	clm.roughness = 1.0
+	cloth.material_override = clm
+	cloth.position = Vector3(-0.18, -0.047, 0.05)
+	cloth.rotation.y = 0.12
+	drawer.add_child(cloth)
+	hook = Node3D.new()
+	hook.position = Vector3(-0.17, -0.038, 0.02)
+	hook.rotation.y = PI / 2 + 0.25
+	drawer.add_child(hook)
+	var steel := StandardMaterial3D.new()
+	steel.albedo_color = Color(0.35, 0.33, 0.3)
+	steel.metallic = 0.8
+	steel.roughness = 0.45
+	for part in [[0.42, Vector3(0, 0, 0), 0.0], [0.07, Vector3(0.226, 0, 0.022), 1.0], [0.04, Vector3(0.24, 0, 0.055), 2.3]]:
+		var w := MeshInstance3D.new()
+		var wm := CylinderMesh.new()
+		wm.top_radius = 0.0035
+		wm.bottom_radius = 0.0035
+		wm.height = part[0]
+		w.mesh = wm
+		w.rotation = Vector3(0, part[2], PI / 2)
+		w.position = part[1]
+		w.material_override = steel
+		hook.add_child(w)
+	var ring := MeshInstance3D.new()
+	var rm := TorusMesh.new()
+	rm.inner_radius = 0.012
+	rm.outer_radius = 0.018
+	ring.mesh = rm
+	ring.position = Vector3(-0.225, 0, 0)
+	ring.material_override = steel
+	hook.add_child(ring)
+
+
+## Код верный: катсцена — замок падает, ящик выезжает, Миша берёт крюк.
+func _open_drawer() -> void:
+	var p = L.player
+	L.busy = true
+	p.frozen = true
+	p.set_physics_process(false)
+	p.velocity = Vector3.ZERO
+	L.hint_label.text = ""
+	L.floor2._letterbox(true)
+	# встать перед тумбой и посмотреть вниз, на ящик
+	await L.floor2._move(Vector3(DRAWER.x + 0.95, Y2 + 0.02, DRAWER.z), PI / 2, -0.88, 1.1)
+	var lock: Node3D = L.get_node("BathLock")
+	var sh := lock.get_node("Shackle") as Node3D
+	L._sfx3d("clink", LOCK, -2.0, 0.8)
+	create_tween().tween_property(sh, "position:y", 0.075, 0.2)
+	await get_tree().create_timer(0.45).timeout
+	# замок соскакивает и падает на пол
+	var fall := create_tween().set_parallel()
+	fall.tween_property(lock, "position", Vector3(LOCK.x + 0.12, Y2 + 0.03, LOCK.z + 0.05), 0.4).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	fall.tween_property(lock, "rotation", Vector3(1.4, -PI / 2 + 0.6, 0.3), 0.4)
+	await fall.finished
+	L._sfx3d("clink", lock.global_position, 0.0, 0.6)
+	await get_tree().create_timer(0.5).timeout
+	# ящик со скрипом выезжает
+	drawer_hole.visible = true
+	L._sfx3d("drag", DRAWER, -4.0, 1.3)
+	L._sfx3d("creak", DRAWER, -8.0, 1.7)
+	var out := create_tween()
+	out.tween_property(drawer, "position:x", DRAWER.x + 0.33, 1.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await out.finished
+	await get_tree().create_timer(0.7).timeout
+	# крюк поднимается к камере — «взял»
+	var cam_pos: Vector3 = p.cam.global_position + p.forward() * 0.35 + Vector3(0, -0.15, 0)
+	var take := create_tween().set_parallel()
+	take.tween_property(hook, "global_position", cam_pos, 0.7).set_trans(Tween.TRANS_SINE)
+	take.tween_property(hook, "rotation:x", 0.6, 0.7)
+	await take.finished
+	hook.visible = false
+	L._sfx("pickup", -4.0, 0.8)
+	L._say("B_LOCK_OK", 4.0)
+	L._set_objective("B_OBJ3")
+	await get_tree().create_timer(0.6).timeout
+	L.floor2._letterbox(false)
+	p.set_physics_process(true)
+	p.frozen = false
+	L.busy = false
 
 
 func _soft_dot() -> Texture2D:
@@ -493,12 +629,7 @@ func _try_code() -> void:
 	if digits == CODE:
 		lock_open = true
 		has_hook = true
-		L._sfx3d("clink", LOCK, -2.0, 0.8)
-		L._sfx3d("door", LOCK, -10.0, 1.6)
-		var sh := L.get_node("BathLock/Shackle") as Node3D
-		create_tween().tween_property(sh, "position:y", 0.07, 0.25)
-		L._say("B_LOCK_OK", 4.0)
-		L._set_objective("B_OBJ3")
+		_open_drawer()
 		return
 	mistakes += 1
 	L._sfx3d("clink", LOCK, -6.0, 1.4)
