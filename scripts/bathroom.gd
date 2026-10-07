@@ -295,14 +295,14 @@ func _build_fog() -> void:
 	var en := TranslationServer.get_locale().begins_with("en")
 	var suf := "_en" if en else ""
 	var mats := []
-	for spec in [["fog_mirror", REAL_LAYER, 0.0], ["fog_true", MIRROR_LAYER, 0.0]]:
+	for spec in [["res://textures/fog_mirror.png", REAL_LAYER], ["res://textures/fog_true.png", MIRROR_LAYER]]:
 		var q := MeshInstance3D.new()
 		var qm := QuadMesh.new()
 		qm.size = Vector2(0.78, 0.61)
 		q.mesh = qm
 		var m := StandardMaterial3D.new()
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		m.albedo_texture = load("res://textures/%s%s.png" % [spec[0], suf])
+		m.albedo_texture = load(spec[0].replace(".png", suf + ".png"))   # для английского — с подписью ANYA
 		m.albedo_color = Color(1, 1, 1, 0)
 		m.roughness = 0.9
 		q.material_override = m
