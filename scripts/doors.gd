@@ -49,8 +49,11 @@ func interact(tid: String) -> void:
 			L._sfx3d("creak", c, -10.0, 1.4)
 			return
 	_busy[id] = true
-	L._sfx3d("door", d.center, -10.0 if to == d.open else -6.0, randf_range(1.05, 1.25) if to == d.open else 1.35)
-	L._sfx3d("creak", d.center, -14.0, randf_range(1.2, 1.6))
+	if to == d.open:
+		L._sfx3d("creak", d.center, -6.0, randf_range(0.95, 1.2))     # открывается — скрип петель
+	else:
+		L._sfx3d("creak", d.center, -12.0, randf_range(1.3, 1.6))
+		get_tree().create_timer(0.45).timeout.connect(func(): L._sfx3d("door", d.center, -8.0, randf_range(1.0, 1.15)))   # закрылась — хлопок
 	var tw := create_tween()
 	tw.tween_property(d.pivot, "rotation:y", to, 0.75 if to == d.open else 0.55).set_trans(Tween.TRANS_SINE)
 	await tw.finished

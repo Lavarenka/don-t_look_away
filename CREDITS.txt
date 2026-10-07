@@ -27,6 +27,14 @@
 - Девочка-призрак «Horror Ghost Character - Blood Stained Spirit» — adhamasalah, sketchfab.com/adhamAsalah, CC BY 4.0
   (риг и анимации — Mixamo). Заменила «Horror Girl» (CC BY-NC), которая больше не используется.
 - «Horror mask» — Bulat.Shakirov, sketchfab.com/Bulat.Shakirov, CC BY 4.0.
+- Звуки Freesound.org (обрезаны и выровнены по громкости):
+  scream — «scream14», Grez1, CC0
+  sting — «Violin Scare», SirBedlam, CC BY 3.0 (freesound.org/s/393824)
+  heartbeat — «Heartbeat 97 BPM», Cloud-10, CC0
+  whisper — «Creepy whispering», RaspberryTickle, CC0
+  whisper_harsh — «Crowd of demonic whispers», ShangusBurger, CC0
+  creak — «Heavy door creaking 05», rambler52, CC0
+  door — «Storm door slam 01», volivieri, CC BY 4.0 (freesound.org/s/161190)
 - Ванная «The Bathroom (Free)» — Evan, Sketchfab, CC BY 4.0 (текстуры уменьшены).
 
 Нужно проверить или заменить:
