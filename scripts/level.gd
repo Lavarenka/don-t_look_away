@@ -2,7 +2,7 @@ extends Node3D
 ## Тестовый уровень: прихожая → зал (головоломка с телевизором) → коридор (головоломка со свечами).
 ## Никто не гоняется за игроком: только призраки, которые появляются и исчезают, загадки и скримеры.
 
-const CHANNEL_CODE := [3, 7, 5]      ## порядок каналов (подсказки на обороте фотографий)
+const CHANNEL_CODE := [3, 7, 5]      ## «шоу Гостя»: музыка в 19:30, 21:00 и 22:45 (см. hall_puzzle.gd)
 const CANDLE_CODE := [2, 3, 1]       ## Степан (1991) → Аня (2004) → Вера (2026)
 const VINTAGE = preload("res://scripts/vintage.gd")
 const SETTINGS = preload("res://scripts/settings.gd")
@@ -55,6 +55,7 @@ var haunts: Node
 var nursery: Node
 var attic: Node
 var floor2: Node
+var hallp: Node            ## загадки зала и коридора, осколок зеркала
 var events := {}            ## какие сценки уже случились
 var shade_mode := ""        ## что сейчас делает призрак
 var shade_t := 0.0
@@ -197,6 +198,9 @@ func _ready() -> void:
 	attic = preload("res://scripts/attic.gd").new()
 	attic.L = self
 	add_child(attic)
+	hallp = preload("res://scripts/hall_puzzle.gd").new()
+	hallp.L = self
+	add_child(hallp)
 	floor2 = preload("res://scripts/floor2.gd").new()
 	add_child(floor2)
 	floor2.setup(self)
@@ -466,6 +470,8 @@ func _target_ok(id: String) -> bool:
 		return attic.target_ok(id)
 	if id.begins_with("f_"):
 		return floor2.target_ok(id)
+	if id.begins_with("h_"):
+		return hallp.target_ok(id)
 	match id:
 		"tv_off": return tv_on
 		"servant": return phase == "intro" or phase == "hall"
@@ -508,6 +514,7 @@ func _interact() -> void:
 			has_key = true
 			_sfx("pickup", -6.0)
 			_say("LVL_17")
+			hallp.got_shard()
 			_set_objective("LVL_18")
 			phase = "door"
 		"door1":
@@ -534,6 +541,7 @@ func _interact() -> void:
 			nursery.interact(t)
 			attic.interact(t)
 			floor2.interact(t)
+			hallp.interact(t)
 
 
 func _show_note(text: String) -> void:
@@ -721,8 +729,7 @@ func _update_tv(delta: float) -> void:
 			_solve_tv()
 	else:
 		code_progress = 1 if channel == CHANNEL_CODE[0] else 0
-		player.flicker = 0.3
-		_sfx("whisper", -12.0)
+		hallp.tv_mistake()
 
 
 func _update_guest(delta: float) -> void:
@@ -790,11 +797,10 @@ func _light_candle(i: int) -> void:
 	else:
 		busy = true
 		await get_tree().create_timer(0.6).timeout
-		_sfx("whisper", -2.0)
 		for k in 3:
 			_set_candle(k + 1, false)
 		candle_progress = 0
-		player.flicker = 0.6
+		hallp.candle_mistake()
 		_say("LVL_25")
 		busy = false
 
@@ -804,6 +810,7 @@ func _solve_candles() -> void:
 	_sfx3d("knock", Vector3(0, 1.2, -18), -2.0, 1.5)
 	_say("LVL_26")
 	exit_unlocked = true
+	hallp.candles_solved()
 	_set_objective("LVL_27")
 	drone.volume_db = -40.0
 	await get_tree().create_timer(2.0).timeout
@@ -1075,6 +1082,7 @@ func _cheat_corridor() -> void:
 	hall_lamp.light_energy = 0.0
 	key_node.visible = false
 	has_key = true
+	hallp.got_shard(false)
 	door1_open = true
 	door1.rotation.y = 1.6
 	servant_door.rotation.y = 1.7

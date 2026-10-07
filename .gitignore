@@ -878,6 +878,8 @@
 !/scripts/flicker.gd.uid
 !/scripts/floor2.gd
 !/scripts/floor2.gd.uid
+!/scripts/hall_puzzle.gd
+!/scripts/hall_puzzle.gd.uid
 !/scripts/haunts.gd
 !/scripts/haunts.gd.uid
 !/scripts/intro.gd
@@ -976,5 +978,7 @@
 !/textures/servant_wood_basecolor.jpg.import
 !/textures/servant_wood_normal.jpg
 !/textures/servant_wood_normal.jpg.import
+!/textures/tv_guide.png
+!/textures/tv_guide.png.import
 !/tools/git_used.py
 /.godot/
