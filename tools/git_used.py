@@ -45,7 +45,7 @@ for p in ALL:
 for p in ALL:
     stem = os.path.splitext(os.path.basename(p))[0]
     if p.startswith('audio/') and not p.endswith('.import'):
-        if re.sub(r'\d+$', '', stem) in fmt_prefixes or stem in quoted or (p.startswith('audio/intro/i_') and stem[2:] in quoted):
+        if re.sub(r'\d+$', '', stem) in fmt_prefixes or stem in quoted or re.sub(r'_\d+$', '', stem) in quoted or (p.startswith('audio/intro/i_') and stem[2:] in quoted):
             add(p)
     if re.match(r'models/forest/pine/pine\d\.glb$', p):
         add(p)
