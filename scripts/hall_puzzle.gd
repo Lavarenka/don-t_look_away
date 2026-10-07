@@ -117,9 +117,8 @@ func tv_mistake() -> void:
 	else:
 		# дыхание за спиной: призрак стоит сзади, пока не обернёшься
 		L._sfx("heartbeat", -6.0)
-		if not L.shade.visible:
-			L._shade_show(L._behind_player(1.1), "behind")
-			L._sfx("whisper_harsh", -4.0)
+		L._glance_ghost()
+		L._sfx("whisper_harsh", -4.0)
 
 
 ## Неверная свеча: портреты темнеют и трясутся в рамах, со второго раза — висят криво.
@@ -382,7 +381,8 @@ func _update_corridor(delta: float) -> void:
 		return
 	if _anya_lunge:
 		return
-	_anya.visible = true
+	# пока в коридоре показывается обычный призрак — Ани в осколке нет (не дублируются)
+	_anya.visible = L.events.has("corridor") and not L.shade.visible
 	_anya.look_at(Vector3(L.player.global_position.x, 0, L.player.global_position.z), Vector3.UP, true)
 	# подсказка, если игрок долго не поднимает осколок
 	if _corr_hint_t < 0.0:
@@ -395,7 +395,7 @@ func _update_corridor(delta: float) -> void:
 	# Аня в осколке: пока на неё смотришь — оживает (жуткая поза, кровь), но не подходит.
 	# Первый раз, если смотреть долго, — внезапно оказывается прямо у лица (только в стекле).
 	# Опустил стекло — она уже в другом месте и снова ждёт в осколке.
-	if _anya_lunge:
+	if _anya_lunge or not _anya.visible:
 		pass
 	elif _raise >= 1.0 and L._sees(_anya.global_position + Vector3(0, 1.2, 0), 0.3, false):
 		_anya_seen += delta

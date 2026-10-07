@@ -86,6 +86,7 @@ var amb_layers := {}
 var tv_static: AudioStreamPlayer3D
 var sfx_cache := {}
 var last_loud := -100.0      ## когда звучал последний громкий звук (крик, скример, удар)
+const RUNNER_ON := false     ## бегущий призрак в коридоре (пока выключен)
 const LOUD := ["scream", "scream_mask", "sting", "bang", "whisper_harsh", "girl_appear", "phone_call", "gurgle", "pipes", "heartbeat", "far_moan", "far_whisper", "far_scream"]
 var tv_mat: StandardMaterial3D
 
@@ -609,7 +610,32 @@ func _sees(p: Vector3, max_angle := 0.5, need_light := true) -> bool:
 	return player.is_light_lit() or not need_light or to.length() < 2.0
 
 
+## Призрак «краем глаза»: сбоку, в поле зрения, но не там, куда смотришь.
+## Шёпот с его стороны и мигание фонаря цепляют взгляд; посмотрел прямо — исчез.
+func _glance_ghost() -> void:
+	if shade.visible:
+		return
+	var fwd: Vector3 = player.forward()
+	fwd.y = 0.0
+	fwd = fwd.normalized()
+	var best := Vector3.ZERO
+	var best_room := 0.0
+	for a in [0.62, -0.62, 0.5, -0.5, 0.75, -0.75]:
+		var dir := fwd.rotated(Vector3.UP, a)
+		var r := _room_toward(dir, 2.8)
+		if r > best_room + 0.05:
+			best_room = r
+			best = dir
+	if best_room < 1.2:
+		return
+	var pos := player.global_position + best * best_room
+	_shade_show(Vector3(pos.x, player.global_position.y, pos.z), "glance")
+	_sfx3d("whisper", pos + Vector3(0, 1.4, 0), 2.0, 1.15)
+	player.flicker = 0.2
+
+
 func _shade_show(pos: Vector3, mode: String) -> void:
+	_shade_light(mode == "glance")
 	shade.global_position = pos
 	shade.visible = true
 	_face(shade, player.global_position)
@@ -618,12 +644,25 @@ func _shade_show(pos: Vector3, mode: String) -> void:
 	shade_seen_t = 0.0
 
 
+## Слабый холодный свет на призраке — чтобы его было видно вне луча фонаря.
+var _shade_lamp: OmniLight3D
+func _shade_light(on: bool) -> void:
+	if _shade_lamp == null:
+		_shade_lamp = OmniLight3D.new()
+		_shade_lamp.light_color = Color(0.6, 0.7, 1.0)
+		_shade_lamp.omni_range = 2.2
+		_shade_lamp.position = Vector3(0, 1.5, 0.5)
+		shade.add_child(_shade_lamp)
+	_shade_lamp.light_energy = 0.7 if on else 0.0
+
+
 func _shade_hide(sting := false, flicker := true) -> void:
 	if flicker:
 		player.flicker = 0.25
 		_sfx("click", -8.0)
 	shade.visible = false
 	shade_mode = ""
+	_shade_light(false)
 	if sting:
 		_sfx("sting", -4.0)
 		player.shake = 0.5
@@ -666,6 +705,12 @@ func _update_shade(delta: float) -> void:
 		"flash":
 			if shade_t > 1.6 or dist < 2.0:
 				_shade_hide(false)
+		"glance":
+			# краем глаза: посмотрел прямо — исчез со щелчком фонаря
+			if _sees(head, 0.3, false):
+				_shade_hide(true)
+			elif shade_t > 8.0:
+				_shade_hide(false, false)
 		"peek":
 			if shade_seen_t > 0.35:
 				_shade_hide(false)
@@ -723,7 +768,7 @@ func _check_events() -> void:
 			events["doorway"] = true
 			_shade_show(p, "doorway")
 	# 3. зомби: игрок светит в конец коридора — он с рёвом несётся из темноты
-	if phase == "corridor" and events.has("corridor_step") and not shade.visible and not events.has("zombie") \
+	if RUNNER_ON and phase == "corridor" and events.has("corridor_step") and not shade.visible and not events.has("zombie") \
 			and player.global_position.z > -11.0 and player.forward().z < -0.85 and player.is_light_lit():
 		if not events.has("zombie_wait"):
 			events["zombie_wait"] = time_now
@@ -789,9 +834,8 @@ func _update_tv(delta: float) -> void:
 		if code_progress == 1 and not events.has("behind"):
 			# дыхание за спиной: призрак стоит прямо за игроком
 			events["behind"] = true
-			await get_tree().create_timer(4.0).timeout
-			_shade_show(_behind_player(), "behind")
-			_sfx("whisper", -2.0)
+			await get_tree().create_timer(2.5).timeout
+			_glance_ghost()
 		elif code_progress == 2 and not events.has("chair"):
 			events["chair"] = true
 			events["peek_wait"] = true
