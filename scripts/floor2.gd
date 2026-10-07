@@ -75,11 +75,15 @@ func _sign(key: String, pos: Vector3, yaw: float, col: Color, px: float, paper: 
 
 
 func target_ok(id: String) -> bool:
+	if id == "f_bath" and L.bath.unlocked:
+		return false
 	return L.phase == "floor2" and not L.busy
 
 
 func interact(id: String) -> void:
 	if not DOORS.has(id):
+		return
+	if id == "f_bed" and await L.bath.try_bedroom():
 		return
 	var pos: Vector3 = DOORS[id][0]
 	L._sfx3d("click", pos, -6.0, 0.8)
@@ -89,6 +93,9 @@ func interact(id: String) -> void:
 		return
 	tried[id] = true
 	L._say(DOORS[id][1], 3.5)
+	# подёргал несколько дверей — и ванная, где капает вода, открывается сама
+	if tried.size() >= 3 and not L.bath.unlocked:
+		get_tree().create_timer(4.0).timeout.connect(L.bath.unlock)
 	if id == "f_anya":                       # изнутри отвечают стуком
 		await get_tree().create_timer(1.1).timeout
 		for t in [0.0, 0.45, 0.45]:

@@ -1,4 +1,28 @@
 keys,en,ru
+B_BED_KEY,The key turns... but the door won't give. As if someone is holding it from the other side.,Ключ поворачивается... но дверь не поддаётся. Будто кто-то держит её с той стороны.
+B_DRAIN,Got the chain with the hook... The water is going down.,Подцепил цепочку крюком... Вода уходит.
+B_FOG,The mirror fogged up... and something is written on it.,Зеркало запотело... и на нём что-то написано.
+B_KEY,"A key on a faded ribbon. The tag says: ""Vera"". Grandma's bedroom.",Ключ на выцветшей ленточке. На бирке: «Вера». От бабушкиной спальни.
+B_KEY_H,E — take the key,E — взять ключ
+B_LOCK_H,E — the combination padlock,E — кодовый замок
+B_LOCK_KEYS,A/D — wheel   W/S — digit   E — pull   Esc — back,A/D — колесо   W/S — цифра   E — дёрнуть   Esc — назад
+B_LOCK_OK,Click. In the cabinet: Grandpa's long wire hook.,Щёлк. В шкафчике — дедов длинный проволочный крюк.
+B_LOCK_TITLE,Combination padlock,Кодовый замок
+B_LOCK_TRY,Pull,Дёрнуть
+B_LOCK_WRONG,Won't open.,Не открывается.
+B_MIRROR0,Small handprints on the glass. The mirror is cold as ice — it needs steam.,На стекле маленькие отпечатки ладоней. Зеркало ледяное — нужен пар.
+B_MIRROR1,"Numbers, drawn with a finger... backwards. As if someone wrote them from the other side of the glass.","Цифры, нарисованные пальцем... задом наперёд. Будто кто-то писал их с той стороны стекла."
+B_MIRROR_H,E — look at the mirror,E — посмотреть в зеркало
+B_OBJ1,Look around the bathroom,Осмотри ванную
+B_OBJ2,Open the padlock on the sink cabinet,Открой кодовый замок на шкафчике под раковиной
+B_OBJ3,Pull the plug out of the bath,Вытащи пробку из ванны
+B_OBJ4,Open Grandma's bedroom,Открой спальню бабушки
+B_OPEN,A click... The bathroom door opened by itself.,Щелчок... Дверь ванной открылась сама.
+B_TAP,Hot water. The pipes groan somewhere in the walls.,Горячая вода. Где-то в стенах застонали трубы.
+B_TAP_H,E — turn on the hot water,E — открыть горячую воду
+B_TAP_STOP,The pipes choked. The water stopped by itself.,Трубы захлебнулись. Вода перестала течь сама.
+B_TUB0,Black water up to the rim. The plug chain is somewhere at the bottom. I'm not putting my hand in there.,Чёрная вода до краёв. Цепочка от пробки где-то на дне. Руку я туда не суну.
+B_TUB_H,E — the bath,E — ванна
 CH_1,1. The House,1. Дом
 CH_2,2. Candle Corridor,2. Коридор со свечами
 CH_3,3. The Nursery,3. Детская

@@ -56,6 +56,7 @@ var nursery: Node
 var attic: Node
 var floor2: Node
 var hallp: Node            ## загадки зала и коридора, осколок зеркала
+var bath: Node             ## ванная второго этажа
 var events := {}            ## какие сценки уже случились
 var shade_mode := ""        ## что сейчас делает призрак
 var shade_t := 0.0
@@ -204,6 +205,9 @@ func _ready() -> void:
 	floor2 = preload("res://scripts/floor2.gd").new()
 	add_child(floor2)
 	floor2.setup(self)
+	bath = preload("res://scripts/bathroom.gd").new()
+	add_child(bath)
+	bath.setup(self)
 	_setup_zombie()
 	player.mouse_sens *= SETTINGS.get_sens()
 	SETTINGS.apply_general()
@@ -472,6 +476,8 @@ func _target_ok(id: String) -> bool:
 		return floor2.target_ok(id)
 	if id.begins_with("h_"):
 		return hallp.target_ok(id)
+	if id.begins_with("b_"):
+		return bath.target_ok(id)
 	match id:
 		"tv_off": return tv_on
 		"servant": return phase == "intro" or phase == "hall"
@@ -542,6 +548,7 @@ func _interact() -> void:
 			attic.interact(t)
 			floor2.interact(t)
 			hallp.interact(t)
+			bath.interact(t)
 
 
 func _show_note(text: String) -> void:

@@ -40,6 +40,8 @@
 !/audio/door.wav.import
 !/audio/drag.wav
 !/audio/drag.wav.import
+!/audio/drip.wav
+!/audio/drip.wav.import
 !/audio/drone.wav
 !/audio/drone.wav.import
 !/audio/giggle.wav
@@ -50,6 +52,8 @@
 !/audio/glass.wav.import
 !/audio/gramophone.wav
 !/audio/gramophone.wav.import
+!/audio/gurgle.wav
+!/audio/gurgle.wav.import
 !/audio/heartbeat.wav
 !/audio/heartbeat.wav.import
 !/audio/house/attic_roof.ogg
@@ -120,6 +124,8 @@
 !/audio/phone_ring.wav.import
 !/audio/pickup.wav
 !/audio/pickup.wav.import
+!/audio/pipes.wav
+!/audio/pipes.wav.import
 !/audio/scratch.wav
 !/audio/scratch.wav.import
 !/audio/scream.wav
@@ -150,6 +156,8 @@
 !/audio/tinnitus.wav.import
 !/audio/tv_static.wav
 !/audio/tv_static.wav.import
+!/audio/water_run.wav
+!/audio/water_run.wav.import
 !/audio/whisper.wav
 !/audio/whisper.wav.import
 !/audio/whisper_harsh.wav
@@ -390,6 +398,8 @@
 !/models/attic/trunk/trunk.bin
 !/models/attic/trunk/trunk.gltf
 !/models/attic/trunk/trunk.gltf.import
+!/models/bathroom/bathroom.glb
+!/models/bathroom/bathroom.glb.import
 !/models/carved_wooden_elephant/carved_wooden_elephant.bin
 !/models/carved_wooden_elephant/carved_wooden_elephant_2k.gltf
 !/models/carved_wooden_elephant/carved_wooden_elephant_2k.gltf.import
@@ -872,6 +882,8 @@
 !/scenes/menu.tscn
 !/scripts/attic.gd
 !/scripts/attic.gd.uid
+!/scripts/bathroom.gd
+!/scripts/bathroom.gd.uid
 !/scripts/creature.gd
 !/scripts/creature.gd.uid
 !/scripts/flicker.gd
@@ -940,6 +952,8 @@
 !/textures/drawings/risunok5.png.import
 !/textures/drawings/risunok5_en.png
 !/textures/drawings/risunok5_en.png.import
+!/textures/fog_figure.png
+!/textures/fog_figure.png.import
 !/textures/linen_diff.jpg
 !/textures/linen_diff.jpg.import
 !/textures/linen_nor.jpg

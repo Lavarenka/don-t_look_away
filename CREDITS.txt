@@ -27,6 +27,7 @@
 - Девочка-призрак «Horror Ghost Character - Blood Stained Spirit» — adhamasalah, sketchfab.com/adhamAsalah, CC BY 4.0
   (риг и анимации — Mixamo). Заменила «Horror Girl» (CC BY-NC), которая больше не используется.
 - «Horror mask» — Bulat.Shakirov, sketchfab.com/Bulat.Shakirov, CC BY 4.0.
+- Ванная «The Bathroom (Free)» — Evan, Sketchfab, CC BY 4.0 (текстуры уменьшены).
 
 Нужно проверить или заменить:
 - horror_corridor_1.glb («Horror corridor 1», Katydid, Sketchfab) — Free Standard:
