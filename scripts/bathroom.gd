@@ -194,6 +194,27 @@ func _build_props() -> void:
 	water.mesh = pmw
 	var wm := ShaderMaterial.new()
 	wm.shader = load("res://shaders/murky_water.gdshader")
+	for k in [["ripple_a", 11, 0.9], ["ripple_b", 29, 1.6]]:
+		var nt := NoiseTexture2D.new()
+		nt.width = 256
+		nt.height = 256
+		nt.seamless = true
+		nt.as_normal_map = true
+		nt.bump_strength = 10.0
+		var fn := FastNoiseLite.new()
+		fn.seed = k[1]
+		fn.frequency = 0.02 * k[2]
+		fn.fractal_octaves = 3
+		nt.noise = fn
+		wm.set_shader_parameter(k[0], nt)
+	# отражения комнаты в воде и в зеркале
+	var probe := ReflectionProbe.new()
+	probe.size = Vector3(5.4, 2.8, 5.5)
+	probe.box_projection = true
+	probe.interior = true
+	probe.update_mode = ReflectionProbe.UPDATE_ONCE
+	probe.position = Vector3(-1.43, Y2 + 1.4, -39.55)
+	L.add_child(probe)
 	water.material_override = wm
 	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	water.position = TUB + Vector3(0, WATER_TOP, 0)

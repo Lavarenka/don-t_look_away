@@ -658,7 +658,29 @@ func _face(n: Node3D, target: Vector3) -> void:
 func _behind_player(d := 1.3) -> Vector3:
 	var back: Vector3 = -player.forward()
 	back.y = 0
-	return player.global_position + back.normalized() * d
+	back = back.normalized()
+	# не ставить призрака в стену: сзади стена близко — пробуем чуть вбок, где больше места
+	var best := back
+	var room := _room_toward(back, d)
+	if room < d:
+		for a in [0.7, -0.7, 1.2, -1.2]:
+			var dir := back.rotated(Vector3.UP, a)
+			var r := _room_toward(dir, d)
+			if r > room + 0.05:
+				room = r
+				best = dir
+	return player.global_position + best * clampf(room, 0.45, d)
+
+
+## Сколько места (до стены) в направлении dir, не больше d.
+func _room_toward(dir: Vector3, d: float) -> float:
+	var from: Vector3 = player.global_position + Vector3(0, 1.0, 0)
+	var q := PhysicsRayQueryParameters3D.create(from, from + dir * (d + 0.45))
+	q.exclude = [player.get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	if hit.is_empty():
+		return d
+	return from.distance_to(hit.position) - 0.45
 
 
 func _check_events() -> void:

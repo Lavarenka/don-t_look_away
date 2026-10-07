@@ -135,6 +135,45 @@ func candle_mistake() -> void:
 		L._sfx3d("knock", fr.global_position, -6.0, randf_range(1.4, 1.8))
 
 
+func _next_spot() -> void:
+	_anya_step += 1
+	var spots := [Vector3(-0.55, 0, -9.55), Vector3(0.55, 0, -13.2), Vector3(-0.4, 0, -16.6)]
+	_anya.position = spots[_anya_step % spots.size()]
+	L._sfx3d("giggle", _anya.position + Vector3(0, 1.2, 0), -10.0)
+
+
+## В осколке она вдруг оказывается вплотную к лицу — и через миг снова на своём месте.
+func _face_pop() -> void:
+	_anya_lunge = true
+	var cam: Camera3D = L.player.cam
+	var fwd: Vector3 = L.player.forward()
+	fwd.y = 0.0
+	fwd = fwd.normalized()
+	var at := cam.global_position + fwd * 0.62
+	_anya.global_position = Vector3(at.x, cam.global_position.y - 1.6, at.z)
+	_anya.rotation.y = atan2(-fwd.x, -fwd.z)
+	_anya.play_from("idle", 1.0, 0.3)
+	_anya.set_blood(1.0)
+	var face := OmniLight3D.new()
+	face.light_color = Color(0.75, 0.82, 1.0)
+	face.light_energy = 2.0
+	face.omni_range = 1.4
+	face.position = Vector3(0, 1.5, 0.45)
+	_anya.add_child(face)
+	L._sfx("sting", -2.0, 0.85)
+	L._sfx("whisper_harsh", -4.0)
+	L.player.shake = 0.5
+	await get_tree().create_timer(0.7).timeout
+	face.queue_free()
+	L.player.flicker = 0.3
+	_anya_seen = 0.0
+	_anya_alive = false
+	_anya.play("idle", 0.4)
+	_anya.set_blood(0.3)
+	_next_spot()
+	_anya_lunge = false
+
+
 ## Скример: призрак резко прыгает в лицо и пропадает. g — узел spirit.gd.
 func ghost_lunge(g: Node3D, after := Callable(), keep_pos := false) -> void:
 	var cam: Camera3D = L.player.cam
@@ -330,7 +369,7 @@ func _update_corridor(delta: float) -> void:
 		return
 	if _anya_lunge:
 		return
-	_anya.visible = not _anya_gone
+	_anya.visible = true
 	_anya.look_at(Vector3(L.player.global_position.x, 0, L.player.global_position.z), Vector3.UP, true)
 	# подсказка, если игрок долго не поднимает осколок
 	if _corr_hint_t < 0.0:
@@ -340,10 +379,10 @@ func _update_corridor(delta: float) -> void:
 		if _corr_hint_t > 25.0:
 			_corr_hint_t = -1000.0
 			L._say("PZ_SHARD_NAG", 4.5)
-	# Аня в осколке: пока на неё смотришь — оживает и медленно идёт к тебе;
-	# смотришь слишком долго — прыгает в лицо (один раз за игру).
-	# Опустил стекло — она уже в другом месте.
-	if _anya_gone:
+	# Аня в осколке: пока на неё смотришь — оживает (жуткая поза, кровь), но не подходит.
+	# Первый раз, если смотреть долго, — внезапно оказывается прямо у лица (только в стекле).
+	# Опустил стекло — она уже в другом месте и снова ждёт в осколке.
+	if _anya_lunge:
 		pass
 	elif _raise >= 1.0 and L._sees(_anya.global_position + Vector3(0, 1.2, 0), 0.3, false):
 		_anya_seen += delta
@@ -352,24 +391,15 @@ func _update_corridor(delta: float) -> void:
 			_anya.play_from("zidle", 0.3, 0.55)
 			_anya.set_blood(0.6)
 			L._sfx("heartbeat", -8.0)
-		if _anya_alive:
-			var to: Vector3 = L.player.global_position - _anya.global_position
-			to.y = 0.0
-			if to.length() > 1.3:
-				_anya.global_position += to.normalized() * delta * 0.35
-		if _anya_seen > 3.2:
-			_anya_lunge = true
-			holding = false
-			ghost_lunge(_anya, func(): _anya_gone = true; _anya_lunge = false)
+		if _anya_seen > 2.4 and not _anya_gone:
+			_anya_gone = true          # «у лица» — один раз за игру
+			_face_pop()
 	elif _anya_seen > 0.6 and _raise <= 0.0:
 		_anya_seen = 0.0
 		_anya_alive = false
 		_anya.play("idle", 0.4)
 		_anya.set_blood(0.3)
-		_anya_step += 1
-		var spots := [Vector3(-0.55, 0, -9.55), Vector3(0.55, 0, -13.2), Vector3(-0.4, 0, -16.6)]
-		_anya.position = spots[_anya_step % spots.size()]
-		L._sfx3d("giggle", _anya.position + Vector3(0, 1.2, 0), -10.0)
+		_next_spot()
 	# горящие свечи нельзя оставлять за спиной
 	var lit := false
 	var facing := false
