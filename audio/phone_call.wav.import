@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://8ti1retxkc1b"
-path="res://.godot/imported/phone_laugh.wav-b6bcd960ddd63d959c98ee843094d093.sample"
+uid="uid://dwcqb2nmw3wqs"
+path="res://.godot/imported/phone_call.wav-bfa5ee21e5eabd2e8545acc52bdac7ce.sample"
 
 [deps]
 
-source_file="res://audio/phone_laugh.wav"
-dest_files=["res://.godot/imported/phone_laugh.wav-b6bcd960ddd63d959c98ee843094d093.sample"]
+source_file="res://audio/phone_call.wav"
+dest_files=["res://.godot/imported/phone_call.wav-bfa5ee21e5eabd2e8545acc52bdac7ce.sample"]
 
 [params]
 

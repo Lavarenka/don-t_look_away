@@ -168,9 +168,14 @@ func _face_pop() -> void:
 	face.omni_range = 1.4
 	face.position = Vector3(0, 1.5, 0.45)
 	_anya.add_child(face)
-	L._sfx("sting", -2.0, 0.85)
-	L._sfx("whisper_harsh", -4.0)
-	L.player.shake = 0.5
+	# резко и громко: удар, короткий крик, злой шёпот, тряска, красная вспышка
+	L._sfx("sting", 3.0, 0.9)
+	L._sfx("scream", -2.0, 1.35)
+	L._sfx("whisper_harsh", 0.0)
+	L._sfx("heartbeat", -2.0, 1.25)
+	L.player.shake = 0.9
+	L.red_flash.color.a = 0.3
+	create_tween().tween_property(L.red_flash, "color:a", 0.0, 0.8)
 	await get_tree().create_timer(0.7).timeout
 	face.queue_free()
 	L.player.flicker = 0.3

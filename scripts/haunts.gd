@@ -338,13 +338,15 @@ func interact(id: String) -> void:
 		L.extra_hints.erase("phone")
 		L.busy = true
 		_once3d("click", _pos("Phone"), -4.0)
-		await _wait(0.9)
-		# в трубке — дикий хохот, который «зажёвывается» и замедляется
-		L._sfx("phone_laugh", 0.0)
-		L.player.shake = 0.4
-		L._say("HAUNT_09", 6.0)
-		await _wait(6.4)
-		L._sfx("click", -2.0, 0.5)
+		await _wait(0.6)
+		# в трубке: треск линии, тяжёлое дыхание, детский шёпот, смешок — и обрыв
+		L._sfx("phone_call", 0.0)
+		L._say("HAUNT_04", 3.4)
+		await _wait(3.6)
+		L._say("HAUNT_05", 3.4)
+		await _wait(3.2)
+		L.player.shake = 0.3
+		await _wait(1.5)
 		L._say("HAUNT_06", 2.0)
 		L.busy = false
 
