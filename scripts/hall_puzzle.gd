@@ -25,6 +25,7 @@ var _poly: Polygon2D
 var _edge: Line2D
 var _shine: Polygon2D
 var _pts := PackedVector2Array()
+var _uv_k := Vector2.ONE
 var _turn_t := 0.0
 var _tv_mist := 0
 var _tv_last := -100.0
@@ -309,7 +310,9 @@ const SHAPE := [Vector2(-0.15, -0.31), Vector2(0.03, -0.35), Vector2(0.08, -0.24
 
 func _resize() -> void:
 	var sz: Vector2 = get_viewport().get_visible_rect().size
-	_view.size = Vector2i(sz)
+	# «стекло» рендерится в реальном разрешении окна (интерфейс может быть растянут)
+	_uv_k = Vector2(DisplayServer.window_get_size()) / sz if DisplayServer.get_name() != "headless" else Vector2.ONE
+	_view.size = Vector2i(sz * _uv_k)
 	var c := Vector2(sz.x * 0.5, sz.y * 0.52)
 	_pts = PackedVector2Array()
 	for p in SHAPE:
@@ -360,7 +363,10 @@ func _process(delta: float) -> void:
 		for p in _pts:
 			pts.append(p + off)
 		_poly.polygon = pts
-		_poly.uv = pts
+		var uvs := PackedVector2Array()
+		for q in pts:
+			uvs.append(q * _uv_k)
+		_poly.uv = uvs
 		_edge.points = pts
 		# блик по краю стекла
 		_shine.polygon = PackedVector2Array([pts[0], pts[1], pts[2], pts[9]])

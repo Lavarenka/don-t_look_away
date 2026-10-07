@@ -148,6 +148,9 @@ MENU_FS,Fullscreen: ,Полный экран:
 MENU_LANG,Language: English,Язык: Русский
 MENU_OFF,Off,Выкл
 MENU_ON,On,Вкл
+MENU_RES,Resolution: ,Разрешение: 
+MENU_RES_FS, (fullscreen: monitor), (на весь экран — как у монитора)
+MENU_SCALE,Render scale: ,Масштаб картинки: 
 MENU_SENS,Mouse sensitivity: ,Чувствительность мыши: 
 MENU_SETTINGS,Settings,Настройки
 MENU_VOL,Volume: ,Громкость: 

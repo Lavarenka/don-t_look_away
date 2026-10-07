@@ -110,8 +110,26 @@ static func get_sens() -> float:
 	return float(get_val("input", "sens", 1.0))
 
 
+## По умолчанию — полный экран (в редакторе Godot — окно, чтобы было удобно тестировать).
 static func get_fullscreen() -> bool:
-	return bool(get_val("video", "fullscreen", false))
+	return bool(get_val("video", "fullscreen", not OS.has_feature("editor")))
+
+
+## Размер окна (в полноэкранном режиме — всегда разрешение монитора).
+const RESOLUTIONS := [Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080), Vector2i(2560, 1440)]
+
+
+static func get_resolution() -> int:
+	return clampi(int(get_val("video", "res", 2)), 0, RESOLUTIONS.size() - 1)
+
+
+## Масштаб 3D-картинки: меньше 100% — рендер в меньшем разрешении с чётким растягиванием AMD FSR
+## (больше FPS на слабых видеокартах). Интерфейс и текст всегда в полном разрешении.
+const RENDER_SCALES := [1.0, 0.85, 0.75, 0.6]
+
+
+static func get_render_scale() -> float:
+	return float(get_val("video", "scale", 1.0))
 
 
 ## Громкость и экран — применяются сразу ко всей игре.
@@ -119,9 +137,25 @@ static func apply_general() -> void:
 	var v := get_volume()
 	AudioServer.set_bus_mute(0, v <= 0.001)
 	AudioServer.set_bus_volume_db(0, linear_to_db(max(v, 0.001)))
+	if DisplayServer.get_name() == "headless":
+		return
 	var want := DisplayServer.WINDOW_MODE_FULLSCREEN if get_fullscreen() else DisplayServer.WINDOW_MODE_WINDOWED
-	if DisplayServer.window_get_mode() != want and DisplayServer.get_name() != "headless":
+	if DisplayServer.window_get_mode() != want:
 		DisplayServer.window_set_mode(want)
+	if want == DisplayServer.WINDOW_MODE_WINDOWED:
+		# окно выбранного размера (но не больше экрана), по центру
+		var scr := DisplayServer.screen_get_usable_rect(DisplayServer.window_get_current_screen())
+		var sz: Vector2i = RESOLUTIONS[get_resolution()]
+		sz = Vector2i(mini(sz.x, scr.size.x), mini(sz.y, scr.size.y))
+		if DisplayServer.window_get_size() != sz:
+			DisplayServer.window_set_size(sz)
+			DisplayServer.window_set_position(scr.position + (scr.size - sz) / 2)
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree:
+		var sc := get_render_scale()
+		tree.root.scaling_3d_mode = Viewport.SCALING_3D_MODE_FSR if sc < 0.999 else Viewport.SCALING_3D_MODE_BILINEAR
+		tree.root.scaling_3d_scale = sc
+		tree.root.fsr_sharpness = 0.3
 
 
 # ---------------- главы ----------------

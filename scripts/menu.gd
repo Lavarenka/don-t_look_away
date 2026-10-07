@@ -237,9 +237,24 @@ func _ghost_shift() -> void:
 
 
 func _clear() -> void:
+	_buttons.get_parent().position.y = -170.0
+	_fit_box.call_deferred()
 	for c in _buttons.get_children():
 		_buttons.remove_child(c)
 		c.queue_free()
+
+
+## Длинная страница (настройки) не должна вылезать за экран — сдвигаем блок меню.
+func _fit_box() -> void:
+	await get_tree().process_frame
+	var box := _buttons.get_parent() as Control
+	var vh := get_viewport_rect().size.y
+	var r := box.get_global_rect()
+	if r.end.y > vh - 16.0:
+		box.position.y -= r.end.y - (vh - 16.0)
+	r = box.get_global_rect()
+	if r.position.y < 16.0:
+		box.position.y += 16.0 - r.position.y
 
 
 func _page_main() -> void:
@@ -294,6 +309,26 @@ func _page_settings() -> void:
 		SETTINGS.set_val("video", "fullscreen", not SETTINGS.get_fullscreen())
 		SETTINGS.apply_general()
 		fupd.call())
+	var rb := _button("", func(): pass)
+	var rupd := func():
+		var r: Vector2i = SETTINGS.RESOLUTIONS[SETTINGS.get_resolution()]
+		rb.text = tr("MENU_RES") + ("%d×%d" % [r.x, r.y]) + (tr("MENU_RES_FS") if SETTINGS.get_fullscreen() else "")
+	rupd.call()
+	rb.pressed.connect(func():
+		SETTINGS.set_val("video", "res", (SETTINGS.get_resolution() + 1) % SETTINGS.RESOLUTIONS.size())
+		SETTINGS.apply_general()
+		rupd.call())
+	fb.pressed.connect(rupd)
+	var cb := _button("", func(): pass)
+	var cupd := func():
+		var sc: float = SETTINGS.get_render_scale()
+		cb.text = tr("MENU_SCALE") + "%d%%" % roundi(sc * 100.0) + (" (FSR)" if sc < 0.999 else "")
+	cupd.call()
+	cb.pressed.connect(func():
+		var i: int = SETTINGS.RENDER_SCALES.find(snappedf(SETTINGS.get_render_scale(), 0.01))
+		SETTINGS.set_val("video", "scale", SETTINGS.RENDER_SCALES[(i + 1) % SETTINGS.RENDER_SCALES.size()])
+		SETTINGS.apply_general()
+		cupd.call())
 	# язык: English ⇄ Русский (меню перезагружается, чтобы обновить все надписи)
 	_button("MENU_LANG", func():
 		var i := SETTINGS.LANGS.find(SETTINGS.get_lang())
