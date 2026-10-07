@@ -88,7 +88,7 @@ var sfx_cache := {}
 var last_loud := -100.0      ## когда звучал последний громкий звук (крик, скример, удар)
 const RUNNER_ON := false     ## бегущий призрак в коридоре (пока выключен)
 const LOUD := ["scream", "scream_mask", "sting", "bang", "whisper_harsh", "girl_appear", "phone_call", "gurgle", "pipes", "heartbeat", "far_moan", "far_whisper", "far_scream"]
-var tv_mat: StandardMaterial3D
+var tv_mat: ShaderMaterial
 
 const NOTE_TEXT := "LVL_01"
 const NOTE2_TEXT := "LVL_02"
@@ -176,9 +176,9 @@ func _ready() -> void:
 	_setup_house()
 	_setup_girl()
 	shade.visible = false
-	tv_mat = StandardMaterial3D.new()
-	tv_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	tv_mat.albedo_color = Color(0.02, 0.02, 0.025)
+	tv_mat = ShaderMaterial.new()
+	tv_mat.shader = preload("res://shaders/crt.gdshader")
+	_tv_pic(Color(0.02, 0.02, 0.025))
 	tv_screen.material_override = tv_mat
 	tv_light.light_energy = 0.0
 	tv_label.visible = false
@@ -805,8 +805,20 @@ func _tv_power(on: bool) -> void:
 			_set_objective("LVL_22")
 	else:
 		tv_static.stop()
-		tv_mat.albedo_color = Color(0.02, 0.02, 0.025)
+		_tv_pic(Color(0.02, 0.02, 0.025))
 		_sfx("click", -4.0)
+
+
+## Картинка на экране телевизора: цвет передачи и сколько «снега».
+func _tv_pic(col: Color, noise := 0.0) -> void:
+	tv_mat.set_shader_parameter("tint", col)
+	tv_mat.set_shader_parameter("noise_amt", noise)
+
+
+## Изображение поверх передачи (лицо при скримере); null — убрать.
+func _tv_img(tex: Texture2D) -> void:
+	tv_mat.set_shader_parameter("img", tex)
+	tv_mat.set_shader_parameter("has_img", 1.0 if tex else 0.0)
 
 
 func _update_tv(delta: float) -> void:
@@ -815,10 +827,10 @@ func _update_tv(delta: float) -> void:
 	dwell += delta
 	if dwell < 1.5:
 		var g := randf_range(0.25, 0.7)
-		tv_mat.albedo_color = Color(g, g, g * 1.05)
+		_tv_pic(Color(g, g, g * 1.05), 1.0)
 		tv_light.light_energy = g * 1.5
 		return
-	tv_mat.albedo_color = Color.from_hsv(channel / 9.0, 0.35, 0.55)
+	_tv_pic(Color.from_hsv(channel / 9.0, 0.35, 0.55), 0.12)
 	tv_light.light_energy = 0.9
 	if dwell_done:
 		return
@@ -879,14 +891,14 @@ func _solve_tv() -> void:
 	busy = true
 	guest.visible = true
 	guest_hidden_t = -1.0
-	tv_mat.albedo_color = Color(0.8, 0.75, 0.7)
-	tv_mat.albedo_texture = load("res://textures/scare_face.png")
+	_tv_pic(Color(0.8, 0.75, 0.7), 0.15)
+	_tv_img(load("res://textures/scare_face.png"))
 	tv_light.light_energy = 3.0
 	_sfx("scream", -6.0, 1.3)
 	_sfx("sting", -2.0)
 	player.shake = 0.6
 	await get_tree().create_timer(0.9).timeout
-	tv_mat.albedo_texture = null
+	_tv_img(null)
 	_tv_power(false)
 	guest.visible = false
 	_sfx("whisper", -8.0)

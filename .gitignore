@@ -998,6 +998,7 @@
 !/scripts/spirit.gd.uid
 !/scripts/vintage.gd
 !/scripts/vintage.gd.uid
+!/shaders/crt.gdshader
 !/shaders/fog.gdshader
 !/shaders/fog.gdshader.uid
 !/shaders/grain.gdshader
