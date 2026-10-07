@@ -53,7 +53,7 @@ ITEM_BOW,the red bow,красный бант
 ITEM_DRESS,the white dress,белое платье
 ITEM_SCARF,the red scarf,красный шарф
 ITEM_SHOES,the black shoes,чёрные туфли
-LVL_01,"Misha, if you're reading this, the power's out again.\n\nDon't be afraid of them. They won't hurt you, they only watch. The Guest in the living room is still waiting for his shows.\n\nThe papers are in the china cabinet. It opens once he has watched his three shows. Just flip through the channels: when it's his, he turns his chair to the screen.\n\nAnd don't turn around if you hear breathing behind you.\n\nGrandma","Миша, если читаешь это, значит свет опять выбило.\n\nНе бойся их. Они ничего тебе не сделают, они только смотрят. Гость в зале всё ещё ждёт свои передачи.\n\nДокументы в серванте. Он откроется, когда Гость посмотрит свои три передачи. Просто переключай каналы: когда идёт его передача, он поворачивает кресло к экрану.\n\nИ не оборачивайся, если услышишь дыхание за спиной.\n\nБабушка"
+LVL_01,"Misha, if you're reading this, the power's out again.\n\nDon't be afraid of them. They won't hurt you, they only watch. The Guest in the living room is still waiting for his shows.\n\nThe papers are in the china cabinet. It opens once he has watched his three shows, in order. I wrote his channels on the back of the photos, by year. When it's his show, he turns his chair to the screen.\n\nAnd don't turn around if you hear breathing behind you.\n\nGrandma","Миша, если читаешь это, значит свет опять выбило.\n\nНе бойся их. Они ничего тебе не сделают, они только смотрят. Гость в зале всё ещё ждёт свои передачи.\n\nДокументы в серванте. Он откроется, когда Гость посмотрит свои три передачи, по порядку. Его каналы я записала на обороте фотографий, по годам. Когда идёт его передача, он поворачивает кресло к экрану.\n\nИ не оборачивайся, если услышишь дыхание за спиной.\n\nБабушка"
 LVL_02,"Key to the hallway — and a piece of the old mirror. Keep it with you.\n\nOur portraits hang in the hallway. Light the candles in the order we left you. Look at us through the glass: it remembers when.\n\nWhile the candles burn, don't turn your back on us. And if you get it wrong, they'll blow them out themselves.","Ключ от коридора — и осколок старого зеркала. Держи его при себе.\n\nВ коридоре висят наши портреты. Зажги свечи в том порядке, в каком мы ушли. Посмотри на нас через стекло: оно помнит когда.\n\nПока свечи горят, не поворачивайся к нам спиной. А если ошибёшься, они задуют свечи сами."
 LVL_03,E — read the note,E — прочитать записку
 LVL_04,E — look at the photo,E — посмотреть фотографию
@@ -65,9 +65,9 @@ LVL_09,E — open the door,E — открыть дверь
 LVL_10,E — light the candle,E — зажечь свечу
 LVL_11,Look around the entryway,Осмотрись в прихожей
 LVL_12,OBJECTIVE:  ,ЗАДАЧА:  
-LVL_13,"Photo, 1975: Grandma on the porch. On the back: ""Pyotr, our lodger, moved in. Brought nothing but a TV and a gramophone.""",Фото 1975 года: бабушка у крыльца. На обороте: «Въехал наш квартирант Пётр. Привёз только телевизор и патефон».
-LVL_14,"Photo, 1976: Grandpa up a power pole. On the back: ""Stepan fixed the antenna — nine channels now. Pyotr still watches only music.""",Фото 1976 года: дед с проводами на столбе. На обороте: «Стёпа починил антенну — теперь девять каналов. А Пётр всё равно смотрит одну музыку».
-LVL_15,"Photo, 1977: a man in this very armchair. On the back: ""Pyotr. When his music came on, he always turned his chair to the TV.""","Фото 1977 года: мужчина в этом же кресле. На обороте: «Пётр. Когда начиналась его музыка, он всегда поворачивал кресло к телевизору»."
+LVL_13,"Photo, 1975: Grandma on the porch. On the back: ""Pyotr, our lodger, moved in. Brought only a TV and a gramophone. Channel %d.""",Фото 1975 года: бабушка у крыльца. На обороте: «Въехал наш квартирант Пётр. Привёз только телевизор и патефон. Канал %d».
+LVL_14,"Photo, 1976: Grandpa up a power pole. On the back: ""Stepan fixed the antenna — nine channels now. Pyotr watches only music. Channel %d.""",Фото 1976 года: дед с проводами на столбе. На обороте: «Стёпа починил антенну — теперь девять каналов. А Пётр смотрит одну музыку. Канал %d».
+LVL_15,"Photo, 1977: a man in this very armchair. On the back: ""Pyotr. When his music came on, he turned his chair to the TV. Channel %d.""","Фото 1977 года: мужчина в этом же кресле. На обороте: «Пётр. Когда начиналась его музыка, он поворачивал кресло к телевизору. Канал %d»."
 LVL_16,"Locked. Scratched into the lock: ""TV"".",Заперто. На замке нацарапано: «Телевизор».
 LVL_17,The hallway key and a shard of mirror. There's a note under the key.,Ключ от коридора и осколок зеркала. Под ключом записка.
 LVL_18,Open the door to the hallway,Открой дверь в коридор
@@ -156,11 +156,11 @@ NUR_02,red,красная
 NUR_03,blue,синяя
 NUR_04,green,зелёная
 NUR_05,white,белая
-NUR_06,"Anya's drawing: a yellow sun. In the corner, the number 1.",Рисунок Ани: жёлтое солнышко. В углу цифра 1.
-NUR_07,"Anya's drawing: Grandma's red house, and the two of us. Number 2.",Рисунок Ани: красный бабушкин дом и мы с ней. Цифра 2.
-NUR_08,Anya's drawing: a blue river. Number 3.,Рисунок Ани: синяя речка. Цифра 3.
-NUR_09,Anya's drawing: a green forest. Someone tall stands between the trees. Number 4.,Рисунок Ани: зелёный лес. Между ёлками стоит кто-то высокий. Цифра 4.
-NUR_10,"White chalk on black paper: ""Don't look away"". Number 5.",Белым мелом на чёрной бумаге: «Не отворачивайся». Цифра 5.
+NUR_06,"Anya's drawing: a yellow sun. In the corner, the number %d.",Рисунок Ани: жёлтое солнышко. В углу цифра %d.
+NUR_07,"Anya's drawing: Grandma's red house, and the two of us. Number %d.",Рисунок Ани: красный бабушкин дом и мы с ней. Цифра %d.
+NUR_08,Anya's drawing: a blue river. Number %d.,Рисунок Ани: синяя речка. Цифра %d.
+NUR_09,Anya's drawing: a green forest. Someone tall stands between the trees. Number %d.,Рисунок Ани: зелёный лес. Между ёлками стоит кто-то высокий. Цифра %d.
+NUR_10,"White chalk on black paper: ""Don't look away"". Number %d.",Белым мелом на чёрной бумаге: «Не отворачивайся». Цифра %d.
 NUR_11,A note taped to the music box. A child's handwriting:\n\nMISHA IF YOU COME BACK\nPLAY MY SONG\nBY MY DRAWINGS\nIN ORDER\n\nAnd I'll hide.,"Записка, приклеенная к шкатулке. Детский почерк:\n\nМИША ЕСЛИ ТЫ ВЕРНЁШЬСЯ\nСЫГРАЙ МОЮ ПЕСЕНКУ\nПО МОИМ РИСУНКАМ\nПО ПОРЯДКУ\n\nА я спрячусь."
 NUR_12,E — look at the drawing,E — посмотреть рисунок
 NUR_13,E — reach for the drawing under the bed,E — достать рисунок из-под кровати

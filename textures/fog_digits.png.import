@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dqyvol5aqfhim"
-path="res://.godot/imported/fog_mirror.png-c9cac189319f7ccf54191dd2b4b0c2e1.ctex"
+uid="uid://7ue15g7r0nm8"
+path="res://.godot/imported/fog_digits.png-ed103f848db74cc088a58d2fe3fd75a7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/fog_mirror.png"
-dest_files=["res://.godot/imported/fog_mirror.png-c9cac189319f7ccf54191dd2b4b0c2e1.ctex"]
+source_file="res://textures/fog_digits.png"
+dest_files=["res://.godot/imported/fog_digits.png-ed103f848db74cc088a58d2fe3fd75a7.ctex"]
 
 [params]
 

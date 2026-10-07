@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://h00p6cgkh0mv"
-path="res://.godot/imported/fog_true.png-a01d71157acbc3ca5b18f6a66aaeef44.ctex"
+uid="uid://b6a4ypn2hdjfr"
+path="res://.godot/imported/fog_base.png-40c5bf3fae98028f9cdb64e82ea27fcc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://textures/fog_true.png"
-dest_files=["res://.godot/imported/fog_true.png-a01d71157acbc3ca5b18f6a66aaeef44.ctex"]
+source_file="res://textures/fog_base.png"
+dest_files=["res://.godot/imported/fog_base.png-40c5bf3fae98028f9cdb64e82ea27fcc.ctex"]
 
 [params]
 

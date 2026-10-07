@@ -4,10 +4,10 @@ extends Node
 ## Цепочка загадок:
 ## 1. Дверь отпирается сама, когда игрок подёргал несколько дверей холла.
 ## 2. Горячая вода в раковине → пар → зеркало запотевает, на нём пальцем написан код.
-##    Написан «изнутри» — задом наперёд (читается как 743). Правильно — 347:
+##    Код каждый раз новый. Написан «изнутри» — задом наперёд (в лоб читается наоборот):
 ##    догадаться, что надпись зеркальная, или посмотреть через осколок (Q).
 ##    Если долго смотреть в запотевшее зеркало — за туманом проступает женщина, и гаснет свет.
-## 3. Кодовый замок на шкафчике под раковиной (347) → дедов проволочный крюк.
+## 3. Кодовый замок на шкафчике под раковиной → дедов проволочный крюк.
 ##    Неверный код — пугалка (трубы, стук из шкафчика, силуэт в зеркале).
 ## 4. Крюком вытащить пробку из ванны с чёрной водой → вода уходит, из ванны поднимается Аня (скример).
 ## 5. На дне — ключ с биркой «Вера»: от спальни бабушки.
@@ -15,14 +15,13 @@ extends Node
 const SPIRIT = preload("res://scripts/spirit.gd")
 const Y2 := -3.4
 const O := Vector3(-1.56, -3.4, -39.33)          ## куда поставлена модель ванной
-const CODE := [3, 4, 7]
 const MIRROR_LAYER := 1 << 10
 const REAL_LAYER := 1 << 11
 const TAP := Vector3(-0.46, Y2 + 1.0, -38.62)     ## кран раковины
 const MIRROR_C := Vector3(-0.455, Y2 + 1.5, -38.57)
 const LOCK := Vector3(-0.46, Y2 + 0.62, -39.3)
 const TUB := Vector3(0.285, Y2, -40.95)          ## центр ванны (на уровне пола)
-const WATER_TOP := 0.64
+const WATER_TOP := 0.53
 const WATER_LOW := 0.2
 const INNER_HINGE := Vector3(-1.685, Y2, -38.47)  ## петля двери между тамбуром и ванной
 const INNER_C := Vector3(-2.115, Y2 + 1.0, -38.455)
@@ -57,8 +56,9 @@ var water: MeshInstance3D
 var stream: MeshInstance3D
 var steam: GPUParticles3D
 var water_snd: AudioStreamPlayer3D
-var fog_real: StandardMaterial3D
-var fog_true: StandardMaterial3D
+var fog_real: ShaderMaterial
+var fog_true: ShaderMaterial
+var CODE := []           ## код замка — каждый раз новый (написан на запотевшем зеркале)
 var fig_mat: StandardMaterial3D
 var candle_light: OmniLight3D
 var candle_flame: MeshInstance3D
@@ -333,16 +333,21 @@ func _build_fog() -> void:
 	var en := TranslationServer.get_locale().begins_with("en")
 	var suf := "_en" if en else ""
 	var mats := []
-	for spec in [["res://textures/fog_mirror.png", REAL_LAYER], ["res://textures/fog_true.png", MIRROR_LAYER]]:
+	# случайный код из цифр, которые в зеркальном виде не совпадают с обычным
+	var pool := [2, 3, 4, 5, 6, 7, 9]
+	for i in 3:
+		CODE.append(pool[randi() % pool.size()])
+	for spec in [[true, REAL_LAYER], [false, MIRROR_LAYER]]:
 		var q := MeshInstance3D.new()
 		var qm := QuadMesh.new()
 		qm.size = Vector2(0.78, 0.61)
 		q.mesh = qm
-		var m := StandardMaterial3D.new()
-		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		m.albedo_texture = load(spec[0].replace(".png", suf + ".png"))   # для английского — с подписью ANYA
-		m.albedo_color = Color(1, 1, 1, 0)
-		m.roughness = 0.9
+		var m := ShaderMaterial.new()
+		m.shader = load("res://shaders/fog.gdshader")
+		m.set_shader_parameter("base_tex", load("res://textures/fog_base.png".replace(".png", suf + ".png")))   # для английского — подпись ANYA
+		m.set_shader_parameter("digits", load("res://textures/fog_digits.png"))
+		m.set_shader_parameter("code", Vector3(CODE[0], CODE[1], CODE[2]))
+		m.set_shader_parameter("mirrored", spec[0])
 		q.material_override = m
 		q.layers = spec[1]
 		q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -675,8 +680,8 @@ func _process(delta: float) -> void:
 		if run_t > 8.0:
 			_stop_water()
 	var a := smoothstep(0.0, 1.0, fog)
-	fog_real.albedo_color.a = a
-	fog_true.albedo_color.a = a
+	fog_real.set_shader_parameter("fade", a)
+	fog_true.set_shader_parameter("fade", a)
 	if candle_light.visible:
 		candle_light.light_energy = 0.45 + randf() * 0.1
 	# долго смотришь в запотевшее зеркало — за туманом проступает она, и гаснет свет

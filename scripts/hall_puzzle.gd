@@ -66,6 +66,14 @@ func interact(_id: String) -> void:
 	pass
 
 
+## Сбился порядок: кресло со скрипом отворачивается обратно.
+func tv_reset() -> void:
+	var chair := L.get_node_or_null("Armchair") as Node3D
+	L._sfx3d("creak", Vector3(-0.3, 0.8, -3), -2.0, 0.45)
+	if chair:
+		create_tween().tween_property(chair, "rotation:y", _chair_tv + CHAIR_AWAY, 0.8).set_trans(Tween.TRANS_SINE)
+
+
 ## Нашли его передачу: кресло поворачивается к экрану на треть.
 func tv_found(n: int) -> void:
 	var chair := L.get_node_or_null("Armchair") as Node3D

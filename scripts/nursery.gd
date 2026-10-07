@@ -8,7 +8,9 @@ extends Node
 
 var door_locked := false   ## дверь детской уже захлопнулась
 var L: Node
-const CODE := [0, 1, 2, 3, 4]
+var CODE := []           ## порядок клавиш (цвета) — по номерам на рисунках, номера каждый раз новые
+var nums := [1, 2, 3, 4, 5]   ## номер в углу каждого рисунка
+const NUM_COLORS := [Color8(235, 190, 20), Color8(205, 35, 30), Color8(40, 80, 200), Color8(40, 150, 50), Color8(240, 240, 235)]
 const KEY_NAMES := ["NUR_01", "NUR_02", "NUR_03", "NUR_04", "NUR_05"]
 const CAPTIONS := [
 	"NUR_06",
@@ -28,6 +30,7 @@ var toys := ["NBear", "NDuck", "NHorse", "NElephant", "NRockChair"]
 
 
 func _ready() -> void:
+	_number_drawings()
 	# цели для «E»
 	for i in 5:
 		var d: Node3D = L.get_node("Drawing%d" % (i + 1))
@@ -160,6 +163,35 @@ func _process(delta: float) -> void:
 		nl.light_energy = 0.0 if randf() < 0.04 else 0.35 * randf_range(0.85, 1.0)
 
 
+## Случайные номера на рисунках: дорисовываем цифру мелком в кружок в углу.
+func _number_drawings() -> void:
+	nums.shuffle()
+	CODE.clear()
+	for n in range(1, 6):
+		CODE.append(nums.find(n))
+	for i in 5:
+		var spr := L.get_node("Drawing%d" % (i + 1)) as Sprite3D
+		var img: Image = spr.texture.get_image()
+		if img.is_compressed():
+			img.decompress()
+		img.convert(Image.FORMAT_RGBA8)
+		var g: Image = load("res://textures/drawings/num_%d.png" % nums[i]).get_image()
+		if g.is_compressed():
+			g.decompress()
+		g.convert(Image.FORMAT_RGBA8)
+		var col: Color = NUM_COLORS[i]
+		for y in g.get_height():
+			for x in g.get_width():
+				var a := g.get_pixel(x, y).a
+				if a > 0.0:
+					g.set_pixel(x, y, Color(col.r * randf_range(0.85, 1.0), col.g * randf_range(0.85, 1.0), col.b * randf_range(0.85, 1.0), a))
+		var k := img.get_width() / 512.0
+		if k != 1.0:
+			g.resize(int(g.get_width() * k), int(g.get_height() * k))
+		img.blend_rect(g, Rect2i(Vector2i.ZERO, g.get_size()), Vector2i(int((512 - 66) * k), int(16 * k)))
+		spr.texture = ImageTexture.create_from_image(img)
+
+
 ## Вызывается из level.gd на любое нажатие E, которое не забрали другие.
 func interact(id: String) -> void:
 	if viewer.visible:
@@ -188,7 +220,7 @@ func _show(i: int) -> void:
 	viewer.visible = true
 	L.player.frozen = true
 	L._sfx("creak", -20.0, 1.8)
-	L._say(CAPTIONS[i], 4.0)
+	L._say(tr(CAPTIONS[i]) % nums[i], 4.0)
 
 
 # ---------------- шкатулка ----------------

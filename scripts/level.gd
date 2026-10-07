@@ -2,7 +2,7 @@ extends Node3D
 ## Тестовый уровень: прихожая → зал (головоломка с телевизором) → коридор (головоломка со свечами).
 ## Никто не гоняется за игроком: только призраки, которые появляются и исчезают, загадки и скримеры.
 
-const CHANNEL_CODE := [3, 7, 5]      ## «шоу Гостя»: на этих каналах кресло поворачивается к экрану (любой порядок)
+var CHANNEL_CODE := [3, 7, 5]        ## «шоу Гостя»: каналы с оборотов фото 1975→1976→1977 (каждую игру новые)
 const CANDLE_CODE := [2, 3, 1]       ## Степан (1991) → Аня (2004) → Вера (2026)
 const VINTAGE = preload("res://scripts/vintage.gd")
 const SETTINGS = preload("res://scripts/settings.gd")
@@ -153,6 +153,10 @@ func _hint_text(h) -> String:
 func _ready() -> void:
 	SETTINGS.apply_lang()
 	randomize()
+	# три разных канала Гостя (не первый — на нём телевизор включается)
+	var chans := [2, 3, 4, 5, 6, 7, 8, 9]
+	chans.shuffle()
+	CHANNEL_CODE = chans.slice(0, 3)
 	_localize_scene()
 	_build_hud()
 	SETTINGS.apply($WorldEnvironment.environment, grain_mat, SETTINGS.get_quality())
@@ -515,11 +519,11 @@ func _interact() -> void:
 		"note2":
 			_show_note(NOTE2_TEXT)
 		"photo1":
-			_say("LVL_13")
+			_say(tr("LVL_13") % CHANNEL_CODE[0], 5.0)
 		"photo2":
-			_say("LVL_14")
+			_say(tr("LVL_14") % CHANNEL_CODE[1], 5.0)
 		"photo3":
-			_say("LVL_15")
+			_say(tr("LVL_15") % CHANNEL_CODE[2], 5.0)
 		"tv":
 			_tv_next()
 		"tv_off":
@@ -755,8 +759,8 @@ func _update_tv(delta: float) -> void:
 	dwell_done = true
 	if code_progress >= CHANNEL_CODE.size():   # загадка уже решена — каналы можно листать просто так
 		return
-	if channel in CHANNEL_CODE and not tv_found.has(channel):
-		# его передача: пустое кресло поворачивается к экрану
+	if channel == CHANNEL_CODE[code_progress]:
+		# его передача (по порядку лет на фото): пустое кресло поворачивается к экрану
 		tv_found.append(channel)
 		code_progress = tv_found.size()
 		_sfx3d("knock", $Servant.global_position, -6.0, 2.0)
@@ -773,7 +777,16 @@ func _update_tv(delta: float) -> void:
 		elif code_progress >= CHANNEL_CODE.size():
 			await get_tree().create_timer(1.6).timeout
 			_solve_tv()
+	elif channel in CHANNEL_CODE and code_progress > 0 and not tv_found.has(channel):
+		# его канал, но не по порядку — кресло со скрипом отворачивается обратно
+		tv_found.clear()
+		code_progress = 0
+		hallp.tv_reset()
 	elif not channel in CHANNEL_CODE:
+		if code_progress > 0:
+			tv_found.clear()
+			code_progress = 0
+			hallp.tv_reset()
 		hallp.tv_mistake()
 
 
