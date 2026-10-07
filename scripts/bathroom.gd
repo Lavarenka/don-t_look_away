@@ -24,6 +24,10 @@ const LOCK := Vector3(-0.46, Y2 + 0.62, -39.3)
 const TUB := Vector3(0.285, Y2, -40.95)          ## центр ванны (на уровне пола)
 const WATER_TOP := 0.72
 const WATER_LOW := 0.2
+const INNER_HINGE := Vector3(-1.685, Y2, -38.47)  ## петля двери между тамбуром и ванной
+const INNER_C := Vector3(-2.115, Y2 + 1.0, -38.455)
+const INNER_CLOSED := 0.733                       ## поворот петли: закрыта
+const INNER_OPEN := -0.84                         ## открыта внутрь ванной
 const SINK_CANDLE := Vector3(-0.89, Y2 + 1.13, -39.195)
 
 var L: Node
@@ -47,6 +51,7 @@ var next_drip := 2.0
 
 var door_pivot: Node3D
 var door_angle := 1.6
+var inner_pivot: Node3D
 var water: MeshInstance3D
 var stream: MeshInstance3D
 var steam: GPUParticles3D
@@ -150,7 +155,10 @@ func _build_door() -> void:
 	door_pivot.global_position = Vector3(leaf.global_position.x, Y2, leaf.global_position.z)
 	leaf.reparent(door_pivot, true)
 	var c := Vector3.ZERO
-	for mi in leaf.find_children("*", "MeshInstance3D", true, false):
+	var meshes := leaf.find_children("*", "MeshInstance3D", true, false)
+	if leaf is MeshInstance3D:
+		meshes.append(leaf)
+	for mi in meshes:
 		c = (mi.global_transform * mi.get_aabb()).get_center()
 	var body := StaticBody3D.new()
 	var sh := CollisionShape3D.new()
@@ -161,6 +169,19 @@ func _build_door() -> void:
 	door_pivot.add_child(body)
 	body.position = Vector3(c.x - door_pivot.global_position.x, 0.935, 0)
 	door_angle = -1.6 if c.x < door_pivot.global_position.x else 1.6   # открывается внутрь ванной
+	# табличка «ВАННАЯ» висит на самой двери (иначе остаётся в воздухе, когда дверь открыта)
+	for n in L.get_children():
+		if n is Node3D and n.get_child_count() > 0 and n.get_child(n.get_child_count() - 1) is Label3D \
+				and (n.get_child(n.get_child_count() - 1) as Label3D).text == tr("F2_SIGN_BATH"):
+			n.reparent(leaf, true)
+	# внутренняя дверь (из модели) — на петлю, сначала закрыта
+	var inner: Node3D = room.find_child("Door_001", true, false)
+	if inner:
+		inner_pivot = Node3D.new()
+		L.add_child(inner_pivot)
+		inner_pivot.global_position = INNER_HINGE
+		inner.reparent(inner_pivot, true)
+		inner_pivot.rotation.y = INNER_CLOSED
 
 
 # ---------------- вода, кран, замок ----------------
@@ -536,7 +557,7 @@ func unlock() -> void:
 	L._sfx3d("click", door_pivot.global_position + Vector3(0, 1, 0), -2.0, 0.7)
 	await get_tree().create_timer(0.8).timeout
 	L._sfx3d("creak", door_pivot.global_position + Vector3(0, 1, 0), -4.0, 0.7)
-	create_tween().tween_property(door_pivot, "rotation:y", door_angle * 0.55, 3.0).set_trans(Tween.TRANS_SINE)
+	create_tween().tween_property(door_pivot, "rotation:y", door_angle, 3.2).set_trans(Tween.TRANS_SINE)
 	L._say("B_OPEN", 3.5)
 	L._set_objective("B_OBJ1")
 

@@ -1,10 +1,9 @@
 extends Node
 ## Загадки зала и коридора.
 ##
-## Зал — «Шоу Гостя»: в телепрограмме 1977 года шесть часов эфира, Гость смотрел только музыку
-## (подсказки на обороте фото), а три вещи в зале остановились на «его» времени:
-## наручные часы (19:30), будильник (21:00), настенные часы (22:45).
-## Музыка в эти часы идёт на каналах 3 → 7 → 5. За неверный канал — пугалка.
+## Зал — «Шоу Гостя»: кресло Гостя стоит отвернувшись. Листаешь каналы — на «его» передаче
+## пустое кресло со скрипом поворачивается к экрану (каналы 3, 7 и 5, в любом порядке).
+## Когда он «посмотрел» все три — сервант открывается. Задержался на чужом канале — пугалка.
 ##
 ## Коридор — осколок зеркала (Q или правая кнопка мыши): в нём видно «отражённый дом».
 ## Только там на табличках под портретами есть годы, на стене — надпись сажей, а в коридоре стоит Аня.
@@ -30,6 +29,7 @@ var _turn_t := 0.0
 var _tv_mist := 0
 var _tv_last := -100.0
 var _candle_mist := 0
+var _chair_tv := 0.0
 var _anya: Node3D
 var _anya_seen := 0.0
 var _anya_step := 0
@@ -37,172 +37,52 @@ var _corr_hint_t := -1.0
 
 
 func _ready() -> void:
-	_build_props()
+	_setup_chair()
 	_build_mirror_world()
 	_build_shard()
 
 
 # ---------------- зал: телепрограмма, часы, будильник ----------------
-func _build_props() -> void:
-	# телепрограмма на чайном столике
-	var guide := MeshInstance3D.new()
-	var gm := BoxMesh.new()
-	gm.size = Vector3(0.26, 0.004, 0.36)
-	guide.mesh = gm
-	var gmat := StandardMaterial3D.new()
-	gmat.albedo_texture = load("res://textures/tv_guide.png")
-	gmat.roughness = 0.95
-	guide.material_override = gmat
-	guide.position = Vector3(-0.92, 0.934, -4.78)
-	guide.rotation.y = -0.35
-	L.add_child(guide)
-
-	# наручные часы Гостя на подлокотнике кресла
-	var watch := Node3D.new()
-	watch.position = Vector3(-0.3, 0.0, -3.0) + WATCH_OFS
-	L.add_child(watch)
-	var band := MeshInstance3D.new()
-	var bm := BoxMesh.new()
-	bm.size = Vector3(0.022, 0.004, 0.17)
-	band.mesh = bm
-	band.material_override = _mat(Color(0.12, 0.07, 0.04), 0.7)
-	watch.add_child(band)
-	var face := MeshInstance3D.new()
-	var fm := CylinderMesh.new()
-	fm.top_radius = 0.019
-	fm.bottom_radius = 0.019
-	fm.height = 0.008
-	face.mesh = fm
-	face.position.y = 0.004
-	face.material_override = _mat(Color(0.75, 0.62, 0.35), 0.35, 0.8)
-	watch.add_child(face)
-	var dial := MeshInstance3D.new()
-	var dm := CylinderMesh.new()
-	dm.top_radius = 0.015
-	dm.bottom_radius = 0.015
-	dm.height = 0.002
-	dial.mesh = dm
-	dial.position.y = 0.0085
-	dial.material_override = _mat(Color(0.85, 0.82, 0.74), 0.6)
-	watch.add_child(dial)
-	watch.rotation.y = 0.3
-
-	# будильник на столе у телефона: стрелки на девяти
-	var alarm := Node3D.new()
-	alarm.position = Vector3(1.66, 0.93, -5.42)
-	alarm.rotation.y = -0.25
-	L.add_child(alarm)
-	var metal := _mat(Color(0.45, 0.12, 0.1), 0.4, 0.6)
-	var body := MeshInstance3D.new()
-	var cm := CylinderMesh.new()
-	cm.top_radius = 0.055
-	cm.bottom_radius = 0.055
-	cm.height = 0.04
-	body.mesh = cm
-	body.rotation.x = PI / 2
-	body.position.y = 0.075
-	body.material_override = metal
-	alarm.add_child(body)
-	var adial := MeshInstance3D.new()
-	var adm := CylinderMesh.new()
-	adm.top_radius = 0.047
-	adm.bottom_radius = 0.047
-	adm.height = 0.002
-	adial.mesh = adm
-	adial.rotation.x = PI / 2
-	adial.position = Vector3(0, 0.075, 0.021)
-	adial.material_override = _mat(Color(0.86, 0.83, 0.75), 0.7)
-	alarm.add_child(adial)
-	for s in [-1, 1]:
-		var bell := MeshInstance3D.new()
-		var sm := SphereMesh.new()
-		sm.radius = 0.022
-		sm.height = 0.03
-		bell.mesh = sm
-		bell.position = Vector3(0.035 * s, 0.13, 0)
-		bell.rotation.z = -0.5 * s
-		bell.material_override = metal
-		alarm.add_child(bell)
-		var leg := MeshInstance3D.new()
-		var lm := BoxMesh.new()
-		lm.size = Vector3(0.008, 0.03, 0.008)
-		leg.mesh = lm
-		leg.position = Vector3(0.03 * s, 0.015, 0)
-		leg.rotation.z = 0.4 * s
-		leg.material_override = metal
-		alarm.add_child(leg)
-	# стрелки: часовая на 9, минутная на 12
-	var hand_mat := _mat(Color(0.05, 0.05, 0.05), 0.8)
-	for h in [[Vector3(0.016, 0.003, 0.002), Vector3(-0.009, 0.075, 0.023)], [Vector3(0.003, 0.03, 0.002), Vector3(0, 0.089, 0.023)]]:
-		var hand := MeshInstance3D.new()
-		var hm := BoxMesh.new()
-		hm.size = h[0]
-		hand.mesh = hm
-		hand.position = h[1]
-		hand.material_override = hand_mat
-		alarm.add_child(hand)
-
-	# стрелки настенных часов: без четверти одиннадцать
-	for h in [[Vector3(0.006, 0.045, 0.003), -PI * 2.0 * (10.75 / 12.0)], [Vector3(0.004, 0.065, 0.003), -PI * 2.0 * 0.75]]:
-		var piv := Node3D.new()
-		piv.position = CLOCK_C
-		piv.rotation.z = h[1]
-		L.add_child(piv)
-		var hand := MeshInstance3D.new()
-		var hm := BoxMesh.new()
-		hm.size = h[0]
-		hand.mesh = hm
-		hand.position.y = h[0].y * 0.5
-		hand.material_override = hand_mat
-		piv.add_child(hand)
-
-	L.targets.append({"id": "h_guide", "pos": guide.global_position, "th": 0.35, "dist": 2.0})
-	L.targets.append({"id": "h_watch", "pos": watch.global_position, "th": 0.3, "dist": 1.8})
-	L.targets.append({"id": "h_alarm", "pos": alarm.global_position + Vector3(0, 0.08, 0), "th": 0.3, "dist": 2.0})
-	L.targets.append({"id": "h_clock", "pos": CLOCK_C, "th": 0.3, "dist": 3.0})
-	L.extra_hints["h_guide"] = "PZ_GUIDE_H"
-	L.extra_hints["h_watch"] = "PZ_WATCH_H"
-	L.extra_hints["h_alarm"] = "PZ_ALARM_H"
-	L.extra_hints["h_clock"] = "PZ_CLOCK_H"
 
 
-const CLOCK_C := Vector3(1.555, 1.932, -5.785)   ## центр циферблата настенных часов
-const WATCH_OFS := Vector3(-0.05, 0.62, 0.4)
+const CHAIR_AWAY := 1.25          ## на сколько кресло отвёрнуто от телевизора в начале
 
 
-func _mat(c: Color, rough := 0.6, metal := 0.0) -> StandardMaterial3D:
-	var m := StandardMaterial3D.new()
-	m.albedo_color = c
-	m.roughness = rough
-	m.metallic = metal
-	return m
+func _setup_chair() -> void:
+	var chair := L.get_node_or_null("Armchair") as Node3D
+	if chair:
+		_chair_tv = chair.rotation.y
+		chair.rotation.y = _chair_tv + CHAIR_AWAY
 
 
-func target_ok(id: String) -> bool:
-	return id in ["h_guide", "h_watch", "h_alarm", "h_clock"] and L.phase in ["intro", "hall", "key", "door"]
+func target_ok(_id: String) -> bool:
+	return false
 
 
-func interact(id: String) -> void:
-	match id:
-		"h_guide":
-			L._show_note("PZ_GUIDE")
-		"h_watch":
-			L._sfx("pickup", -14.0, 1.4)
-			L._say("PZ_WATCH", 4.5)
-		"h_alarm":
-			L._sfx("clink", -12.0, 1.3)
-			L._say("PZ_ALARM", 4.5)
-		"h_clock":
-			L._say("PZ_CLOCK", 4.0)
+func interact(_id: String) -> void:
+	pass
+
+
+## Нашли его передачу: кресло поворачивается к экрану на треть.
+func tv_found(n: int) -> void:
+	var chair := L.get_node_or_null("Armchair") as Node3D
+	L._sfx3d("creak", Vector3(-0.3, 0.8, -3), 0.0, 0.55)
+	if chair:
+		var to := _chair_tv + CHAIR_AWAY * (1.0 - n / 3.0)
+		create_tween().tween_property(chair, "rotation:y", to, 1.4).set_trans(Tween.TRANS_SINE)
+	if n == 1:
+		L._say("PZ_CHAIR1", 3.5)
+	elif n == 2:
+		L._say("PZ_CHAIR2", 3.0)
 
 
 ## Неверный канал: каждый раз что-то новое, и дом всё злее.
 func tv_mistake() -> void:
-	# не чаще раза в 8 секунд, иначе листание каналов превращается в сплошной шум
+	# не чаще раза в 15 секунд, иначе листание каналов превращается в сплошной шум
 	if L.channel == 1 and _tv_mist == 0:   # только что включил — это ещё не ошибка
 		return
 	var now := Time.get_ticks_msec() / 1000.0
-	if now - _tv_last < 8.0:
+	if now - _tv_last < 15.0:
 		L._sfx("whisper", -14.0)
 		return
 	_tv_last = now
@@ -217,15 +97,12 @@ func tv_mistake() -> void:
 		await get_tree().create_timer(1.4).timeout
 		L.tv_static.volume_db -= 12.0
 	elif kind == 1:
-		# кресло Гостя со скрипом поворачивается к игроку — и так и остаётся
-		var chair := L.get_node_or_null("Armchair") as Node3D
-		L._sfx3d("creak", Vector3(-0.3, 0.8, -3), 0.0, 0.6)
+		# в серванте кто-то стучит изнутри, лампочки фонаря захлёбываются
+		for t in [0.0, 0.3, 0.3, 0.5]:
+			await get_tree().create_timer(t).timeout
+			L._sfx3d("knock", Vector3(2.5, 1.2, -3), 2.0, 1.2)
 		L._sfx("whisper", -6.0)
-		if chair:
-			var to: Vector3 = L.player.global_position - chair.global_position
-			var yaw := atan2(to.x, to.z) - PI / 2
-			create_tween().tween_property(chair, "rotation:y", lerp_angle(chair.rotation.y, yaw, 0.45), 0.5).set_trans(Tween.TRANS_BACK)
-		L.player.shake = 0.25
+		L.player.flicker = 0.5
 	else:
 		# дыхание за спиной: призрак стоит сзади, пока не обернёшься
 		L._sfx("heartbeat", -6.0)

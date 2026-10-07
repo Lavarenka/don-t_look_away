@@ -2,7 +2,7 @@ extends Node3D
 ## Тестовый уровень: прихожая → зал (головоломка с телевизором) → коридор (головоломка со свечами).
 ## Никто не гоняется за игроком: только призраки, которые появляются и исчезают, загадки и скримеры.
 
-const CHANNEL_CODE := [3, 7, 5]      ## «шоу Гостя»: музыка в 19:30, 21:00 и 22:45 (см. hall_puzzle.gd)
+const CHANNEL_CODE := [3, 7, 5]      ## «шоу Гостя»: на этих каналах кресло поворачивается к экрану (любой порядок)
 const CANDLE_CODE := [2, 3, 1]       ## Степан (1991) → Аня (2004) → Вера (2026)
 const VINTAGE = preload("res://scripts/vintage.gd")
 const SETTINGS = preload("res://scripts/settings.gd")
@@ -40,6 +40,7 @@ var channel := 1
 var dwell := 0.0
 var dwell_done := false
 var code_progress := 0
+var tv_found := []          ## какие «его» каналы уже найдены
 var candle_progress := 0
 var candles_lit := [false, false, false]
 var next_amb := 10.0
@@ -57,6 +58,7 @@ var attic: Node
 var floor2: Node
 var hallp: Node            ## загадки зала и коридора, осколок зеркала
 var bath: Node             ## ванная второго этажа
+var doors: Node            ## двери, которые открываются и закрываются по E
 var events := {}            ## какие сценки уже случились
 var shade_mode := ""        ## что сейчас делает призрак
 var shade_t := 0.0
@@ -208,6 +210,14 @@ func _ready() -> void:
 	bath = preload("res://scripts/bathroom.gd").new()
 	add_child(bath)
 	bath.setup(self)
+	doors = preload("res://scripts/doors.gd").new()
+	doors.L = self
+	add_child(doors)
+	doors.add("door1", door1, 0.0, 1.6, Vector3(0, 1.1, -6), func(): return door1_open)
+	doors.add("exit", exit_door, 0.0, 1.6, Vector3(0, 1.1, -18), func(): return events.has("nursery_open"))
+	doors.add("land", get_node("F2LandPivot"), 0.0, 1.6, Vector3(3.0, -2.4, -34.2), func(): return phase == "floor2")
+	doors.add("bath", bath.door_pivot, 0.0, bath.door_angle, Vector3(-0.8, -2.4, -36.8), func(): return bath.unlocked)
+	doors.add("bath_in", bath.inner_pivot, bath.INNER_CLOSED, bath.INNER_OPEN, bath.INNER_C, func(): return phase == "floor2")
 	_setup_zombie()
 	player.mouse_sens *= SETTINGS.get_sens()
 	SETTINGS.apply_general()
@@ -478,6 +488,8 @@ func _target_ok(id: String) -> bool:
 		return hallp.target_ok(id)
 	if id.begins_with("b_"):
 		return bath.target_ok(id)
+	if id.begins_with("d_"):
+		return doors.target_ok(id)
 	match id:
 		"tv_off": return tv_on
 		"servant": return phase == "intro" or phase == "hall"
@@ -549,6 +561,7 @@ func _interact() -> void:
 			floor2.interact(t)
 			hallp.interact(t)
 			bath.interact(t)
+			doors.interact(t)
 
 
 func _show_note(text: String) -> void:
@@ -720,22 +733,25 @@ func _update_tv(delta: float) -> void:
 	dwell_done = true
 	if code_progress >= CHANNEL_CODE.size():   # загадка уже решена — каналы можно листать просто так
 		return
-	if channel == CHANNEL_CODE[code_progress]:
-		code_progress += 1
+	if channel in CHANNEL_CODE and not tv_found.has(channel):
+		# его передача: пустое кресло поворачивается к экрану
+		tv_found.append(channel)
+		code_progress = tv_found.size()
 		_sfx3d("knock", $Servant.global_position, -6.0, 2.0)
+		hallp.tv_found(code_progress)
 		if code_progress == 1 and not events.has("behind"):
 			# дыхание за спиной: призрак стоит прямо за игроком
 			events["behind"] = true
-			await get_tree().create_timer(1.0).timeout
+			await get_tree().create_timer(4.0).timeout
 			_shade_show(_behind_player(), "behind")
 			_sfx("whisper", -2.0)
 		elif code_progress == 2 and not events.has("chair"):
 			events["chair"] = true
 			events["peek_wait"] = true
 		elif code_progress >= CHANNEL_CODE.size():
+			await get_tree().create_timer(1.6).timeout
 			_solve_tv()
-	else:
-		code_progress = 1 if channel == CHANNEL_CODE[0] else 0
+	elif not channel in CHANNEL_CODE:
 		hallp.tv_mistake()
 
 

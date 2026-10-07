@@ -29,6 +29,7 @@ CH_3,3. The Nursery,3. Детская
 CH_4,4. The Attic,4. Чердак
 CH_5,5. The Second Floor,5. Второй этаж
 CH_LOCKED,— locked —,— закрыто —
+D_CLOSE,E — close,E — закрыть
 F2_SIGN_ANYA,ANYA\nKNOCK FIRST!,АНЯ\nСТУЧАТЬ!
 F2_SIGN_BATH,BATH,ВАННАЯ
 HAUNT_01,Someone is pounding on the front door. Then — silence.,Кто-то ломится во входную дверь. Потом — тишина.
@@ -51,7 +52,7 @@ ITEM_BOW,the red bow,красный бант
 ITEM_DRESS,the white dress,белое платье
 ITEM_SCARF,the red scarf,красный шарф
 ITEM_SHOES,the black shoes,чёрные туфли
-LVL_01,"Misha, if you're reading this, the power's out again.\n\nDon't be afraid of them. They won't hurt you, they only watch. The Guest in the living room is still waiting for his shows.\n\nThe papers are in the china cabinet. The lock opens if you put on his three shows, one after another, the way he watched them that night. The photos will tell you what he liked. And look at what stopped when he did.\n\nAnd don't turn around if you hear breathing behind you.\n\nGrandma","Миша, если читаешь это, значит свет опять выбило.\n\nНе бойся их. Они ничего тебе не сделают, они только смотрят. Гость в зале всё ещё ждёт свои передачи.\n\nДокументы в серванте. Замок откроется, если включить на телевизоре три его передачи, одну за другой, как он смотрел их в тот вечер. Что он любил, расскажут фотографии. И посмотри, что остановилось вместе с ним.\n\nИ не оборачивайся, если услышишь дыхание за спиной.\n\nБабушка"
+LVL_01,"Misha, if you're reading this, the power's out again.\n\nDon't be afraid of them. They won't hurt you, they only watch. The Guest in the living room is still waiting for his shows.\n\nThe papers are in the china cabinet. It opens once he has watched his three shows. Just flip through the channels: when it's his, he turns his chair to the screen.\n\nAnd don't turn around if you hear breathing behind you.\n\nGrandma","Миша, если читаешь это, значит свет опять выбило.\n\nНе бойся их. Они ничего тебе не сделают, они только смотрят. Гость в зале всё ещё ждёт свои передачи.\n\nДокументы в серванте. Он откроется, когда Гость посмотрит свои три передачи. Просто переключай каналы: когда идёт его передача, он поворачивает кресло к экрану.\n\nИ не оборачивайся, если услышишь дыхание за спиной.\n\nБабушка"
 LVL_02,"Key to the hallway — and a piece of the old mirror. Keep it with you.\n\nOur portraits hang in the hallway. Light the candles in the order we left you. Look at us through the glass: it remembers when.\n\nWhile the candles burn, don't turn your back on us. And if you get it wrong, they'll blow them out themselves.","Ключ от коридора — и осколок старого зеркала. Держи его при себе.\n\nВ коридоре висят наши портреты. Зажги свечи в том порядке, в каком мы ушли. Посмотри на нас через стекло: оно помнит когда.\n\nПока свечи горят, не поворачивайся к нам спиной. А если ошибёшься, они задуют свечи сами."
 LVL_03,E — read the note,E — прочитать записку
 LVL_04,E — look at the photo,E — посмотреть фотографию
@@ -65,14 +66,14 @@ LVL_11,Look around the entryway,Осмотрись в прихожей
 LVL_12,OBJECTIVE:  ,ЗАДАЧА:  
 LVL_13,"Photo, 1975: Grandma on the porch. On the back: ""Pyotr, our lodger, moved in. Brought nothing but a TV and a gramophone.""",Фото 1975 года: бабушка у крыльца. На обороте: «Въехал наш квартирант Пётр. Привёз только телевизор и патефон».
 LVL_14,"Photo, 1976: Grandpa up a power pole. On the back: ""Stepan fixed the antenna — nine channels now. Pyotr still watches only music.""",Фото 1976 года: дед с проводами на столбе. На обороте: «Стёпа починил антенну — теперь девять каналов. А Пётр всё равно смотрит одну музыку».
-LVL_15,"Photo, 1977: a man in this very armchair. On the back: ""Pyotr. His watch stopped the same night he did.""","Фото 1977 года: мужчина в этом же кресле. На обороте: «Пётр. Его часы остановились в ту же ночь, что и он»."
+LVL_15,"Photo, 1977: a man in this very armchair. On the back: ""Pyotr. When his music came on, he always turned his chair to the TV.""","Фото 1977 года: мужчина в этом же кресле. На обороте: «Пётр. Когда начиналась его музыка, он всегда поворачивал кресло к телевизору»."
 LVL_16,"Locked. Scratched into the lock: ""TV"".",Заперто. На замке нацарапано: «Телевизор».
 LVL_17,The hallway key and a shard of mirror. There's a note under the key.,Ключ от коридора и осколок зеркала. Под ключом записка.
 LVL_18,Open the door to the hallway,Открой дверь в коридор
 LVL_19,Locked. The key must be in the cabinet.,Заперто. Ключ должен быть в серванте.
 LVL_20,Light the candles under the portraits in the right order,Зажги свечи у портретов в правильном порядке
 LVL_21,Locked. The candles first.,Заперто. Сначала свечи.
-LVL_22,Put the Guest's three shows on the TV,Включи на телевизоре три передачи Гостя
+LVL_22,Find the Guest's three shows on the TV,Найди на телевизоре три передачи Гостя
 LVL_23,The armchair is empty. The cabinet doors opened by themselves.,Кресло пустое. Дверцы серванта открылись сами.
 LVL_24,Take the key from the cabinet,Возьми ключ из серванта
 LVL_25,Someone blew out the candles.,Кто-то задул свечи.
@@ -179,19 +180,13 @@ NUR_27,Three...,Три...
 PAUSE_01,PAUSED,ПАУЗА
 PAUSE_02,Resume,Продолжить
 PAUSE_03,Main Menu,В главное меню
-PZ_ALARM,"Pyotr's alarm clock. The alarm is set for nine. Scratched on the back: ""don't sleep through it"".",Будильник Петра. Звонок заведён на девять. На задней крышке нацарапано: «не проспать».
-PZ_ALARM_H,E — look at the alarm clock,E — посмотреть на будильник
-PZ_CLOCK,The wall clock stopped at a quarter to eleven.,Настенные часы остановились без четверти одиннадцать.
-PZ_CLOCK_H,E — look at the clock,E — посмотреть на часы
-PZ_GUIDE,"TV GUIDE  ·  Thursday, October 13, 1977\n\n18:00   2 News  ·  4 Hockey  ·  6 Folk Songs  ·  8 Cartoons\n19:30   1 Farm Hour  ·  3 Evening of Romances  ·  5 Weather  ·  9 Puppet Theater\n20:15   2 Chess School  ·  4 Film ""Taiga""  ·  7 The Brass Band Plays  ·  8 News\n21:00   1 News  ·  5 Football  ·  7 Song of the Year  ·  9 Detective Hour\n22:45   3 Late News  ·  5 Night Concert: Piano  ·  6 Film ""The Pier""  ·  8 Science Today\n23:30   1 Sign-off  ·  4 Jazz Evening  ·  9 Test Pattern\n\nIn the margin, in pencil: ""P. — wake me for the music.""","ПРОГРАММА ПЕРЕДАЧ  ·  четверг, 13 октября 1977\n\n18:00   2 Новости  ·  4 Хоккей  ·  6 Народные песни  ·  8 Мультфильмы\n19:30   1 Сельский час  ·  3 Вечер романса  ·  5 Погода  ·  9 Кукольный театр\n20:15   2 Шахматная школа  ·  4 Фильм «Тайга»  ·  7 Играет духовой оркестр  ·  8 Новости\n21:00   1 Новости  ·  5 Футбол  ·  7 Песня года  ·  9 Следствие ведут\n22:45   3 Последние известия  ·  5 Ночной концерт: фортепиано  ·  6 Фильм «Пристань»  ·  8 Очевидное-невероятное\n23:30   1 Конец вещания  ·  4 Джазовый вечер  ·  9 Настроечная таблица\n\nНа полях карандашом: «П. — разбудить к музыке»."
-PZ_GUIDE_H,E — read the TV guide,E — читать программу передач
+PZ_CHAIR1,The armchair creaked... and turned toward the screen by itself.,Кресло скрипнуло... и само повернулось к экрану.
+PZ_CHAIR2,It turned a little more. He's watching.,Повернулось ещё. Он смотрит.
 PZ_SHARD_1,The glass shows the house... but not quite this one.,В стекле этот дом... но не совсем этот.
 PZ_SHARD_H,Q or right mouse button — raise the mirror shard,Q или правая кнопка мыши — поднять осколок зеркала
 PZ_SHARD_NAG,"""Look at us through the glass""... Grandma meant the shard. (Q / right mouse button)",«Посмотри на нас через стекло»... Бабушка про осколок. (Q / правая кнопка мыши)
 PZ_SOOT,DON'T TURN AWAY,НЕ ОТВОРАЧИВАЙСЯ
 PZ_TURNED,I turned my back on them. The candles went out.,Я повернулся к ним спиной. Свечи погасли.
-PZ_WATCH,A man's wristwatch on the armrest. It stopped at half past seven. Evening — the window behind the chair was dark in the photo.,Мужские наручные часы на подлокотнике. Стоят на половине восьмого. Вечера — на фото за креслом темно.
-PZ_WATCH_H,E — look at the wristwatch,E — посмотреть на наручные часы
 SET_01,Low,Низкое
 SET_02,Medium,Среднее
 SET_03,High,Высокое

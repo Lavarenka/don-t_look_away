@@ -6,6 +6,7 @@ extends Node
 ## Ошибся — шкатулка фальшивит, а одна из игрушек, на которую ты не смотришь,
 ## поворачивается к тебе. Разгадал — финал демки.
 
+var door_locked := false   ## дверь детской уже захлопнулась
 var L: Node
 const CODE := [0, 1, 2, 3, 4]
 const KEY_NAMES := ["NUR_01", "NUR_02", "NUR_03", "NUR_04", "NUR_05"]
@@ -192,6 +193,9 @@ func _show(i: int) -> void:
 
 # ---------------- шкатулка ----------------
 func _press(k: int) -> void:
+	# стоило тронуть шкатулку — дверь детской захлопывается: убежать уже не выйдет
+	if not door_locked:
+		_lock_door()
 	var key: Node3D = L.get_node("MusicBox/Key%d" % k)
 	var tw := create_tween()
 	tw.tween_property(key, "position:y", 0.1, 0.06)
@@ -337,7 +341,8 @@ func _solve() -> void:
 	_gpose("zidle", 1.0, 0.2)
 	girl.visible = true
 	L._sfx("girl_appear", -2.0)
-	_lock_door()
+	if not door_locked:
+		_lock_door()
 	# на каждый счёт пропадает в мигании света и появляется ближе — каждый раз в новой жуткой позе и всё кровавее
 	var poses := [["zidle", 2.7, 0.45, 0.0], ["reach", 1.3, 0.7, 0.0], ["idle", 3.2, 0.9, 0.0]]
 	for k in 3:
@@ -389,6 +394,8 @@ func _gpose(n: String, t: float, blood: float, lift := 0.0) -> void:
 
 ## Дверь в детскую захлопывается — бежать некуда.
 func _lock_door() -> void:
+	door_locked = true
+	L.doors.lock("exit")
 	var p = L.player
 	var pos: Vector3 = p.global_position
 	if pos.z > -18.05:                       # игрок успел выйти — затянуть обратно в комнату
