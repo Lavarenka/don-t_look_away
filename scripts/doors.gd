@@ -8,7 +8,7 @@ var L: Node
 var doors := {}        ## id → {pivot, closed, open, center, ok: Callable, locked}
 var _busy := {}
 ## «Дом дышит»: в комнате, где игрок, иногда одна дверь сама чуть приоткрывается или призакрывается.
-var _creep_t := randf_range(30.0, 55.0)
+var _creep_t := 4.0          ## первый раз — почти сразу, как только рядом есть подходящая дверь
 
 
 func add(id: String, pivot: Node3D, closed_a: float, open_a: float, center: Vector3, ok: Callable) -> void:
@@ -68,7 +68,7 @@ func _process(delta: float) -> void:
 		L.extra_hints["d_" + id] = "D_CLOSE" if is_open(id) else "LVL_68"
 	_creep_t -= delta
 	if _creep_t <= 0.0:
-		_creep_t = 8.0 if not _creep() else randf_range(35.0, 75.0)
+		_creep_t = 3.0 if not _creep() else randf_range(35.0, 75.0)
 
 
 ## Одна дверь рядом с игроком медленно, со слабым скрипом сдвигается сама.
