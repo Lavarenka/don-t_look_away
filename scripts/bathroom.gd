@@ -43,8 +43,9 @@ var lock_open := false
 var has_hook := false
 var drained := false
 var water_m: MeshInstance3D          ## та же вода «в стекле»: прозрачная — видно дно
-var drowned: Node3D                  ## она лежит на дне (видно только в осколке)
-var drowned_key: Node3D              ## и ключ рядом с ней
+var hair: MeshInstance3D             ## на дне — клубок длинных чёрных волос (видно только в осколке)
+var hair_eye: Node3D                 ## из глубины волос иногда открывается глаз
+var drowned_key: Node3D              ## ключ запутался в волосах
 var _shard_seen := false
 var _move_t := 12.0                  ## когда под водой снова что-то шевельнётся
 var key_taken := false
@@ -241,13 +242,7 @@ func _build_props() -> void:
 	water_m.scale = Vector3(0.95, 1, 0.97)
 	water_m.position = water.position
 	L.add_child(water_m)
-	drowned = SPIRIT.new()
-	L.add_child(drowned)
-	drowned.set_layer(MIRROR_LAYER)
-	drowned.global_position = TUB + Vector3(0.0, 0.19, 0.6)
-	drowned.rotation = Vector3(-PI / 2, 0, 0)
-	drowned.play("idle", 0.0)
-	drowned.set_blood(0.5)
+	_build_hair()
 	drowned_key = L.key_node.duplicate()
 	drowned_key.visible = true
 	for mi in drowned_key.find_children("*", "MeshInstance3D", true, false):
@@ -771,7 +766,8 @@ func _stop_water() -> void:
 ## Слив: вода уходит, из ванны поднимается Аня, на дне — ключ.
 func _drain() -> void:
 	drained = true
-	drowned.visible = false
+	hair.visible = false
+	hair_eye.visible = false
 	drowned_key.visible = false
 	water_m.visible = false
 	(water.material_override as ShaderMaterial).set_shader_parameter("shape_a", 0.0)
@@ -866,6 +862,90 @@ func _process(delta: float) -> void:
 			_mirror_ghost()
 
 
+## Клубок волос на дне ванны: сотни прядей-лент расходятся из одной точки (будто там голова),
+## концы колышутся в воде. Посередине — глаз, сначала закрыт. Всё только на «отражённом» слое.
+func _build_hair() -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1977
+	var core := Vector3(0.0, 0.3, -0.38)       # «голова» ближе к изголовью, волосы тянутся к ногам
+	for i in 900:
+		var ph := rng.randf()
+		var start := core + Vector3(rng.randf_range(-0.06, 0.06), rng.randf_range(-0.04, 0.02), rng.randf_range(-0.06, 0.05))
+		# в основном текут к дальнему концу ванны, веером, и медленно оседают
+		var ang := rng.randf_range(-1.25, 1.25) + (PI if rng.randf() < 0.12 else 0.0)
+		var dir := Vector3(sin(ang) * 0.9, rng.randf_range(-0.25, 0.02), cos(ang)).normalized()
+		var length := rng.randf_range(0.45, 1.15)
+		var segs := 18
+		var w := rng.randf_range(0.0012, 0.0032)
+		var wave := rng.randf_range(0.6, 2.2)
+		var amp := rng.randf_range(0.01, 0.04)
+		var pts: Array[Vector3] = []
+		var p := start
+		for k in segs + 1:
+			var q := p + dir.cross(Vector3.UP).normalized() * sin(k * wave * 0.5 + ph * 6.0) * amp
+			var e := Vector2(q.x / 0.25, q.z / 0.62).length()
+			if e > 1.0:
+				q.x /= e
+				q.z /= e
+			q.y = clampf(q.y, 0.16, 0.46)
+			pts.append(q)
+			p += dir * (length / segs)
+			dir.y -= 0.01
+		for k in segs:
+			var a := pts[k]
+			var b := pts[k + 1]
+			var side := (b - a).cross(Vector3.UP).normalized() * w
+			var ta := float(k) / segs
+			var tb := float(k + 1) / segs
+			var c := Color(ph, 0, 0)
+			for v in [[a - side, ta], [a + side, ta], [b + side, tb], [a - side, ta], [b + side, tb], [b - side, tb]]:
+				st.set_color(c)
+				st.set_uv(Vector2(v[1], 0))
+				st.add_vertex(v[0])
+	st.generate_normals()
+	hair = MeshInstance3D.new()
+	hair.mesh = st.commit()
+	var hm := ShaderMaterial.new()
+	hm.shader = preload("res://shaders/hair.gdshader")
+	hair.material_override = hm
+	hair.layers = MIRROR_LAYER
+	hair.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	L.add_child(hair)
+	hair.global_position = TUB
+	# глаз в гуще волос: белок, тёмная радужка, веко — сжатие по высоте (0 — закрыт)
+	hair_eye = Node3D.new()
+	L.add_child(hair_eye)
+	hair_eye.global_position = TUB + core + Vector3(0.0, 0.035, 0.03)
+	hair_eye.rotation = Vector3(-PI / 2, 0.4, 0)     # смотрит вверх, из воды
+	var white := MeshInstance3D.new()
+	var sm := SphereMesh.new()
+	sm.radius = 0.024
+	sm.height = 0.03
+	white.mesh = sm
+	var wm := StandardMaterial3D.new()
+	wm.albedo_color = Color(0.55, 0.5, 0.4)
+	wm.roughness = 0.2
+	white.material_override = wm
+	white.scale = Vector3(1.6, 1.0, 1.0)
+	hair_eye.add_child(white)
+	var iris := MeshInstance3D.new()
+	var im := SphereMesh.new()
+	im.radius = 0.013
+	im.height = 0.026
+	iris.mesh = im
+	var irm := StandardMaterial3D.new()
+	irm.albedo_color = Color(0.03, 0.02, 0.02)
+	irm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	iris.material_override = irm
+	iris.position = hair_eye.global_transform.basis.inverse() * Vector3(0, 0.02, 0)   # радужка — сверху, к смотрящему
+	hair_eye.add_child(iris)
+	for n in [white, iris]:
+		(n as MeshInstance3D).layers = MIRROR_LAYER
+	hair_eye.scale = Vector3(1, 0.05, 1)
+
+
 ## Мутная вода: иногда под поверхностью что-то медленно проплывает (тень и круги, бульканье).
 ## Сквозь осколок вода прозрачная — на дне лежит она, а рядом ключ.
 func _under_water(delta: float) -> void:
@@ -873,8 +953,8 @@ func _under_water(delta: float) -> void:
 	var near: bool = L.player.global_position.distance_to(TUB) < 4.0
 	if near and not _shard_seen and L.hallp.looking_through(TUB + Vector3(0, 0.3, 0), 0.4):
 		_shard_seen = true
-		drowned.play_from("zidle", 0.4, 0.5)      # открыла глаза
-		drowned.set_blood(0.8)
+		(hair.material_override as ShaderMaterial).set_shader_parameter("speed", 1.6)   # волосы зашевелились
+		create_tween().tween_property(hair_eye, "scale:y", 1.0, 0.5).set_delay(0.6)  # открылся глаз
 		L._sfx("heartbeat", -6.0)
 		L._sfx3d("whisper", TUB + Vector3(0, 0.4, 0), -8.0, 1.2)
 		L._say("B_SHARD_TUB", 4.5)

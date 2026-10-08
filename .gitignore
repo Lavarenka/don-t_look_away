@@ -1008,6 +1008,7 @@
 !/shaders/fog.gdshader.uid
 !/shaders/grain.gdshader
 !/shaders/grain.gdshader.uid
+!/shaders/hair.gdshader
 !/shaders/inv_bg.gdshader
 !/shaders/inv_bg.gdshader.uid
 !/shaders/murky_water.gdshader
