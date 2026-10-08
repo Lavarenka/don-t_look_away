@@ -56,6 +56,7 @@ func setup(level: Node, mirror: Node3D) -> void:
 	mcam.size = GH
 	mcam.far = 30.0
 	mcam.current = true
+	mcam.cull_mask &= ~(1 << 10)        # «отражённый» слой осколка в обычном зеркале не виден
 	vp.add_child(mcam)
 	# материал старого зеркала: отражение темнее, с пятнами облезлой амальгамы и тёмными краями
 	var sh := Shader.new()

@@ -27,6 +27,22 @@ var seen := {}
 var viewer: TextureRect
 var bed_scare_done := false
 var toys := ["NBear", "NDuck", "NHorse", "NElephant", "NRockChair"]
+var wound := false            ## шкатулка заведена ключиком (ключик спрятан за портретом в коридоре)
+
+# ---- прятки: после мелодии Аня прячется, Миша водит ----
+## место → [точка, куда смотреть, подсказка «E — …»]
+const SPOTS := {
+	"bed": [Vector3(-0.6, 0.15, -22.55), "NUR_S_BED"],
+	"curt_w": [Vector3(-2.2, 1.0, -21.0), "NUR_S_CURT"],
+	"curt_e": [Vector3(2.2, 1.0, -21.6), "NUR_S_CURT"],
+	"desk": [Vector3(1.95, 0.35, -18.95), "NUR_S_DESK"],
+	"chair": [Vector3(1.95, 0.45, -23.5), "NUR_S_CHAIR"],
+}
+var hiding := false
+var hide_spot := ""
+var _checked := {}
+var _giggle_t := 3.0
+var _steps: Array[Node3D] = []
 
 
 func _ready() -> void:
@@ -39,6 +55,9 @@ func _ready() -> void:
 	var mb: Node3D = L.get_node("MusicBox")
 	L.targets.append({"id": "n_box", "pos": mb.global_position + Vector3(0, 0.05, -0.04), "th": 0.18, "dist": 1.8})
 	L.extra_hints["n_box"] = "NUR_14"
+	for sp in SPOTS:
+		L.targets.append({"id": "n_s_" + sp, "pos": SPOTS[sp][0], "th": 0.4, "dist": 2.0})
+		L.extra_hints["n_s_" + sp] = SPOTS[sp][1]
 	for k in 5:
 		var key: Node3D = L.get_node("MusicBox/Key%d" % k)
 		L.targets.append({"id": "n_k%d" % k, "pos": key.global_position, "th": 0.08, "dist": 1.6})
@@ -87,10 +106,12 @@ func _close_viewer() -> void:
 
 
 func target_ok(id: String) -> bool:
+	if id.begins_with("n_s_"):
+		return hiding and not L.busy and not _checked.has(id)
 	if L.phase != "nursery" or solved or viewer.visible:
 		return false
 	if id.begins_with("n_k"):
-		return seen.has("note")
+		return seen.has("note") and wound
 	return true
 
 
@@ -156,6 +177,10 @@ func _end_dance(close: bool) -> void:
 
 func _process(delta: float) -> void:
 	_update_dance(delta)
+	if seen.has("note") and not wound:
+		L.extra_hints["n_box"] = "NUR_BOX_WIND" if L.inv.has("mb_key") else "NUR_20"
+	if hiding:
+		_update_hide(delta)
 	if L.phase == "nursery" and not solved:
 		var nl: OmniLight3D = L.get_node("NightLight")
 		nl.light_energy = 0.0 if randf() < 0.04 else 0.35 * randf_range(0.85, 1.0)
@@ -204,10 +229,19 @@ func interact(id: String) -> void:
 		else:
 			_show(i)
 	elif id == "n_box":
-		seen["note"] = true
-		L._show_note(NOTE)
-		L._set_objective("NUR_19")
-		L.extra_hints["n_box"] = "NUR_20"
+		if not seen.has("note"):
+			seen["note"] = true
+			L._show_note(NOTE)
+			L._set_objective("NUR_19" if wound or L.inv.has("mb_key") else "NUR_OBJ_KEY")
+		elif not wound and L.inv.has("mb_key"):
+			_wind()
+		elif not wound:
+			L._sfx3d("click", L.get_node("MusicBox").global_position, -12.0, 1.4)
+			L._say("NUR_BOX_NOKEY", 3.5)
+		else:
+			L._show_note(NOTE)
+	elif id.begins_with("n_s_"):
+		_check_spot(id)
 	elif id.begins_with("n_k"):
 		_press(int(id.right(1)))
 
@@ -242,6 +276,15 @@ func _press(k: int) -> void:
 		_turn_hidden_toy()
 		await get_tree().create_timer(1.0).timeout
 		L.busy = false
+
+
+## Завести шкатулку ключиком из коридора.
+func _wind() -> void:
+	wound = true
+	L.inv.remove("mb_key")
+	L._sfx3d("mb_windup", L.get_node("MusicBox").global_position, -4.0)
+	L._set_objective("NUR_19")
+	L.extra_hints["n_box"] = "NUR_20"
 
 
 func _note(k: int, pitch := 1.0, db := -2.0) -> void:
@@ -359,16 +402,138 @@ func _solve() -> void:
 	await get_tree().create_timer(1.5).timeout
 	L._sfx("whisper", 0.0, 1.2)
 	L._say("NUR_24", 3.0)
-	await get_tree().create_timer(2.2).timeout
-	# она стоит у кровати и считает
+	await get_tree().create_timer(1.2).timeout
+	_start_hide()
+
+
+# ---------------- прятки ----------------
+## Аня прячется в одном из мест комнаты. Её смешок слышен оттуда, а в осколке видны её следы мелом.
+func _start_hide() -> void:
+	var keys := SPOTS.keys()
+	hide_spot = keys.pick_random()
+	hiding = true
+	_checked.clear()
+	_giggle_t = 2.5
+	L._set_objective("NUR_HIDE_OBJ")
+	L.busy = false
+	# детские следы мелом от середины комнаты к тайнику — только в стекле
+	var from := Vector3(0.1, 0.035, -21.0)
+	var to: Vector3 = SPOTS[hide_spot][0]
+	to.y = 0.035
+	var n := int(from.distance_to(to) / 0.28)
+	var dir := (to - from).normalized()
+	var side := dir.cross(Vector3.UP).normalized()
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = _foot_tex()
+	mat.albedo_color = Color(0.75, 0.9, 1.0, 0.95)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	for i in n:
+		var f := MeshInstance3D.new()
+		var q := QuadMesh.new()
+		q.size = Vector2(0.08, 0.18)
+		q.orientation = PlaneMesh.FACE_Y
+		f.mesh = q
+		f.material_override = mat
+		f.layers = L.hallp.MIRROR_LAYER
+		f.position = from + dir * (0.28 * (i + 0.5)) + side * (0.06 if i % 2 == 0 else -0.06)
+		f.rotation.y = atan2(dir.x, dir.z)
+		L.add_child(f)
+		_steps.append(f)
+
+
+## Детский след: стопа и пять пальчиков, мягкие края.
+func _foot_tex() -> ImageTexture:
+	var w := 64
+	var h := 128
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var blobs := [[32.0, 80.0, 17.0, 34.0], [30.0, 40.0, 19.0, 16.0]]
+	for tx in [[18.0, 18.0, 6.0], [27.0, 13.0, 5.5], [36.0, 12.0, 5.0], [44.0, 15.0, 4.5], [50.0, 21.0, 4.0]]:
+		blobs.append([tx[0], tx[1], tx[2], tx[2]])
+	for y in h:
+		for x in w:
+			var a := 0.0
+			for b in blobs:
+				var d := Vector2((x - b[0]) / b[2], (y - b[1]) / b[3]).length()
+				a = maxf(a, clampf((1.0 - d) * 3.0, 0.0, 1.0))
+			img.set_pixel(x, y, Color(1, 1, 1, a))
+	return ImageTexture.create_from_image(img)
+
+
+func _update_hide(delta: float) -> void:
+	_giggle_t -= delta
+	if _giggle_t <= 0.0 and not L.busy:
+		_giggle_t = randf_range(6.0, 9.5)
+		L._sfx3d("giggle", SPOTS[hide_spot][0], -12.0, randf_range(1.0, 1.15))
+
+
+func _check_spot(id: String) -> void:
+	var sp := id.trim_prefix("n_s_")
+	_checked[id] = true
+	L.busy = true
+	await _search_anim(sp)
+	if sp == hide_spot:
+		_found()
+		return
+	# не там: шёпот у уха, игрушка за спиной поворачивается, свет дёргается — а смешок уже с другой стороны
+	L._sfx("whisper_harsh", -4.0)
+	L._sfx("sting", -10.0, 0.75)
+	L.player.flicker = 0.6
+	L.player.shake = 0.25
+	_turn_hidden_toy()
+	await get_tree().create_timer(0.9).timeout
+	L._sfx3d("giggle", SPOTS[hide_spot][0], -8.0, 1.2)
+	_giggle_t = randf_range(5.0, 7.0)
+	L.busy = false
+
+
+## Заглянуть / отдёрнуть: штора качается, под кроватью и столом — скрип.
+func _search_anim(sp: String) -> void:
+	var pos: Vector3 = SPOTS[sp][0]
+	if sp.begins_with("curt"):
+		var c: Node3D = L.get_node("NCurtainW" if sp == "curt_w" else "NCurtainE")
+		var x0 := c.position.x
+		L._sfx3d("sheet_rustle", pos, -6.0, 1.0)
+		var tw := create_tween()
+		tw.tween_property(c, "position:x", x0 - signf(x0) * 0.12, 0.25)
+		tw.tween_property(c, "position:x", x0, 0.6).set_trans(Tween.TRANS_SINE)
+		await get_tree().create_timer(0.35).timeout
+	else:
+		L._sfx3d("creak", pos, -10.0, 1.3)
+		await get_tree().create_timer(0.5).timeout
+
+
+## Нашёл: она там — и теперь водит она.
+func _found() -> void:
+	hiding = false
+	for f in _steps:
+		f.queue_free()
+	_steps.clear()
+	var p = L.player
 	var girl: Node3D = L.girl
-	var f: Vector3 = p.forward()
-	f.y = 0.0
-	girl.global_position = p.global_position + f.normalized() * 2.6
+	var at: Vector3 = SPOTS[hide_spot][0]
+	at.y = p.global_position.y
+	girl.global_position = at
 	L._face(girl, p.global_position)
-	_gpose("zidle", 1.0, 0.2)
+	_gpose("zidle", 2.0, 0.4)
 	girl.visible = true
+	L._sfx("sting", -2.0)
 	L._sfx("girl_appear", -2.0)
+	p.shake = 0.5
+	await get_tree().create_timer(0.8).timeout
+	L._sfx("whisper", -2.0, 1.3)
+	L._say("NUR_FOUND", 2.8)
+	await get_tree().create_timer(2.0).timeout
+	_finale_count()
+
+
+## Финал: она считает, с каждым счётом ближе, — и касается.
+func _finale_count() -> void:
+	L.busy = true
+	var p = L.player
+	var girl: Node3D = L.girl
+	var f: Vector3
 	if not door_locked:
 		_lock_door()
 	# на каждый счёт пропадает в мигании света и появляется ближе — каждый раз в новой жуткой позе и всё кровавее

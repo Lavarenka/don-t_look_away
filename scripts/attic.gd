@@ -386,6 +386,9 @@ var mirror_look := 0.0         ## сколько секунд игрок смо�
 var cloth: MeshInstance3D      ## скомканное платье в сундуке
 var viewer: TextureRect
 var origin := {}             ## где лежала вещь — туда она возвращается, если взять другую
+const STASH := Vector3(4.3, 0.45, -32.6)   ## ящик, где спрятаны туфли (Crate3)
+var stash_open := false
+var _gaze: Array[Node3D] = []              ## «взгляды» манекенов — красные нити, видны только в осколке
 
 
 func _ready() -> void:
@@ -414,6 +417,12 @@ func _ready() -> void:
 	add_child(mirror_fx)
 	mirror_fx.setup(L, L.get_node("Attic/CovMirror/Mirror"))
 	L.get_node("Attic/Trunk1").add_child(cloth)
+	# туфли спрятаны в ящике — куда «на самом деле» смотрят манекены, видно только в осколке
+	var shoes: Node3D = L.get_node("Attic/ItemShoes")
+	shoes.global_position = STASH + Vector3(0, 0.0, 0)
+	shoes.visible = false
+	_target("a_stash", STASH, 0.4, 2.4, "A_STASH")
+	_build_gaze()
 	for it in ["Scarf", "Bow", "Shoes"]:
 		var n: Node3D = L.get_node("Attic/Item" + it)
 		origin[it] = n
@@ -604,6 +613,8 @@ func target_ok(id: String) -> bool:
 		return false                      # ключа больше нет — люк открывается сам
 	if id == "a_trunk":
 		return not trunk_open or cloth.visible
+	if id == "a_stash":
+		return not stash_open
 	return true
 
 
@@ -693,6 +704,8 @@ func interact(id: String) -> void:
 		_dress(int(id.right(1)))
 	elif id == "a_board":
 		_open_board()
+	elif id == "a_stash":
+		_open_stash()
 	elif id == "a_hatch":
 		_hatch()
 
@@ -707,6 +720,61 @@ func _pick(it: String) -> void:
 	if origin.has(it):
 		(origin[it] as Node3D).visible = false
 	L._sfx("sheet_rustle" if it != "Shoes" else "pickup", -6.0, 1.1)
+
+
+## Красные нити от каждого манекена к ящику — «куда они смотрят». Только в осколке.
+func _build_gaze() -> void:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.55, 0.02, 0.02)
+	mat.emission_enabled = true
+	mat.emission = Color(0.35, 0.0, 0.0)
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	for i in range(1, 5):
+		var from: Vector3 = L.get_node("Attic/PForm%d" % i).global_position + Vector3(0, 1.45, 0)
+		var to := STASH + Vector3(0, 0.05, 0)
+		var m := MeshInstance3D.new()
+		var cm := CylinderMesh.new()
+		cm.top_radius = 0.004
+		cm.bottom_radius = 0.004
+		cm.height = from.distance_to(to)
+		m.mesh = cm
+		m.material_override = mat
+		m.layers = 1 << 10          # MIRROR_LAYER (hall_puzzle.gd)
+		L.add_child(m)
+		m.global_position = (from + to) * 0.5
+		m.look_at(to, Vector3.UP if absf((to - from).normalized().y) < 0.95 else Vector3.RIGHT)
+		m.rotate_object_local(Vector3.RIGHT, PI / 2)
+		_gaze.append(m)
+
+
+## Заглянуть в ящик: среди тряпья — чёрные туфли.
+func _open_stash() -> void:
+	stash_open = true
+	L._sfx3d("creak", STASH, -8.0, 1.1)
+	L._sfx3d("sheet_rustle", STASH, -8.0, 0.8)
+	var shoes: Node3D = L.get_node("Attic/ItemShoes")
+	shoes.visible = true
+	for t in L.targets:
+		if t.id == "a_take_Shoes":
+			t.pos = shoes.global_position + Vector3(0, 0.12, 0)
+	for g in _gaze:
+		g.queue_free()
+	_gaze.clear()
+
+
+## Не та вещь: манекен рывком разворачивается к тебе, где-то падает тяжёлое, шёпот (на чердаке без скримеров).
+func _wrong_dress(form: Node3D) -> void:
+	var p = L.player
+	var d: Vector3 = p.global_position - form.global_position
+	L._sfx3d("creak", form.global_position + Vector3(0, 1.2, 0), -2.0, 0.7)
+	create_tween().tween_property(form, "rotation:y", atan2(d.x, d.z), 0.18).set_trans(Tween.TRANS_QUAD)
+	p.flicker = 0.5
+	await get_tree().create_timer(0.5).timeout
+	var behind: Vector3 = p.global_position - p.forward() * 3.0
+	L._sfx3d("attic_thud", behind + Vector3(0, 0.5, 0), 2.0, 0.9)
+	L._sfx("whisper", -8.0, 0.85)
+	p.shake = 0.3
+	L._say("LVL_49", 3.0)
 
 
 func _update_carry() -> void:
@@ -726,8 +794,7 @@ func _dress(i: int) -> void:
 		L._say("INV_PICK" if any else "LVL_50", 3.0)
 		return
 	if WEAR[i] != carry:
-		L._sfx3d("creak", form.global_position + Vector3(0, 1.2, 0), -10.0, 1.4)
-		L._say("LVL_49", 3.0)
+		_wrong_dress(form)
 		return
 	var w: Node3D = form.get_node(carry)
 	w.visible = true

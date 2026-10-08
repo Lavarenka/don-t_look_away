@@ -1,4 +1,5 @@
 keys,en,ru
+A_STASH,E — look in the crate,E — заглянуть в ящик
 B_BED_KEY,The key turns... but the door won't give. As if someone is holding it from the other side.,Ключ поворачивается... но дверь не поддаётся. Будто кто-то держит её с той стороны.
 B_DRAIN,Got the chain with the hook... The water is going down.,Подцепил цепочку крюком... Вода уходит.
 B_FOG,The mirror fogged up... and something is written on it.,Зеркало запотело... и на нём что-то написано.
@@ -18,6 +19,7 @@ B_OBJ2,Open the padlock on the vanity drawer,Открой кодовый зам�
 B_OBJ3,Pull the plug out of the bath,Вытащи пробку из ванны
 B_OBJ4,Open Grandma's bedroom,Открой спальню бабушки
 B_OPEN,A click... The bathroom door opened by itself.,Щелчок... Дверь ванной открылась сама.
+B_SHARD_TUB,Through the glass I can see the bottom... Something glints there. And someone is lying there.,Сквозь стекло видно дно... Там что-то блестит. И кто-то лежит.
 B_SLAM,The door slammed shut behind me.,Дверь за спиной захлопнулась.
 B_TAP,Hot water. The pipes groan somewhere in the walls.,Горячая вода. Где-то в стенах застонали трубы.
 B_TAP_H,E — turn on the hot water,E — открыть горячую воду
@@ -33,6 +35,16 @@ CH_LOCKED,— locked —,— закрыто —
 D_CLOSE,E — close,E — закрыть
 F2_SIGN_ANYA,ANYA\nKNOCK FIRST!,АНЯ\nСТУЧАТЬ!
 F2_SIGN_BATH,BATH,ВАННАЯ
+H_CLOCK,E — open the clock door,E — открыть дверцу часов
+H_MATCHES_HINT,"Matches... Grandma hid them from Anya. In the clock, I think.","Спички... Бабушка прятала их от Ани. Кажется, в часах."
+H_MATCHES_NONE,Nothing to light it with.,Нечем зажечь.
+H_PORTRAIT,E — look behind the portrait,E — заглянуть за портрет
+H_SOOT2_1,"THE KEY
+BEHIND VERA",КЛЮЧИК\nЗА ВЕРОЙ
+H_SOOT2_2,"THE KEY
+BEHIND STEPAN",КЛЮЧИК\nЗА СТЕПАНОМ
+H_SOOT2_3,"THE KEY
+BEHIND ANYA",КЛЮЧИК\nЗА АНЕЙ
 HAUNT_01,Someone is pounding on the front door. Then — silence.,Кто-то ломится во входную дверь. Потом — тишина.
 HAUNT_02,The record stopped by itself.,Пластинка остановилась сама.
 HAUNT_03,E — pick up the phone,E — снять трубку
@@ -67,6 +79,10 @@ INV_KEY,Hallway key,Ключ от коридора
 INV_KEYS,A / D — browse      Hold mouse button — turn      Q / E — tabs      Tab — close,A / D — листать      зажми кнопку мыши — покрутить      Q / E — вкладки      Tab — закрыть
 INV_KEYS_N,A / D — browse      Q / E — tabs      Tab — close,A / D — листать      Q / E — вкладки      Tab — закрыть
 INV_KEY_D,"It was in the china cabinet, under a shard of mirror. The bit is worn smooth — this key has opened that door for years.",Лежал в серванте под осколком зеркала. Бородка стёрта до блеска — им открывали эту дверь много лет.
+INV_MATCHES,Matches,Спички
+INV_MATCHES_D,From the shelf behind the clock pendulum. Grandma hid them from Anya.,С полочки за маятником часов. Бабушка прятала их от Ани.
+INV_MBKEY,Music box key,Ключик от шкатулки
+INV_MBKEY_D,A small brass butterfly key. It was hidden behind a portrait.,Маленький латунный ключик-бабочка. Был спрятан за портретом.
 INV_NOTE,Note,Записка
 INV_NOTES,NOTES,ЗАПИСКИ
 INV_NOTES_EMPTY,No notes yet.,Записок пока нет.
@@ -139,7 +155,7 @@ LVL_48,E — put it on,E — надеть
 LVL_49,No. In the photo it had something else on.,Не то. На фотографии на нём было другое.
 LVL_50,Something used to be on this one. The photo will tell me what.,На нём что-то было. Фотография подскажет что.
 LVL_51,Dress the mannequins as in Grandma's photo,"Одень манекены, как на фотографии бабушки"
-LVL_52,"Photo, 1979. Grandma's mannequins, left to right: the white dress, the red scarf, the red bow, the black shoes. On the back: ""They always look where it's hidden.""","Фото, 1979. Манекены бабушки, слева направо: белое платье, красный шарф, красный бант, чёрные туфли. На обороте: «Они всегда смотрят туда, где спрятано»."
+LVL_52,"Photo, 1979. Grandma's mannequins. On the back: ""They always look at where it's hidden.""","Фото, 1979. Манекены бабушки. На обороте: «Они всегда смотрят туда, где спрятано»."
 LVL_53,All four are dressed. They're... turning.,Все четверо одеты. Они... поворачиваются.
 LVL_54,Look where they're looking,"Посмотри, куда они смотрят"
 LVL_55,E — lift the loose floorboard,E — поднять расшатанную половицу
@@ -218,6 +234,15 @@ NUR_24,"""Now you're it, Misha.""","«Теперь ты водишь, Миша»
 NUR_25,One...,Раз...
 NUR_26,Two...,Два...
 NUR_27,Three...,Три...
+NUR_BOX_NOKEY,The music box isn't wound. It needs its little key.,Шкатулка не заведена. Нужен ключик.
+NUR_BOX_WIND,E — wind the music box,E — завести шкатулку
+NUR_FOUND,"""You found me... Now I'm it.""",«Нашёл... Теперь я вожу».
+NUR_HIDE_OBJ,Find where Anya is hiding,"Найди, где спряталась Аня"
+NUR_OBJ_KEY,Find the music box key,Найди ключик от шкатулки
+NUR_S_BED,E — look under the bed,E — заглянуть под кровать
+NUR_S_CHAIR,E — look behind the rocking chair,E — заглянуть за кресло-качалку
+NUR_S_CURT,E — pull the curtain aside,E — отдёрнуть штору
+NUR_S_DESK,E — look under the desk,E — заглянуть под стол
 PAUSE_01,PAUSED,ПАУЗА
 PAUSE_02,Resume,Продолжить
 PAUSE_03,Main Menu,В главное меню

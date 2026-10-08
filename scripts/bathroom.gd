@@ -42,6 +42,11 @@ var look_t := 0.0
 var lock_open := false
 var has_hook := false
 var drained := false
+var water_m: MeshInstance3D          ## та же вода «в стекле»: прозрачная — видно дно
+var drowned: Node3D                  ## она лежит на дне (видно только в осколке)
+var drowned_key: Node3D              ## и ключ рядом с ней
+var _shard_seen := false
+var _move_t := 12.0                  ## когда под водой снова что-то шевельнётся
 var key_taken := false
 var has_bedkey := false
 var exit_scare := 0       ## 0 — ещё нет, 1 — дверь захлопнется, 4 — захлопывается, 2 — ждёт за дверью, 3 — было
@@ -222,7 +227,36 @@ func _build_props() -> void:
 	water.material_override = wm
 	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	water.position = TUB + Vector3(0, WATER_TOP, 0)
+	water.layers = REAL_LAYER
 	L.add_child(water)
+	# в осколке вода прозрачная: на дне лежит она, а рядом ключ на ленточке
+	water_m = MeshInstance3D.new()
+	water_m.mesh = pmw
+	var mm := StandardMaterial3D.new()
+	mm.albedo_color = Color(0.05, 0.06, 0.04, 0.45)
+	mm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mm.roughness = 0.1
+	water_m.material_override = mm
+	water_m.layers = MIRROR_LAYER
+	water_m.scale = Vector3(0.95, 1, 0.97)
+	water_m.position = water.position
+	L.add_child(water_m)
+	drowned = SPIRIT.new()
+	L.add_child(drowned)
+	drowned.set_layer(MIRROR_LAYER)
+	drowned.global_position = TUB + Vector3(0.0, 0.19, 0.6)
+	drowned.rotation = Vector3(-PI / 2, 0, 0)
+	drowned.play("idle", 0.0)
+	drowned.set_blood(0.5)
+	drowned_key = L.key_node.duplicate()
+	drowned_key.visible = true
+	for mi in drowned_key.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).layers = MIRROR_LAYER
+	for li in drowned_key.find_children("*", "Light3D", true, false):
+		li.queue_free()
+	L.add_child(drowned_key)
+	drowned_key.global_position = TUB + Vector3(0.05, 0.19, 0.2)
+	drowned_key.rotation = Vector3(0, 0.7, 0)
 	# струя из крана
 	stream = MeshInstance3D.new()
 	var sm := CylinderMesh.new()
@@ -737,6 +771,10 @@ func _stop_water() -> void:
 ## Слив: вода уходит, из ванны поднимается Аня, на дне — ключ.
 func _drain() -> void:
 	drained = true
+	drowned.visible = false
+	drowned_key.visible = false
+	water_m.visible = false
+	(water.material_override as ShaderMaterial).set_shader_parameter("shape_a", 0.0)
 	L.inv.remove("hook")
 	L.busy = true
 	L._sfx("clink", -6.0, 0.7)
@@ -793,6 +831,8 @@ func _process(delta: float) -> void:
 		return
 	if exit_scare in [1, 2]:
 		_update_exit_scare()
+	if not drained:
+		_under_water(delta)
 	# капает кран (слышно и из холла)
 	if not running and not drained:
 		next_drip -= delta
@@ -824,6 +864,33 @@ func _process(delta: float) -> void:
 		if look_t > 2.2:
 			ghost_done = true
 			_mirror_ghost()
+
+
+## Мутная вода: иногда под поверхностью что-то медленно проплывает (тень и круги, бульканье).
+## Сквозь осколок вода прозрачная — на дне лежит она, а рядом ключ.
+func _under_water(delta: float) -> void:
+	water_m.position = water.position
+	var near: bool = L.player.global_position.distance_to(TUB) < 4.0
+	if near and not _shard_seen and L.hallp.looking_through(TUB + Vector3(0, 0.3, 0), 0.4):
+		_shard_seen = true
+		drowned.play_from("zidle", 0.4, 0.5)      # открыла глаза
+		drowned.set_blood(0.8)
+		L._sfx("heartbeat", -6.0)
+		L._sfx3d("whisper", TUB + Vector3(0, 0.4, 0), -8.0, 1.2)
+		L._say("B_SHARD_TUB", 4.5)
+	if not near or L.busy or running:
+		return
+	_move_t -= delta
+	if _move_t > 0.0:
+		return
+	_move_t = randf_range(14.0, 24.0)
+	var wm := water.material_override as ShaderMaterial
+	var z0 := randf_range(0.45, 0.6) * (1.0 if randf() < 0.5 else -1.0)
+	L._sfx3d("gurgle", TUB + Vector3(0, 0.45, 0), -14.0, 0.6)
+	var tw := create_tween().set_parallel()
+	tw.tween_method(func(v: float): wm.set_shader_parameter("shape_a", v), 0.0, 0.85, 1.2)
+	tw.tween_method(func(v: float): wm.set_shader_parameter("shape_pos", Vector2(sin(v * 3.0) * 0.08, v)), z0, -z0, 4.5).set_trans(Tween.TRANS_SINE)
+	tw.chain().tween_method(func(v: float): wm.set_shader_parameter("shape_a", v), 0.85, 0.0, 1.0)
 
 
 ## Уходишь из ванной с ключом: дверь в тамбур захлопывается, а когда её откроешь —

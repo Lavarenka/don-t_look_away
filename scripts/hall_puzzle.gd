@@ -40,10 +40,56 @@ var _anya_lunge := false
 var _corr_hint_t := -1.0
 
 
+var stash_portrait := 1        ## за каким портретом спрятан ключик от шкатулки (1 Вера, 2 Степан, 3 Аня)
+var clock_open := false
+var _no_match := 0
+var _behind_done := {}
+
+
 func _ready() -> void:
 	_setup_chair()
 	_build_mirror_world()
 	_build_shard()
+	_setup_extras()
+
+
+## Спички в часах зала, ключик от шкатулки за одним из портретов (подсказка — сажей, только в осколке).
+func _setup_extras() -> void:
+	stash_portrait = randi_range(1, 3)
+	var clock := L.get_node("Clock") as Node3D
+	L.targets.append({"id": "h_clock", "pos": clock.global_position + Vector3(0, -0.05, 0.1), "th": 0.35, "dist": 2.3})
+	L.extra_hints["h_clock"] = "H_CLOCK"
+	for i in 3:
+		var p := L.get_node("Portrait%d" % (i + 1)) as Node3D
+		L.targets.append({"id": "h_p%d" % (i + 1), "pos": p.global_position + Vector3(0.05, 1.7, 0), "th": 0.28, "dist": 2.0})
+		L.extra_hints["h_p%d" % (i + 1)] = "H_PORTRAIT"
+	var soot := Label3D.new()
+	soot.text = tr("H_SOOT2_%d" % stash_portrait)
+	soot.font_size = 64
+	soot.pixel_size = 0.0028
+	soot.modulate = Color(0.16, 0.02, 0.015, 0.9)
+	soot.outline_size = 0
+	soot.shaded = true
+	soot.layers = MIRROR_LAYER
+	soot.position = Vector3(1.06, 1.05, -11.0)
+	soot.rotation.y = -PI / 2
+	soot.rotation.z = -0.05
+	L.add_child(soot)
+
+
+## Смотрит ли игрок сквозь поднятый осколок примерно на точку p.
+func looking_through(p: Vector3, ang := 0.35) -> bool:
+	return holding and _raise >= 1.0 and L.player.forward().angle_to(p - L.player.cam.global_position) < ang
+
+
+## Свечу нечем зажечь, пока нет спичек.
+func need_matches() -> bool:
+	if L.inv.has("matches"):
+		return false
+	_no_match += 1
+	L._sfx("click", -14.0, 0.5)
+	L._say("H_MATCHES_NONE" if _no_match < 2 else "H_MATCHES_HINT", 3.5)
+	return true
 
 
 # ---------------- зал: телепрограмма, часы, будильник ----------------
@@ -59,12 +105,69 @@ func _setup_chair() -> void:
 		chair.rotation.y = _chair_tv + CHAIR_AWAY
 
 
-func target_ok(_id: String) -> bool:
+func target_ok(id: String) -> bool:
+	if L.busy:
+		return false
+	if id == "h_clock":
+		return not clock_open
+	if id.begins_with("h_p"):
+		return L.phase in ["corridor", "nursery"] and not L.inv.has("mb_key") and not _behind_done.has(id) and not L.nursery.solved
 	return false
 
 
-func interact(_id: String) -> void:
-	pass
+func interact(id: String) -> void:
+	if not id.begins_with("h_"):
+		return
+	if id == "h_clock":
+		_open_clock()
+	elif id.begins_with("h_p"):
+		_look_behind(int(id.right(1)))
+
+
+## Дверца часов скрипит — на полочке за маятником коробок спичек.
+func _open_clock() -> void:
+	clock_open = true
+	var clock := L.get_node("Clock") as Node3D
+	L._sfx3d("creak", clock.global_position, -8.0, 1.7)
+	var tw := create_tween()
+	tw.tween_property(clock, "rotation:z", 0.04, 0.12)
+	tw.tween_property(clock, "rotation:z", 0.0, 0.3)
+	await tw.finished
+	L._sfx("pickup", -6.0)
+	L.inv.add("matches")
+
+
+## Заглянуть за портрет: там ключик — или портрет «оживает».
+func _look_behind(i: int) -> void:
+	_behind_done["h_p%d" % i] = true
+	var p := L.get_node("Portrait%d" % i) as Node3D
+	var fr := p.get_node("Frame") as Node3D
+	L.busy = true
+	L._sfx3d("creak", fr.global_position, -10.0, 1.5)
+	var tw := create_tween()
+	tw.tween_method(_tilt.bind(p), 0.0, 0.22, 0.35).set_trans(Tween.TRANS_SINE)
+	await tw.finished
+	if i == stash_portrait:
+		L._sfx("pickup", -6.0)
+		L.inv.add("mb_key")
+		var back := create_tween()
+		back.tween_method(_tilt.bind(p), 0.22, 0.0, 0.4)
+	else:
+		# не тот: лицо на портрете темнеет кровью, рама бьётся о стену, шёпот у самого уха
+		var pic := p.get_node("Picture") as Sprite3D
+		pic.modulate = Color(0.4, 0.04, 0.03)
+		L._sfx("sting", -6.0, 0.8)
+		L._sfx("whisper_harsh", -4.0)
+		L.player.flicker = 0.7
+		L.player.shake = 0.35
+		var bang := create_tween()
+		for k in 5:
+			bang.tween_method(_tilt.bind(p), randf_range(-0.12, 0.12), randf_range(-0.12, 0.12), 0.06)
+		bang.tween_method(_tilt.bind(p), 0.05, randf_range(-0.08, 0.08), 0.1)
+		L._sfx3d("knock", fr.global_position, -4.0, 1.6)
+		create_tween().tween_property(pic, "modulate", Color.WHITE, 1.8).set_delay(0.6)
+		await get_tree().create_timer(0.8).timeout
+	L.busy = false
 
 
 ## Сбился порядок: кресло со скрипом отворачивается обратно.

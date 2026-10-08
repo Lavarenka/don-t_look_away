@@ -18,6 +18,8 @@ const ITEMS := {
 	"hook": ["INV_HOOK", "INV_HOOK_D"],
 	"bedkey": ["INV_BEDKEY", "INV_BEDKEY_D"],
 	"attic_key": ["INV_ATTICKEY", "INV_ATTICKEY_D"],
+	"matches": ["INV_MATCHES", "INV_MATCHES_D"],
+	"mb_key": ["INV_MBKEY", "INV_MBKEY_D"],
 	"att_dress": ["INV_DRESS", "INV_DRESS_D"],
 	"att_scarf": ["INV_SCARF", "INV_SCARF_D"],
 	"att_bow": ["INV_BOW", "INV_BOW_D"],
@@ -25,7 +27,7 @@ const ITEMS := {
 }
 const MAX_ITEMS := 8          ## больше не унести
 ## как повернуть предмет к камере (ключи и крюк лежат плашмя — поднимаем кольцом к игроку)
-const POSE := {"key": Vector3(PI / 2, 0, 0.35), "bedkey": Vector3(PI / 2, 0, 0.35), "attic_key": Vector3(PI / 2, 0, 0.35), "hook": Vector3(PI / 2, 0, 0.55)}
+const POSE := {"key": Vector3(PI / 2, 0, 0.35), "bedkey": Vector3(PI / 2, 0, 0.35), "attic_key": Vector3(PI / 2, 0, 0.35), "hook": Vector3(PI / 2, 0, 0.55), "matches": Vector3(0.5, 0.6, 0), "mb_key": Vector3(0, 0, 0.4)}
 ## текст записки → её заголовок в инвентаре
 const NOTE_TITLES := {"LVL_01": "INV_N_GRANDMA", "LVL_02": "INV_N_CABINET", "NUR_11": "INV_N_ANYA",
 	"LVL_13": "INV_N_PHOTO75", "LVL_14": "INV_N_PHOTO76", "LVL_15": "INV_N_PHOTO77", "LVL_52": "INV_N_PHOTO79"}
@@ -408,6 +410,67 @@ func _build_model(id: String) -> Node3D:
 				rm.roughness = 0.9
 				rib.material_override = rm
 				root.add_child(rib)
+		"matches":
+			# коробок спичек: бумажная этикетка, тёмные «чиркалки» по бокам и одна спичка
+			var box := MeshInstance3D.new()
+			var bm := BoxMesh.new()
+			bm.size = Vector3(0.05, 0.015, 0.036)
+			box.mesh = bm
+			box.material_override = _metal(Color(0.55, 0.35, 0.18), 0.0, 0.85)
+			root.add_child(box)
+			var lab := MeshInstance3D.new()
+			var lm := BoxMesh.new()
+			lm.size = Vector3(0.034, 0.002, 0.024)
+			lab.mesh = lm
+			lab.position = Vector3(0, 0.0081, 0)
+			lab.material_override = _metal(Color(0.75, 0.68, 0.5), 0.0, 0.9)
+			root.add_child(lab)
+			for zz in [-0.0185, 0.0185]:
+				var st := MeshInstance3D.new()
+				var sm := BoxMesh.new()
+				sm.size = Vector3(0.048, 0.012, 0.0015)
+				st.mesh = sm
+				st.position = Vector3(0, 0, zz)
+				st.material_override = _metal(Color(0.2, 0.12, 0.08), 0.0, 1.0)
+				root.add_child(st)
+			var stick := MeshInstance3D.new()
+			var sk := BoxMesh.new()
+			sk.size = Vector3(0.045, 0.0025, 0.0025)
+			stick.mesh = sk
+			stick.position = Vector3(0.012, 0.011, 0.006)
+			stick.rotation.y = 0.4
+			stick.material_override = _metal(Color(0.85, 0.75, 0.55), 0.0, 0.9)
+			root.add_child(stick)
+			var head := MeshInstance3D.new()
+			var hm := SphereMesh.new()
+			hm.radius = 0.0028
+			hm.height = 0.0056
+			head.mesh = hm
+			head.position = stick.position + Vector3(0.0225 * cos(0.4), 0, -0.0225 * sin(0.4))
+			head.material_override = _metal(Color(0.45, 0.06, 0.04), 0.0, 0.7)
+			root.add_child(head)
+		"mb_key":
+			# латунный заводной ключик-«бабочка» от шкатулки
+			var brass := _metal(Color(0.78, 0.6, 0.3), 0.9, 0.3)
+			var shaft := MeshInstance3D.new()
+			var cm := CylinderMesh.new()
+			cm.top_radius = 0.0025
+			cm.bottom_radius = 0.0025
+			cm.height = 0.03
+			shaft.mesh = cm
+			shaft.position = Vector3(0, -0.012, 0)
+			shaft.material_override = brass
+			root.add_child(shaft)
+			for sx in [-1.0, 1.0]:
+				var w := MeshInstance3D.new()
+				var wm := SphereMesh.new()
+				wm.radius = 0.011
+				wm.height = 0.022
+				w.mesh = wm
+				w.scale = Vector3(1.0, 0.8, 0.22)
+				w.position = Vector3(sx * 0.011, 0.01, 0)
+				w.material_override = brass
+				root.add_child(w)
 		"shard":
 			var s := L.key_node.get_node("Shard").duplicate() as MeshInstance3D
 			s.transform = Transform3D.IDENTITY

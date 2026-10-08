@@ -585,7 +585,8 @@ func _interact() -> void:
 				SETTINGS.reach(2)
 				_set_objective("LVL_20")
 		"candle1", "candle2", "candle3":
-			_light_candle(int(t.right(1)))
+			if not hallp.need_matches():
+				_light_candle(int(t.right(1)))
 		"exit":
 			if not exit_unlocked:
 				_sfx("knock", -10.0)
@@ -1205,6 +1206,7 @@ func jump_chapter(n: int) -> void:
 			player.teleport(Vector3(0, 0.05, -18.9), 0.0)
 			_set_objective("LVL_29")
 			_say("LVL_34", 2.0)
+			inv.add("mb_key", null, false)
 			nursery.start_dance()
 		4:
 			_cheat_corridor()
