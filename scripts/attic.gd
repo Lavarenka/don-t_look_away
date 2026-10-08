@@ -304,7 +304,10 @@ func _event(e: String) -> void:
 
 
 func _process(delta: float) -> void:
-	if L.phase != "attic" or L.busy:
+	if L.phase != "attic":
+		return
+	_update_carry()
+	if L.busy:
 		return
 	_attic_sounds(delta)
 	_attic_events(delta)
@@ -368,7 +371,7 @@ func _process(delta: float) -> void:
 ## Какая вещь на каком манекене (как на фотографии бабушки, слева направо).
 const WEAR := {1: "Dress", 2: "Scarf", 3: "Bow", 4: "Shoes"}
 const ITEM_KEY := {"Dress": "ITEM_DRESS", "Scarf": "ITEM_SCARF", "Bow": "ITEM_BOW", "Shoes": "ITEM_SHOES"}
-var carry := ""              ## что в руках (только одна вещь)
+var carry := ""              ## что в руках — вещь, выбранная в инвентаре (см. _process)
 var trunk_open := false
 var dressed := {}
 var solved := false
@@ -586,6 +589,7 @@ func _show_photo() -> void:
 	L.player.frozen = true
 	L._sfx("page", -6.0)
 	L._say("LVL_52", 6.0)
+	L.inv.add_note("LVL_52")
 
 
 func target_ok(id: String) -> bool:
@@ -593,13 +597,13 @@ func target_ok(id: String) -> bool:
 		return false
 	if id.begins_with("a_take_"):
 		var it := id.trim_prefix("a_take_")
-		return carry != it and (origin[it] as Node3D).visible
+		return (origin[it] as Node3D).visible
 	if id.begins_with("a_form"):
 		return not dressed.has(int(id.right(1))) and not solved
 	if id == "a_board":
 		return false                      # ключа больше нет — люк открывается сам
 	if id == "a_trunk":
-		return not trunk_open or (cloth.visible and carry != "Dress")
+		return not trunk_open or cloth.visible
 	return true
 
 
@@ -693,26 +697,33 @@ func interact(id: String) -> void:
 		_hatch()
 
 
-## Взять вещь. В руках только одна — прежняя возвращается на своё место.
+## Взять вещь — она уходит в инвентарь и сразу становится «в руках» (выбранной).
 func _pick(it: String) -> void:
-	if carry != "" and origin.has(carry):
-		(origin[carry] as Node3D).visible = true
-	elif carry == "Dress":
-		L._say("LVL_61", 2.5)                       # платье кладу обратно в сундук
-		cloth.visible = true
-	carry = it
+	var tpl: Node3D = L.get_node("Attic/PForm1/Dress") if it == "Dress" else origin[it]
+	if not L.inv.add("att_" + it.to_lower(), tpl):
+		return
 	if it == "Dress":
 		cloth.visible = false
 	if origin.has(it):
 		(origin[it] as Node3D).visible = false
 	L._sfx("sheet_rustle" if it != "Shoes" else "pickup", -6.0, 1.1)
-	L._say(tr("LVL_60") % tr(ITEM_KEY[it]), 3.0)
+
+
+func _update_carry() -> void:
+	# в руках — вещь, выбранная в инвентаре; подсказка у манекена говорит, что наденем
+	var sel: String = L.inv.selected()
+	carry = sel.trim_prefix("att_").capitalize() if sel.begins_with("att_") else ""
+	for i in range(1, 5):
+		L.extra_hints["a_form%d" % i] = ["INV_WEAR", ITEM_KEY[carry]] if carry != "" else "LVL_48"
 
 
 func _dress(i: int) -> void:
 	var form: Node3D = L.get_node("Attic/PForm%d" % i)
 	if carry == "":
-		L._say("LVL_50", 3.0)
+		var any := false
+		for k in ITEM_KEY:
+			any = any or L.inv.has("att_" + k.to_lower())
+		L._say("INV_PICK" if any else "LVL_50", 3.0)
 		return
 	if WEAR[i] != carry:
 		L._sfx3d("creak", form.global_position + Vector3(0, 1.2, 0), -10.0, 1.4)
@@ -726,6 +737,7 @@ func _dress(i: int) -> void:
 				mi.visible = false
 	L._sfx3d("sheet_rustle", form.global_position + Vector3(0, 1.0, 0), -4.0, 0.9)
 	dressed[i] = true
+	L.inv.remove("att_" + carry.to_lower())
 	carry = ""
 	if dressed.size() == WEAR.size():
 		_finale()
@@ -738,7 +750,6 @@ func _finale() -> void:
 	var p = L.player
 	var board: Node3D = L.get_node("Attic/Board")
 	await get_tree().create_timer(1.0).timeout
-	L._say("LVL_53", 3.0)
 	for i in range(1, 5):
 		var f: Node3D = L.get_node("Attic/PForm%d" % i)
 		var d := board.global_position - f.global_position
@@ -788,7 +799,6 @@ func _finale() -> void:
 	create_tween().tween_property(h, "rotation:z", 1.75, 1.6).set_trans(Tween.TRANS_SINE)
 	await get_tree().create_timer(1.0).timeout
 	L._sfx3d("whoosh", h.global_position, -8.0, 0.6)
-	L._say("LVL_63", 3.5)
 	L._set_objective("LVL_64")
 	L.extra_hints["a_hatch"] = "LVL_65"
 	p.frozen = false
@@ -805,7 +815,6 @@ func _open_board() -> void:
 	L.inv.add("attic_key")
 	(b.get_node("KeyGlint") as OmniLight3D).light_energy = 0.0
 	L._sfx("pickup", -6.0)
-	L._say("LVL_56", 3.0)
 	L._set_objective("LVL_57")
 	L.extra_hints["a_hatch"] = "LVL_58"
 

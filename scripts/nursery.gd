@@ -6,11 +6,8 @@ extends Node
 ## Ошибся — шкатулка фальшивит, а одна из игрушек, на которую ты не смотришь,
 ## поворачивается к тебе. Разгадал — финал демки.
 
-var door_locked := false   ## дверь детской уже захлопнулась
 var L: Node
-var CODE := []           ## порядок клавиш (цвета) — по номерам на рисунках, номера каждый раз новые
-var nums := [1, 2, 3, 4, 5]   ## номер в углу каждого рисунка
-const NUM_COLORS := [Color8(235, 190, 20), Color8(205, 35, 30), Color8(40, 80, 200), Color8(40, 150, 50), Color8(240, 240, 235)]
+const CODE := [0, 1, 2, 3, 4]
 const KEY_NAMES := ["NUR_01", "NUR_02", "NUR_03", "NUR_04", "NUR_05"]
 const CAPTIONS := [
 	"NUR_06",
@@ -30,7 +27,6 @@ var toys := ["NBear", "NDuck", "NHorse", "NElephant", "NRockChair"]
 
 
 func _ready() -> void:
-	_number_drawings()
 	# цели для «E»
 	for i in 5:
 		var d: Node3D = L.get_node("Drawing%d" % (i + 1))
@@ -109,14 +105,12 @@ func start_dance() -> void:
 	g.global_position = Vector3(0.1, 0, -21.4)
 	L._face(g, L.player.global_position)
 	g.visible = true
-	_gpose("idle", -1.0, 0.0)
-	L.girl_sp.float_h = 0.3                  # парит над полом и медленно кружится
 	L._sfx("girl_appear", -4.0)
+	L._girl_anim(1.0)
 	dancing = true
 	dance_t = 0.0
 	dance_seen = 0.0
 	L.drone.volume_db = -30.0
-	L._say("NUR_17", 3.5)
 
 
 func _update_dance(delta: float) -> void:
@@ -145,7 +139,7 @@ func _end_dance(close: bool) -> void:
 	dancing = false
 	var g: Node3D = L.girl
 	# замирает, поворачивается к игроку — свет мигает — её нет
-	L._girl_anim(0.4)                 # замедляется, но не замирает
+	L._girl_anim(0.0)
 	L._face(g, L.player.global_position)
 	L._sfx("sting", -2.0 if close else -6.0)
 	L.player.flicker = 0.45
@@ -153,7 +147,6 @@ func _end_dance(close: bool) -> void:
 	g.visible = false
 	L.drone.volume_db = -8.0
 	L._sfx("giggle", -4.0, 1.1)          # тихий детский смешок
-	L._say("NUR_18", 3.0)
 
 
 func _process(delta: float) -> void:
@@ -161,35 +154,6 @@ func _process(delta: float) -> void:
 	if L.phase == "nursery" and not solved:
 		var nl: OmniLight3D = L.get_node("NightLight")
 		nl.light_energy = 0.0 if randf() < 0.04 else 0.35 * randf_range(0.85, 1.0)
-
-
-## Случайные номера на рисунках: дорисовываем цифру мелком в кружок в углу.
-func _number_drawings() -> void:
-	nums.shuffle()
-	CODE.clear()
-	for n in range(1, 6):
-		CODE.append(nums.find(n))
-	for i in 5:
-		var spr := L.get_node("Drawing%d" % (i + 1)) as Sprite3D
-		var img: Image = spr.texture.get_image()
-		if img.is_compressed():
-			img.decompress()
-		img.convert(Image.FORMAT_RGBA8)
-		var g: Image = load("res://textures/drawings/num_%d.png" % nums[i]).get_image()
-		if g.is_compressed():
-			g.decompress()
-		g.convert(Image.FORMAT_RGBA8)
-		var col: Color = NUM_COLORS[i]
-		for y in g.get_height():
-			for x in g.get_width():
-				var a := g.get_pixel(x, y).a
-				if a > 0.0:
-					g.set_pixel(x, y, Color(col.r * randf_range(0.85, 1.0), col.g * randf_range(0.85, 1.0), col.b * randf_range(0.85, 1.0), a))
-		var k := img.get_width() / 512.0
-		if k != 1.0:
-			g.resize(int(g.get_width() * k), int(g.get_height() * k))
-		img.blend_rect(g, Rect2i(Vector2i.ZERO, g.get_size()), Vector2i(int((512 - 66) * k), int(16 * k)))
-		spr.texture = ImageTexture.create_from_image(img)
 
 
 ## Вызывается из level.gd на любое нажатие E, которое не забрали другие.
@@ -220,7 +184,7 @@ func _show(i: int) -> void:
 	viewer.visible = true
 	L.player.frozen = true
 	L._sfx("creak", -20.0, 1.8)
-	L._say(tr(CAPTIONS[i]) % nums[i], 4.0)
+	L._say(CAPTIONS[i], 4.0)
 
 
 # ---------------- шкатулка ----------------
@@ -242,7 +206,6 @@ func _press(k: int) -> void:
 			_note(n, randf_range(0.82, 0.9), -6.0)
 		L.player.flicker = 0.5
 		_turn_hidden_toy()
-		L._say("NUR_21", 2.5)
 		await get_tree().create_timer(1.0).timeout
 		L.busy = false
 
@@ -317,8 +280,8 @@ func _under_bed() -> void:
 	f.y = 0.0
 	girl.global_position = p.global_position + f.normalized() * 0.6
 	L._face(girl, p.global_position)
-	_gpose("reach", 2.2, 0.6, 0.7)
 	girl.visible = true
+	L._girl_anim(1.2)
 	L._sfx("sting", 2.0)
 	L._sfx("scream", 0.0, 1.25)
 	p.shake = 0.9
@@ -326,7 +289,7 @@ func _under_bed() -> void:
 	create_tween().tween_property(L.red_flash, "color:a", 0.0, 0.8)
 	await get_tree().create_timer(0.55).timeout
 	girl.visible = false
-	_gpose("idle", -1.0, 0.0)
+	L._girl_anim(0.0)
 	await get_tree().create_timer(0.6).timeout
 	L.busy = false
 	p.frozen = false
@@ -338,9 +301,6 @@ func _solve() -> void:
 	solved = true
 	L.busy = true
 	var p = L.player
-	# мелодия сыграна — дверь детской тут же захлопывается: убежать уже не выйдет
-	if not door_locked:
-		_lock_door()
 	L._sfx3d("mb_windup", L.get_node("MusicBox").global_position, -2.0)   # шкатулка заводится сама
 	await get_tree().create_timer(1.6).timeout
 	# шкатулка играет мелодию сама, все игрушки разом поворачиваются к игроку
@@ -353,7 +313,6 @@ func _solve() -> void:
 				_face(L.get_node(n))
 			p.flicker = 0.3
 			L._sfx("creak", -6.0, 0.8)
-			L._say("NUR_23", 3.0)
 	await get_tree().create_timer(1.0).timeout
 	# свет уходит
 	for n in ["MoonNW", "MoonNE", "NursFill"]:
@@ -370,22 +329,16 @@ func _solve() -> void:
 	f.y = 0.0
 	girl.global_position = p.global_position + f.normalized() * 2.6
 	L._face(girl, p.global_position)
-	_gpose("zidle", 1.0, 0.2)
 	girl.visible = true
 	L._sfx("girl_appear", -2.0)
-	if not door_locked:
-		_lock_door()
-	# на каждый счёт пропадает в мигании света и появляется ближе — каждый раз в новой жуткой позе и всё кровавее
-	var poses := [["zidle", 2.7, 0.45, 0.0], ["reach", 1.3, 0.7, 0.0], ["idle", 3.2, 0.9, 0.0]]
-	for k in 3:
-		var word: String = ["NUR_25", "NUR_26", "NUR_27"][k]
+	_lock_door()
+	for word in ["NUR_25", "NUR_26", "NUR_27"]:
 		L._sfx("whisper", -4.0, 1.4)
 		L._say(word, 1.2)
 		p.flicker = 0.35
 		await get_tree().create_timer(1.3).timeout
 		girl.global_position = girl.global_position.lerp(p.global_position, 0.35)
 		L._face(girl, p.global_position)
-		_gpose(poses[k][0], poses[k][1], poses[k][2], poses[k][3])
 	p.light_on = false
 	girl.visible = false
 	await get_tree().create_timer(1.2).timeout
@@ -395,8 +348,9 @@ func _solve() -> void:
 	f.y = 0.0
 	girl.global_position = p.global_position + f.normalized() * 0.55
 	L._face(girl, p.global_position)
-	_gpose("reach", 1.7, 1.0, 1.0)            # тянет к тебе руку, вся в крови, волосы дыбом
+	girl.global_position.y += 0.4            # приподнята: лицо прямо на уровне глаз
 	girl.visible = true
+	L._girl_anim(0.0)
 	p.light_on = true
 	p.flicker = 0.0               # фонарь вспыхивает — она прямо перед лицом
 	p.shake = 1.0
@@ -411,23 +365,8 @@ func _solve() -> void:
 	L.attic.enter()
 
 
-## Поза девочки: анимация n на секунде t (t < 0 — играть), кровь, «волосы дыбом».
-func _gpose(n: String, t: float, blood: float, lift := 0.0) -> void:
-	var g = L.girl_sp
-	if t < 0.0:
-		g.play(n, 1.0, 0.0)
-	else:
-		g.play_from(n, t, 0.7)                 # не замирает: продолжает двигаться с этой позы
-	g.set_blood(blood)
-	g.set_lift(lift)
-	g.float_h = 0.0
-	g._float = 0.0
-
-
 ## Дверь в детскую захлопывается — бежать некуда.
 func _lock_door() -> void:
-	door_locked = true
-	L.doors.lock("exit")
 	var p = L.player
 	var pos: Vector3 = p.global_position
 	if pos.z > -18.05:                       # игрок успел выйти — затянуть обратно в комнату

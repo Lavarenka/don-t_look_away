@@ -82,10 +82,6 @@ func tv_found(n: int) -> void:
 	if chair:
 		var to := _chair_tv + CHAIR_AWAY * (1.0 - n / 3.0)
 		create_tween().tween_property(chair, "rotation:y", to, 1.4).set_trans(Tween.TRANS_SINE)
-	if n == 1:
-		L._say("PZ_CHAIR1", 3.5)
-	elif n == 2:
-		L._say("PZ_CHAIR2", 3.0)
 
 
 ## Неверный канал: каждый раз что-то новое, и дом всё злее.

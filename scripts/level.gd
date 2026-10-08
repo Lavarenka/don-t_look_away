@@ -161,6 +161,11 @@ func _ready() -> void:
 	var chans := [2, 3, 4, 5, 6, 7, 8, 9]
 	chans.shuffle()
 	CHANNEL_CODE = chans.slice(0, 3)
+	# портреты в коридоре висят каждый раз в другом порядке (годы те же — порядок свечей тот же)
+	var spots: Array = [$Portrait1.position, $Portrait2.position, $Portrait3.position]
+	spots.shuffle()
+	for i in 3:
+		get_node("Portrait%d" % (i + 1)).position = spots[i]
 	_localize_scene()
 	_build_hud()
 	SETTINGS.apply($WorldEnvironment.environment, grain_mat, SETTINGS.get_quality())
@@ -544,12 +549,13 @@ func _interact() -> void:
 			_show_note(NOTE_TEXT)
 		"note2":
 			_show_note(NOTE2_TEXT)
-		"photo1":
-			_say(tr("LVL_13") % CHANNEL_CODE[0], 5.0)
-		"photo2":
-			_say(tr("LVL_14") % CHANNEL_CODE[1], 5.0)
-		"photo3":
-			_say(tr("LVL_15") % CHANNEL_CODE[2], 5.0)
+		"photo1", "photo2", "photo3":
+			# фото с подписью на обороте — и в инвентарь, во вкладку записок
+			var n := int(t.right(1)) - 1
+			var key := "LVL_%d" % (13 + n)
+			var txt: String = tr(key) % CHANNEL_CODE[n]
+			_say(txt, 5.0)
+			inv.add_note(key, txt)
 		"tv":
 			_tv_next()
 		"tv_off":
@@ -912,7 +918,6 @@ func _solve_tv() -> void:
 	_sfx3d("door", $Servant.global_position, -6.0, 1.4)
 	create_tween().tween_property(servant_door, "rotation:y", 1.7, 1.2)
 	create_tween().tween_property(servant_door2, "rotation:y", -1.7, 1.2)
-	_say("LVL_23")
 	_set_objective("LVL_24")
 	phase = "key"
 	busy = false
@@ -943,14 +948,12 @@ func _light_candle(i: int) -> void:
 			_set_candle(k + 1, false)
 		candle_progress = 0
 		hallp.candle_mistake()
-		_say("LVL_25")
 		busy = false
 
 
 func _solve_candles() -> void:
 	busy = true
 	_sfx3d("knock", Vector3(0, 1.2, -18), -2.0, 1.5)
-	_say("LVL_26")
 	exit_unlocked = true
 	hallp.candles_solved()
 	_set_objective("LVL_27")

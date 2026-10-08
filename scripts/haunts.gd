@@ -226,7 +226,6 @@ func _front_door_rattle() -> void:
 	leaf.rotation.y = base
 	L.player.shake = 0.3
 	await _wait(0.5)
-	L._say("HAUNT_01", 3.0)
 
 
 func _hall_painting() -> void:
@@ -268,7 +267,6 @@ func _update_gramophone() -> void:
 		g.stop()
 		_once3d("click", g.global_position, 0.0, 0.6)
 		L.player.flicker = 0.3
-		L._say("HAUNT_02", 2.5)
 
 
 func _books_fall() -> void:
@@ -341,13 +339,11 @@ func interact(id: String) -> void:
 		await _wait(0.6)
 		# в трубке: треск линии, тяжёлое дыхание, детский шёпот, смешок — и обрыв
 		L._sfx("phone_call", 0.0)
-		L._say("HAUNT_04", 3.4)
 		await _wait(3.6)
 		L._say("HAUNT_05", 3.4)
 		await _wait(3.2)
 		L.player.shake = 0.3
 		await _wait(1.5)
-		L._say("HAUNT_06", 2.0)
 		L.busy = false
 
 
@@ -394,7 +390,6 @@ func _clock_strike() -> void:
 		_once3d("clock_chime", _pos("Clock"), -2.0)
 		await _wait(1.7)
 	await _wait(1.0)
-	L._say("HAUNT_07", 3.0)
 
 
 func _tv_self() -> void:

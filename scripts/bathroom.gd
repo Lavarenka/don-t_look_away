@@ -714,7 +714,6 @@ func unlock() -> void:
 	await get_tree().create_timer(0.8).timeout
 	L._sfx3d("creak", door_pivot.global_position + Vector3(0, 1, 0), -4.0, 0.7)
 	create_tween().tween_property(door_pivot, "rotation:y", door_angle, 3.2).set_trans(Tween.TRANS_SINE)
-	L._say("B_OPEN", 3.5)
 	L._set_objective("B_OBJ1")
 
 
@@ -725,7 +724,6 @@ func _run_water() -> void:
 	steam.emitting = true
 	water_snd.play()
 	L._sfx3d("pipes", TAP + Vector3(0, -0.5, 0), -10.0, 1.3)
-	L._say("B_TAP", 3.0)
 
 
 func _stop_water() -> void:
@@ -734,8 +732,6 @@ func _stop_water() -> void:
 	steam.emitting = false
 	water_snd.stop()
 	L._sfx3d("pipes", TAP + Vector3(0, -0.5, 0), -2.0, 0.8)
-	if not fog_done:
-		L._say("B_TAP_STOP", 3.0)
 
 
 ## Слив: вода уходит, из ванны поднимается Аня, на дне — ключ.
@@ -744,7 +740,6 @@ func _drain() -> void:
 	L.inv.remove("hook")
 	L.busy = true
 	L._sfx("clink", -6.0, 0.7)
-	L._say("B_DRAIN", 3.0)
 	await get_tree().create_timer(0.8).timeout
 	L._sfx3d("gurgle", TUB + Vector3(0, 0.5, 0), 2.0)
 	var tw := create_tween()
@@ -848,7 +843,6 @@ func _update_exit_scare() -> void:
 				L.player.shake = 0.35
 				L.player.flicker = 0.4
 				_candle(false)
-				L._say("B_SLAM", 3.0)
 		2:
 			if L.doors.is_open("bath_in"):
 				exit_scare = 3

@@ -18,15 +18,22 @@ const ITEMS := {
 	"hook": ["INV_HOOK", "INV_HOOK_D"],
 	"bedkey": ["INV_BEDKEY", "INV_BEDKEY_D"],
 	"attic_key": ["INV_ATTICKEY", "INV_ATTICKEY_D"],
+	"att_dress": ["INV_DRESS", "INV_DRESS_D"],
+	"att_scarf": ["INV_SCARF", "INV_SCARF_D"],
+	"att_bow": ["INV_BOW", "INV_BOW_D"],
+	"att_shoes": ["INV_SHOES", "INV_SHOES_D"],
 }
+const MAX_ITEMS := 8          ## больше не унести
 ## как повернуть предмет к камере (ключи и крюк лежат плашмя — поднимаем кольцом к игроку)
 const POSE := {"key": Vector3(PI / 2, 0, 0.35), "bedkey": Vector3(PI / 2, 0, 0.35), "attic_key": Vector3(PI / 2, 0, 0.35), "hook": Vector3(PI / 2, 0, 0.55)}
 ## текст записки → её заголовок в инвентаре
-const NOTE_TITLES := {"LVL_01": "INV_N_GRANDMA", "LVL_02": "INV_N_CABINET", "NUR_11": "INV_N_ANYA"}
+const NOTE_TITLES := {"LVL_01": "INV_N_GRANDMA", "LVL_02": "INV_N_CABINET", "NUR_11": "INV_N_ANYA",
+	"LVL_13": "INV_N_PHOTO75", "LVL_14": "INV_N_PHOTO76", "LVL_15": "INV_N_PHOTO77", "LVL_52": "INV_N_PHOTO79"}
 
 var L: Node
 var items: Array[String] = []
-var notes: Array[String] = []
+var notes: Array[String] = []       ## ключи записок (заголовок берётся из NOTE_TITLES)
+var _note_txt := {}                 ## ключ → готовый текст (если в нём подставлены числа)
 var is_open := false
 
 var _models := {}            ## id → шаблон модели (Node3D вне дерева)
@@ -78,10 +85,22 @@ func has(id: String) -> bool:
 	return id in items
 
 
+## Предмет «в руках» — тот, что выбран в инвентаре (последний подобранный, пока не выберешь другой).
+func selected() -> String:
+	return items[_sel] if _sel < items.size() else ""
+
+
+func is_full() -> bool:
+	return items.size() >= MAX_ITEMS
+
+
 ## Положить предмет. template — узел, с которого снять внешний вид (иначе модель строится сама).
-func add(id: String, template: Node3D = null, announce := true) -> void:
+func add(id: String, template: Node3D = null, announce := true) -> bool:
 	if id in items:
-		return
+		return true
+	if is_full():
+		L._say("INV_FULL", 2.5)
+		return false
 	if template:
 		var t := template.duplicate() as Node3D
 		t.transform = Transform3D.IDENTITY
@@ -90,6 +109,7 @@ func add(id: String, template: Node3D = null, announce := true) -> void:
 	_sel = items.size() - 1
 	if announce:
 		_announce(tr(ITEMS[id][0]))
+	return true
 
 
 func remove(id: String) -> void:
@@ -101,7 +121,9 @@ func remove(id: String) -> void:
 
 
 ## Прочитанная записка попадает во вкладку «Записки», чтобы её можно было перечитать.
-func add_note(text_key: String) -> void:
+func add_note(text_key: String, text := "") -> void:
+	if text != "":
+		_note_txt[text_key] = text
 	if text_key in notes:
 		return
 	notes.append(text_key)
@@ -254,7 +276,7 @@ func _refresh() -> void:
 		if not notes.is_empty():
 			var k := notes[_note_sel]
 			_note_title.text = tr(NOTE_TITLES.get(k, "INV_NOTE"))
-			_note_text.text = tr(k)
+			_note_text.text = _note_txt.get(k, tr(k))
 			_note_text.add_theme_font_size_override("font_size", 15 if _note_text.text.length() > 380 else 18)
 
 

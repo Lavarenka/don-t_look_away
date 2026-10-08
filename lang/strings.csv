@@ -6,7 +6,7 @@ B_KEY,"A key on a faded ribbon. The tag says: ""Vera"". Grandma's bedroom.",Кл
 B_KEY_H,E — take the key,E — взять ключ
 B_LOCK_H,E — the combination padlock,E — кодовый замок
 B_LOCK_KEYS,A/D — wheel   W/S — digit   E — pull   Esc — back,A/D — колесо   W/S — цифра   E — дёрнуть   Esc — назад
-B_LOCK_OK,"Click. The drawer slides out... Grandpa's long wire hook, wrapped in a rag.","Щёлк. Ящик выезжает... Дедов длинный проволочный крюк, завёрнутый в тряпку."
+B_LOCK_OK,Grandpa's wire hook. Long enough to reach the bottom.,Дедов проволочный крюк. Длинный — достанет до дна.
 B_LOCK_TITLE,Combination padlock,Кодовый замок
 B_LOCK_TRY,Pull,Дёрнуть
 B_LOCK_WRONG,Won't open.,Не открывается.
@@ -37,7 +37,7 @@ HAUNT_01,Someone is pounding on the front door. Then — silence.,Кто-то л
 HAUNT_02,The record stopped by itself.,Пластинка остановилась сама.
 HAUNT_03,E — pick up the phone,E — снять трубку
 HAUNT_04,Someone is breathing heavily on the line...,В трубке кто-то тяжело дышит...
-HAUNT_05,"A child's whisper: ""Misha, are you running away again?""","Детский шёпот: «Миша, ты опять убежишь?»"
+HAUNT_05,"""Misha, are you running away again?""","«Миша, ты опять убежишь?»"
 HAUNT_06,Dial tone.,Гудки.
 HAUNT_07,The clock struck three times and stopped.,Часы пробили три раза и встали.
 HAUNT_08,MISHA,Миша
@@ -53,7 +53,12 @@ INV_ATTICKEY,Rusty key,Ржавый ключ
 INV_ATTICKEY_D,Found under a loose floorboard in the attic. The rust comes off on your fingers.,Был под половицей на чердаке. Ржавчина остаётся на пальцах.
 INV_BEDKEY,Vera's key,Ключ Веры
 INV_BEDKEY_D,"On a faded ribbon. The tag says ""Vera"". It should open Grandma's bedroom.","На выцветшей ленточке, на бирке: «Вера». Должен открыть спальню бабушки."
+INV_BOW,Red bow,Красный бант
+INV_BOW_D,A child's hair bow on a clip. The satin has faded.,Детский бант на заколке. Атлас выцвел.
+INV_DRESS,White dress,Белое платье
+INV_DRESS_D,"Crumpled, smelling of mothballs. Who was it for?","Скомканное, пахнет нафталином. Для кого оно?"
 INV_EMPTY,Nothing here yet.,Пока ничего нет.
+INV_FULL,I can't carry any more.,Больше не унести.
 INV_GOT_HINT,Tab — inventory,Tab — инвентарь
 INV_HOOK,Wire hook,Проволочный крюк
 INV_HOOK_D,Wrapped in a rag in the locked vanity drawer. Long enough to fish something off the bottom of the tub.,Был завёрнут в тряпку в запертом ящике под раковиной. Длинный — можно зацепить что-то со дна ванны.
@@ -68,9 +73,19 @@ INV_NOTES_EMPTY,No notes yet.,Записок пока нет.
 INV_N_ANYA,Anya's note,Записка Ани
 INV_N_CABINET,Note from the cabinet,Записка из серванта
 INV_N_GRANDMA,Grandma's letter,Письмо бабушки
+INV_N_PHOTO75,"Photo, 1975","Фото, 1975"
+INV_N_PHOTO76,"Photo, 1976","Фото, 1976"
+INV_N_PHOTO77,"Photo, 1977","Фото, 1977"
+INV_N_PHOTO79,"Photo of the mannequins, 1979","Фото манекенов, 1979"
+INV_PICK,Pick what to put on: Tab — inventory.,"Выбери, что надеть: Tab — инвентарь."
+INV_SCARF,Red scarf,Красный шарф
+INV_SCARF_D,Hand-knitted and scratchy. Dark stains have dried on the ends.,"Вязаный, колючий. На концах засохли тёмные пятна."
 INV_SHARD,Mirror shard,Осколок зеркала
 INV_SHARD_D,"Cold, and the edges don't cut. Look through it and the room shows what isn't there.
 Q or right mouse button — raise it.","Холодный, края не режут. Если посмотреть сквозь него — в комнате видно то, чего там нет.\nQ или правая кнопка мыши — поднять."
+INV_SHOES,Black shoes,Чёрные туфли
+INV_SHOES_D,"Patent leather, a small size. The soles aren't worn at all — nobody ever walked in them.","Лакированные, маленький размер. Подошвы совсем не стёрты — в них никто не ходил."
+INV_WEAR,E — put on: %s,E — надеть: %s
 ITEM_BOW,the red bow,красный бант
 ITEM_DRESS,the white dress,белое платье
 ITEM_SCARF,the red scarf,красный шарф
@@ -197,7 +212,7 @@ NUR_18,Quiet laughter. The music box falls silent.,Тихий смех. Шкат
 NUR_19,Play Anya's song on the music box,Сыграй мелодию Ани на шкатулке
 NUR_20,E — reread the note,E — перечитать записку
 NUR_21,The music box plays out of tune. Something creaked in the room.,Шкатулка фальшивит. Где-то в комнате скрипнуло.
-NUR_22,"A whisper from under the bed: ""Found you...""",Шёпот из-под кровати: «Нашла...»
+NUR_22,"""Found you...""",«Нашла...»
 NUR_23,The music box plays by itself. All the toys are looking at me.,Шкатулка играет сама. Все игрушки смотрят на меня.
 NUR_24,"""Now you're it, Misha.""","«Теперь ты водишь, Миша»."
 NUR_25,One...,Раз...

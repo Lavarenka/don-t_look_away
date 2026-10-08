@@ -181,6 +181,7 @@
 !/fonts/CormorantSC-Light.ttf
 !/fonts/CormorantSC-Light.ttf.import
 !/fonts/Lora-Italic-Variable.ttf
+!/fonts/Lora-Italic-Variable.ttf.import
 !/lang/strings.csv
 !/lang/strings.csv.import
 !/lang/strings.en.translation
@@ -980,6 +981,7 @@
 !/scripts/intro.gd
 !/scripts/intro.gd.uid
 !/scripts/inventory.gd
+!/scripts/inventory.gd.uid
 !/scripts/level.gd
 !/scripts/level.gd.uid
 !/scripts/mannequin.gd
@@ -1007,6 +1009,7 @@
 !/shaders/grain.gdshader
 !/shaders/grain.gdshader.uid
 !/shaders/inv_bg.gdshader
+!/shaders/inv_bg.gdshader.uid
 !/shaders/murky_water.gdshader
 !/shaders/murky_water.gdshader.uid
 !/shaders/spirit.gdshader
@@ -1023,16 +1026,6 @@
 !/textures/decal_on_zdes.png.import
 !/textures/decal_on_zdes_en.png
 !/textures/decal_on_zdes_en.png.import
-!/textures/drawings/num_1.png
-!/textures/drawings/num_1.png.import
-!/textures/drawings/num_2.png
-!/textures/drawings/num_2.png.import
-!/textures/drawings/num_3.png
-!/textures/drawings/num_3.png.import
-!/textures/drawings/num_4.png
-!/textures/drawings/num_4.png.import
-!/textures/drawings/num_5.png
-!/textures/drawings/num_5.png.import
 !/textures/drawings/risunok1.png
 !/textures/drawings/risunok1.png.import
 !/textures/drawings/risunok1_en.png
