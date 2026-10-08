@@ -956,6 +956,7 @@ func _solve_candles() -> void:
 	busy = true
 	_sfx3d("knock", Vector3(0, 1.2, -18), -2.0, 1.5)
 	exit_unlocked = true
+	inv.remove("matches")             # свечи горят — спички больше не нужны
 	hallp.candles_solved()
 	_set_objective("LVL_27")
 	drone.volume_db = -40.0

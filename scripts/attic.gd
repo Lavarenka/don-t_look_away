@@ -388,7 +388,7 @@ var viewer: TextureRect
 var origin := {}             ## где лежала вещь — туда она возвращается, если взять другую
 const STASH := Vector3(4.3, 0.45, -32.6)   ## ящик, где спрятаны туфли (Crate3)
 var stash_open := false
-var _gaze: Array[Node3D] = []              ## «взгляды» манекенов — красные нити, видны только в осколке
+var _gaze: Array[Node3D] = []              ## двойники манекенов, развёрнутые к тайнику (только в осколке)
 
 
 func _ready() -> void:
@@ -722,29 +722,26 @@ func _pick(it: String) -> void:
 	L._sfx("sheet_rustle" if it != "Shoes" else "pickup", -6.0, 1.1)
 
 
-## Красные нити от каждого манекена к ящику — «куда они смотрят». Только в осколке.
+## В осколке манекены стоят иначе: все четверо развёрнуты к ящику с туфлями — «куда они смотрят на самом деле».
+## Настоящие манекены в стекле не видны, вместо них — их двойники на «отражённом» слое.
 func _build_gaze() -> void:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.55, 0.02, 0.02)
-	mat.emission_enabled = true
-	mat.emission = Color(0.35, 0.0, 0.0)
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	for i in range(1, 5):
-		var from: Vector3 = L.get_node("Attic/PForm%d" % i).global_position + Vector3(0, 1.45, 0)
-		var to := STASH + Vector3(0, 0.05, 0)
-		var m := MeshInstance3D.new()
-		var cm := CylinderMesh.new()
-		cm.top_radius = 0.004
-		cm.bottom_radius = 0.004
-		cm.height = from.distance_to(to)
-		m.mesh = cm
-		m.material_override = mat
-		m.layers = 1 << 10          # MIRROR_LAYER (hall_puzzle.gd)
-		L.add_child(m)
-		m.global_position = (from + to) * 0.5
-		m.look_at(to, Vector3.UP if absf((to - from).normalized().y) < 0.95 else Vector3.RIGHT)
-		m.rotate_object_local(Vector3.RIGHT, PI / 2)
-		_gaze.append(m)
+		var f: Node3D = L.get_node("Attic/PForm%d" % i)
+		var twin := f.duplicate() as Node3D
+		f.get_parent().add_child(twin)
+		twin.global_transform = f.global_transform
+		var d := STASH - f.global_position
+		twin.rotation.y = atan2(d.x, d.z)
+		_set_layers(twin, 1 << 10)          # MIRROR_LAYER (hall_puzzle.gd) — только в осколке
+		_set_layers(f, 1 << 11)             # REAL_LAYER — настоящий в осколке не виден
+		_gaze.append(twin)
+
+
+func _set_layers(n: Node, mask: int) -> void:
+	for mi in n.find_children("*", "VisualInstance3D", true, false):
+		(mi as VisualInstance3D).layers = mask
+	if n is VisualInstance3D:
+		(n as VisualInstance3D).layers = mask
 
 
 ## Заглянуть в ящик: среди тряпья — чёрные туфли.
@@ -760,6 +757,8 @@ func _open_stash() -> void:
 	for g in _gaze:
 		g.queue_free()
 	_gaze.clear()
+	for i in range(1, 5):
+		_set_layers(L.get_node("Attic/PForm%d" % i), 1)
 
 
 ## Не та вещь: манекен рывком разворачивается к тебе, где-то падает тяжёлое, шёпот (на чердаке без скримеров).
