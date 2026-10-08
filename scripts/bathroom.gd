@@ -445,6 +445,7 @@ func _open_drawer() -> void:
 	take.tween_property(hook, "rotation:x", 0.6, 0.7)
 	await take.finished
 	hook.visible = false
+	L.inv.add("hook", hook)
 	L._sfx("pickup", -4.0, 0.8)
 	L._say("B_LOCK_OK", 4.0)
 	L._set_objective("B_OBJ3")
@@ -696,6 +697,7 @@ func interact(id: String) -> void:
 		"b_key":
 			key_taken = true
 			has_bedkey = true
+			L.inv.add("bedkey")
 			key_mesh.visible = false
 			L._sfx("pickup", -6.0)
 			L._say("B_KEY", 4.5)
@@ -739,6 +741,7 @@ func _stop_water() -> void:
 ## Слив: вода уходит, из ванны поднимается Аня, на дне — ключ.
 func _drain() -> void:
 	drained = true
+	L.inv.remove("hook")
 	L.busy = true
 	L._sfx("clink", -6.0, 0.7)
 	L._say("B_DRAIN", 3.0)

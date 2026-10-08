@@ -321,6 +321,7 @@ func _resize() -> void:
 
 func got_shard(say := true) -> void:
 	has_shard = true
+	L.inv.add("shard", null, say)
 	if say:
 		await get_tree().create_timer(3.8).timeout
 		L._say("PZ_SHARD_H", 4.0)

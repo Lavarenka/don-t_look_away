@@ -802,6 +802,7 @@ func _open_board() -> void:
 	L._sfx3d("creak", b.global_position, -4.0, 1.3)
 	await get_tree().create_timer(0.6).timeout
 	has_key = true
+	L.inv.add("attic_key")
 	(b.get_node("KeyGlint") as OmniLight3D).light_energy = 0.0
 	L._sfx("pickup", -6.0)
 	L._say("LVL_56", 3.0)
@@ -817,4 +818,5 @@ func _hatch() -> void:
 		return
 	if L.busy:
 		return
+	L.inv.remove("attic_key")
 	L.floor2.descend()

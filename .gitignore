@@ -180,6 +180,7 @@
 !/audio/whoosh.wav.import
 !/fonts/CormorantSC-Light.ttf
 !/fonts/CormorantSC-Light.ttf.import
+!/fonts/Lora-Italic-Variable.ttf
 !/lang/strings.csv
 !/lang/strings.csv.import
 !/lang/strings.en.translation
@@ -978,6 +979,7 @@
 !/scripts/haunts.gd.uid
 !/scripts/intro.gd
 !/scripts/intro.gd.uid
+!/scripts/inventory.gd
 !/scripts/level.gd
 !/scripts/level.gd.uid
 !/scripts/mannequin.gd
@@ -999,10 +1001,12 @@
 !/scripts/vintage.gd
 !/scripts/vintage.gd.uid
 !/shaders/crt.gdshader
+!/shaders/crt.gdshader.uid
 !/shaders/fog.gdshader
 !/shaders/fog.gdshader.uid
 !/shaders/grain.gdshader
 !/shaders/grain.gdshader.uid
+!/shaders/inv_bg.gdshader
 !/shaders/murky_water.gdshader
 !/shaders/murky_water.gdshader.uid
 !/shaders/spirit.gdshader

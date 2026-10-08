@@ -57,6 +57,7 @@ var nursery: Node
 var attic: Node
 var floor2: Node
 var hallp: Node            ## загадки зала и коридора, осколок зеркала
+var inv: Node              ## инвентарь (Tab)
 var bath: Node             ## ванная второго этажа
 var doors: Node            ## двери, которые открываются и закрываются по E
 var events := {}            ## какие сценки уже случились
@@ -168,6 +169,9 @@ func _ready() -> void:
 	hall_glow = _own_mat($HallBulbMesh)
 	exit_glow = _own_mat($ExitLampPanel)
 	add_child(preload("res://scripts/pause.gd").new())
+	inv = preload("res://scripts/inventory.gd").new()
+	inv.L = self
+	add_child(inv)
 	_setup_audio()
 	player.step.connect(_on_step)
 	player.action.connect(_interact)
@@ -556,6 +560,7 @@ func _interact() -> void:
 		"key":
 			key_node.visible = false
 			has_key = true
+			inv.add("key")
 			_sfx("pickup", -6.0)
 			_say("LVL_17")
 			hallp.got_shard()
@@ -567,6 +572,7 @@ func _interact() -> void:
 				_say("LVL_19")
 			else:
 				door1_open = true
+				inv.remove("key")
 				_sfx("door", -4.0)
 				create_tween().tween_property(door1, "rotation:y", 1.6, 1.6).set_trans(Tween.TRANS_SINE)
 				phase = "corridor"
@@ -591,6 +597,7 @@ func _interact() -> void:
 
 
 func _show_note(text: String) -> void:
+	inv.add_note(text)
 	note_label.text = tr(text)
 	_sfx("page", -6.0)
 	_voice(text)

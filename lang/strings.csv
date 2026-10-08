@@ -49,6 +49,28 @@ INTRO_04,"""…Your grandmother, Vera Korneva, passed away last week. I'm sorry 
 INTRO_05,"""The house on Lipovaya Street is yours now. She left the papers in the china cabinet…""","«Дом на Липовой, семь, теперь ваш. Документы она оставила в серванте…»"
 INTRO_06,"""…And she asked me to pass on something strange: 'Tell Misha not to look away.'""",«…И она просила передать странное: „Пусть Миша не отворачивается“.»
 INTRO_07,"Through the static: ""Misha…""",Сквозь помехи: «Миша…»
+INV_ATTICKEY,Rusty key,Ржавый ключ
+INV_ATTICKEY_D,Found under a loose floorboard in the attic. The rust comes off on your fingers.,Был под половицей на чердаке. Ржавчина остаётся на пальцах.
+INV_BEDKEY,Vera's key,Ключ Веры
+INV_BEDKEY_D,"On a faded ribbon. The tag says ""Vera"". It should open Grandma's bedroom.","На выцветшей ленточке, на бирке: «Вера». Должен открыть спальню бабушки."
+INV_EMPTY,Nothing here yet.,Пока ничего нет.
+INV_GOT_HINT,Tab — inventory,Tab — инвентарь
+INV_HOOK,Wire hook,Проволочный крюк
+INV_HOOK_D,Wrapped in a rag in the locked vanity drawer. Long enough to fish something off the bottom of the tub.,Был завёрнут в тряпку в запертом ящике под раковиной. Длинный — можно зацепить что-то со дна ванны.
+INV_ITEMS,ITEMS,ПРЕДМЕТЫ
+INV_KEY,Hallway key,Ключ от коридора
+INV_KEYS,A / D — browse      Hold mouse button — turn      Q / E — tabs      Tab — close,A / D — листать      зажми кнопку мыши — покрутить      Q / E — вкладки      Tab — закрыть
+INV_KEYS_N,A / D — browse      Q / E — tabs      Tab — close,A / D — листать      Q / E — вкладки      Tab — закрыть
+INV_KEY_D,"It was in the china cabinet, under a shard of mirror. The bit is worn smooth — this key has opened that door for years.",Лежал в серванте под осколком зеркала. Бородка стёрта до блеска — им открывали эту дверь много лет.
+INV_NOTE,Note,Записка
+INV_NOTES,NOTES,ЗАПИСКИ
+INV_NOTES_EMPTY,No notes yet.,Записок пока нет.
+INV_N_ANYA,Anya's note,Записка Ани
+INV_N_CABINET,Note from the cabinet,Записка из серванта
+INV_N_GRANDMA,Grandma's letter,Письмо бабушки
+INV_SHARD,Mirror shard,Осколок зеркала
+INV_SHARD_D,"Cold, and the edges don't cut. Look through it and the room shows what isn't there.
+Q or right mouse button — raise it.","Холодный, края не режут. Если посмотреть сквозь него — в комнате видно то, чего там нет.\nQ или правая кнопка мыши — поднять."
 ITEM_BOW,the red bow,красный бант
 ITEM_DRESS,the white dress,белое платье
 ITEM_SCARF,the red scarf,красный шарф
@@ -139,7 +161,7 @@ MENU_06,demo,тестовая версия
 MENU_07,New Game,Начать игру
 MENU_08,Graphics: ,Графика: 
 MENU_09,Quit,Выход
-MENU_10,WASD — move   Mouse — look   E — interact   F — flashlight   Esc — pause,WASD — ходить   мышь — смотреть   E — действие   F — фонарь   Esc — пауза
+MENU_10,WASD — move   Mouse — look   E — interact   F — flashlight   Tab — inventory   Esc — pause,WASD — ходить   мышь — смотреть   E — действие   F — фонарь   Tab — инвентарь   Esc — пауза
 MENU_11,Loading…,Загрузка…
 MENU_12,Failed to load the level.,Не удалось загрузить уровень.
 MENU_BACK,Back,Назад
