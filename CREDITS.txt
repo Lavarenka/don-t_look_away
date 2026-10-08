@@ -24,16 +24,30 @@
   «Horror night stand» — SmolShadyStudios, sketchfab.com/SmolShadyStudios
   «Scarf for ZD (TFP)» — Elite Catoy, sketchfab.com/Jerry.com
   «Maid Dress Test» — pers, sketchfab.com/persnip (рукава убраны)
-- Туфли (leather women's shoes) — Fab, бесплатно; лицензию уточнить на странице Fab.
+- Туфли «Leather women's shoes» — SUSUSUBE (Sketchfab / Fab), CC BY 4.0.
 - Манекены-люди и их анимации — Mixamo (Adobe), бесплатно для игр.
+- Девочка-призрак «Horror Ghost Character - Blood Stained Spirit» — adhamasalah, sketchfab.com/adhamAsalah, CC BY 4.0
+  (риг и анимации — Mixamo). Заменила «Horror Girl» (CC BY-NC), которая больше не используется.
+- «Horror mask» — Bulat.Shakirov, sketchfab.com/Bulat.Shakirov, CC BY 4.0.
+- Звуки Freesound.org (обрезаны и выровнены по громкости):
+  scream — «scream14», Grez1, CC0
+  sting — «Violin Scare», SirBedlam, CC BY 3.0 (freesound.org/s/393824)
+  heartbeat — «Heartbeat 97 BPM», Cloud-10, CC0
+  whisper — «Creepy whispering», RaspberryTickle, CC0
+  whisper_harsh — «Crowd of demonic whispers», ShangusBurger, CC0
+  creak — «Heavy door creaking 05», rambler52, CC0
+  door — «Storm door slam 01», volivieri, CC BY 4.0 (freesound.org/s/161190)
+  drawer — «Wooden drawer open», joedeshon, CC BY 4.0 (freesound.org/s/117645)
+  phone_call — шёпот «Whisper», IanStarGem, CC0 (+ дыхание из Sonniss и смешок выше)
+  far_scream — «scream_owowo», RutgerMuller, CC0; far_moan — «Moaning ghost», MaxDemianAGL, CC BY 3.0 (freesound.org/s/132250);
+  far_whisper — «Whisper», IanStarGem, CC0 (приглушены и с эхом — «за стеной»)
+  giggle — «Creepy girl laugh», IENBA, CC0; «Child giggle», RaspberryTickle, CC0;
+           «Creepy child giggle with reverb», wolfdoctor, CC BY 4.0 (freesound.org/s/578760)
+- Ванная «The Bathroom (Free)» — Evan, Sketchfab, CC BY 4.0 (текстуры уменьшены).
 
 Нужно проверить или заменить:
-- horror_girl.glb («Horror Girl», LostBoyz2078, Sketchfab) — CC BY-NC: НЕКОММЕРЧЕСКАЯ.
-  Для релиза в Steam ЗАМЕНИТЬ или купить лицензию.
 - horror_corridor_1.glb («Horror corridor 1», Katydid, Sketchfab) — Free Standard:
   насколько известно, игры разрешены; перед релизом перечитать условия.
-- horror_ghost_character_-_blood_stained_spirit.glb (Sketchfab) — лицензию проверить на странице модели.
-- horror_mask.glb (Sketchfab) — лицензию проверить на странице модели.
 
 Не использовано: young_marceline_horror.glb — фан-модель персонажа из чужого мультфильма,
 такие нельзя ставить в свою игру.
