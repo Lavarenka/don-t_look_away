@@ -312,46 +312,12 @@ func _build_props() -> void:
 	water_snd.position = TAP
 	L.add_child(water_snd)
 	_build_drawer()
-	# кодовый замок на ящике тумбы
-	var lock := Node3D.new()
+	# кодовый замок на ящике тумбы — модель из Blender (корпус, дужка «Shackle», три колёсика с цифрами)
+	var lock: Node3D = load("res://models/props/padlock.glb").instantiate()
 	lock.position = LOCK
 	lock.rotation.y = -PI / 2
-	L.add_child(lock)
-	var brass := StandardMaterial3D.new()
-	brass.albedo_color = Color(0.55, 0.42, 0.2)
-	brass.metallic = 0.85
-	brass.roughness = 0.35
-	var body := MeshInstance3D.new()
-	var bm := BoxMesh.new()
-	bm.size = Vector3(0.07, 0.075, 0.03)
-	body.mesh = bm
-	body.material_override = brass
-	lock.add_child(body)
-	var shackle := MeshInstance3D.new()
-	var tm := TorusMesh.new()
-	tm.inner_radius = 0.018
-	tm.outer_radius = 0.026
-	shackle.mesh = tm
-	shackle.rotation.x = PI / 2
-	shackle.position = Vector3(0, 0.045, 0)
-	shackle.material_override = brass
-	shackle.name = "Shackle"
-	lock.add_child(shackle)
-	for i in 3:
-		var wheel := MeshInstance3D.new()
-		var wm2 := CylinderMesh.new()
-		wm2.top_radius = 0.009
-		wm2.bottom_radius = 0.009
-		wm2.height = 0.016
-		wheel.mesh = wm2
-		wheel.rotation.z = PI / 2
-		wheel.position = Vector3(-0.02 + i * 0.02, -0.01, -0.017)
-		var wmat := StandardMaterial3D.new()
-		wmat.albedo_color = Color(0.15, 0.13, 0.1)
-		wmat.metallic = 0.6
-		wheel.material_override = wmat
-		lock.add_child(wheel)
 	lock.name = "BathLock"
+	L.add_child(lock)
 
 
 ## Выдвижной ящик тумбы: лицевая панель — снимок настоящей панели модели (textures/vanity_drawer.jpg),
@@ -411,29 +377,7 @@ func _build_drawer() -> void:
 	hook.position = Vector3(-0.17, -0.038, 0.02)
 	hook.rotation.y = PI / 2 + 0.25
 	drawer.add_child(hook)
-	var steel := StandardMaterial3D.new()
-	steel.albedo_color = Color(0.35, 0.33, 0.3)
-	steel.metallic = 0.8
-	steel.roughness = 0.45
-	for part in [[0.42, Vector3(0, 0, 0), 0.0], [0.07, Vector3(0.226, 0, 0.022), 1.0], [0.04, Vector3(0.24, 0, 0.055), 2.3]]:
-		var w := MeshInstance3D.new()
-		var wm := CylinderMesh.new()
-		wm.top_radius = 0.0035
-		wm.bottom_radius = 0.0035
-		wm.height = part[0]
-		w.mesh = wm
-		w.rotation = Vector3(0, part[2], PI / 2)
-		w.position = part[1]
-		w.material_override = steel
-		hook.add_child(w)
-	var ring := MeshInstance3D.new()
-	var rm := TorusMesh.new()
-	rm.inner_radius = 0.012
-	rm.outer_radius = 0.018
-	ring.mesh = rm
-	ring.position = Vector3(-0.225, 0, 0)
-	ring.material_override = steel
-	hook.add_child(ring)
+	hook.add_child(load("res://models/props/hook.glb").instantiate())   # гнутая проволока из Blender
 
 
 ## Код верный: катсцена — замок падает, ящик выезжает, Миша берёт крюк.

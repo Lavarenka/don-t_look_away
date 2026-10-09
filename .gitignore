@@ -714,6 +714,7 @@
 !/models/player/remy_alpha_0.png.import
 !/models/player/remy_alpha_1.png
 !/models/player/remy_alpha_1.png.import
+!/models/props/hook.glb
 !/models/props/key_attic.glb
 !/models/props/key_attic.glb.import
 !/models/props/key_attic_KeyAttic_color.png
@@ -780,7 +781,9 @@
 !/models/props/matchbox_Striker_rough.png.import
 !/models/props/matchbox_label.png
 !/models/props/matchbox_label.png.import
+!/models/props/padlock.glb
 !/models/props/shard.glb
+!/models/props/shard.glb.import
 !/models/rubber_duck_toy/rubber_duck_toy.bin
 !/models/rubber_duck_toy/rubber_duck_toy_2k.gltf
 !/models/rubber_duck_toy/rubber_duck_toy_2k.gltf.import
@@ -1074,6 +1077,7 @@
 !/shaders/fog.gdshader
 !/shaders/fog.gdshader.uid
 !/shaders/glass.gdshader
+!/shaders/glass.gdshader.uid
 !/shaders/grain.gdshader
 !/shaders/grain.gdshader.uid
 !/shaders/hair.gdshader

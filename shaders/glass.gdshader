@@ -19,15 +19,13 @@ void fragment() {
 	// волны излома: концентрические кольца от точки удара + мелкая рябь
 	vec2 q = lp.xz * 1.0;
 	float ring = sin(length(q - vec2(-0.05, 0.01)) * 260.0) * 0.5 + sin(q.x * 150.0 + q.y * 90.0) * 0.25;
-	vec3 n = normalize(NORMAL + (VIEW_MATRIX * vec4(ring * 0.12, 0.0, ring * 0.08, 0.0)).xyz * (1.0 - edge));
+	vec3 n = normalize(NORMAL + (VIEW_MATRIX * vec4(ring * 0.03, 0.0, ring * 0.02, 0.0)).xyz * (1.0 - edge));
 	float facing = clamp(abs(dot(n, VIEW)), 0.0, 1.0);
 	float f = pow(1.0 - facing, 3.0);
 	vec3 r = reflect(-VIEW, n * sign(dot(n, VIEW) + 1e-4));
 	// узкая полоса «окна» сверху и тёплый отблеск сбоку
-	float band = 1.0 - smoothstep(0.0, 0.07, abs(r.y - 0.62 - ring * 0.12));
-	band += (1.0 - smoothstep(0.0, 0.035, abs(r.y + 0.1 - ring * 0.1))) * 0.45;   // второе, слабее
-	band += (1.0 - smoothstep(0.0, 0.05, abs(r.x + 0.45 + ring * 0.1))) * 0.3;
-	float side = (1.0 - smoothstep(0.0, 0.04, abs(r.x - 0.8 - ring * 0.15))) * 0.5;   // узкий тёплый отблеск
+	float band = (1.0 - smoothstep(0.0, 0.06, abs(r.y - 0.62 - ring * 0.04))) * 0.7;
+	float side = (1.0 - smoothstep(0.0, 0.04, abs(r.x - 0.8 - ring * 0.04))) * 0.35;   // узкий тёплый отблеск
 	vec3 refl = vec3(0.9, 0.95, 1.0) * band + vec3(1.0, 0.8, 0.55) * side;
 	ALBEDO = mix(tint * 0.12, vec3(0.12, 0.28, 0.2), edge);
 	ROUGHNESS = mix(0.02, 0.12, edge);

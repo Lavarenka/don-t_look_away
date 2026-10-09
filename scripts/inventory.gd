@@ -75,6 +75,12 @@ var _pitch := 0.0
 var _drag := false
 var _row_vps: Array[SubViewport] = []
 var _fade: Tween
+# бирка на ключе Веры качается, как маятник, когда крутишь ключ
+var _swing: Node3D
+var _sw_dir := Vector3.DOWN
+var _sw_vel := Vector3.ZERO
+var _sw_prev_p := Vector3.ZERO
+var _sw_prev_v := Vector3.ZERO
 var _toast_tw: Tween
 var _toast_lines: Array[String] = []
 
@@ -259,6 +265,47 @@ func _process(delta: float) -> void:
 		_yaw += delta * 0.35
 		_pitch = lerpf(_pitch, 0.0, delta * 1.5)
 	_pivot.rotation = Vector3(_pitch, _yaw, 0.0)
+	_update_swing(delta)
+
+
+## Ленточка с биркой (узлы Ribbon/Tag в модели) вешается на шарнир у головки ключа.
+func _setup_swing(model: Node) -> void:
+	_swing = null
+	var rib := model.find_child("Ribbon", true, false) as Node3D
+	var tag := model.find_child("Tag", true, false) as Node3D
+	if rib == null or tag == null:
+		return
+	var sw := Node3D.new()
+	sw.name = "Swing"
+	rib.get_parent().add_child(sw)
+	sw.position = rib.position            # петля ленточки — точка подвеса
+	rib.reparent(sw)
+	tag.reparent(sw)
+	_swing = sw
+	_sw_dir = Vector3.DOWN
+	_sw_vel = Vector3.ZERO
+	_sw_prev_p = sw.global_position
+	_sw_prev_v = Vector3.ZERO
+
+
+## Маятник: направление «ленточка → бирка» живёт в мире, его тянет вниз, а рывки ключа его раскачивают.
+func _update_swing(dt: float) -> void:
+	if _swing == null or not is_instance_valid(_swing) or dt <= 0.0:
+		return
+	var par := _swing.get_parent() as Node3D
+	var p := _swing.global_position
+	var pv := (p - _sw_prev_p) / dt
+	var pa := (pv - _sw_prev_v) / dt
+	_sw_prev_p = p
+	_sw_prev_v = pv
+	var acc := Vector3.DOWN * 9.0 - pa.limit_length(60.0) * 0.5
+	acc -= _sw_dir * acc.dot(_sw_dir)
+	_sw_vel += acc * dt
+	_sw_vel -= _sw_dir * _sw_vel.dot(_sw_dir)
+	_sw_vel *= exp(-1.6 * dt)
+	_sw_dir = (_sw_dir + _sw_vel * dt).normalized()
+	var local := (par.global_basis.inverse() * _sw_dir).normalized()
+	_swing.quaternion = Quaternion(Vector3(0, 0, 1), local)
 
 
 # ---------------------------------------------------------------- отрисовка
@@ -302,6 +349,7 @@ func _show_items() -> void:
 	_name.text = tr(ITEMS[id][0])
 	_desc.text = tr(ITEMS[id][1])
 	_pivot.add_child(_fitted(id))
+	_setup_swing(_pivot.get_child(_pivot.get_child_count() - 1))
 	# ряд остальных: у каждой иконки своя маленькая камера, предметы стоят далеко друг от друга
 	for i in items.size():
 		var spot := Vector3(100.0 + i * 10.0, 0, 0)
