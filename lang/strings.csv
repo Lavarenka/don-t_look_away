@@ -1,6 +1,5 @@
 keys,en,ru
 A_STASH,E — look in the crate,E — заглянуть в ящик
-B_BED_KEY,The key turns... but the door won't give. As if someone is holding it from the other side.,Ключ поворачивается... но дверь не поддаётся. Будто кто-то держит её с той стороны.
 B_DRAIN,Got the chain with the hook... The water is going down.,Подцепил цепочку крюком... Вода уходит.
 B_FOG,The mirror fogged up... and something is written on it.,Зеркало запотело... и на нём что-то написано.
 B_KEY,"A key on a faded ribbon. The tag says: ""Vera"". Grandma's bedroom.",Ключ на выцветшей ленточке. На бирке: «Вера». От бабушкиной спальни.
@@ -18,6 +17,7 @@ B_OBJ1,Look around the bathroom,Осмотри ванную
 B_OBJ2,Open the padlock on the vanity drawer,Открой кодовый замок на ящике тумбы
 B_OBJ3,Pull the plug out of the bath,Вытащи пробку из ванны
 B_OBJ4,Open Grandma's bedroom,Открой спальню бабушки
+BR_OBJ1,Explore Grandma's bedroom,Осмотри спальню бабушки
 B_OPEN,A click... The bathroom door opened by itself.,Щелчок... Дверь ванной открылась сама.
 B_SHARD_TUB,Through the glass I can see the bottom... Hair. So much hair. And something glints in it.,Сквозь стекло видно дно... Волосы. Столько волос. И в них что-то блестит.
 B_SLAM,The door slammed shut behind me.,Дверь за спиной захлопнулась.

@@ -755,17 +755,6 @@ func _drain() -> void:
 	_candle(true)
 
 
-## Попытка открыть спальню ключом из ванной.
-func try_bedroom() -> bool:
-	if not has_bedkey:
-		return false
-	L._sfx3d("click", Vector3(-3.2, Y2 + 1.0, -36.7), -2.0, 0.9)
-	L._say("B_BED_KEY", 4.5)
-	await get_tree().create_timer(1.0).timeout
-	L._sfx3d("knock", Vector3(-3.2, Y2 + 1.2, -37.0), 0.0, 0.8)
-	return true
-
-
 func _process(delta: float) -> void:
 	if L == null or L.phase != "floor2":
 		return

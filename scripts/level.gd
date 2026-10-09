@@ -60,6 +60,7 @@ var hallp: Node            ## загадки зала и коридора, ос�
 var inv: Node              ## инвентарь (Tab)
 var bath: Node             ## ванная второго этажа
 var doors: Node            ## двери, которые открываются и закрываются по E
+var bedroom: Node          ## спальня бабушки Веры
 var events := {}            ## какие сценки уже случились
 var shade_mode := ""        ## что сейчас делает призрак
 var shade_t := 0.0
@@ -249,6 +250,12 @@ func _ready() -> void:
 	doors.add("land", get_node("F2LandPivot"), 0.0, 1.6, Vector3(3.0, -2.4, -34.2), func(): return phase == "floor2")
 	doors.add("bath", bath.door_pivot, 0.0, bath.door_angle, Vector3(-0.8, -2.4, -36.8), func(): return bath.unlocked)
 	doors.add("bath_in", bath.inner_pivot, bath.INNER_CLOSED, bath.INNER_OPEN, bath.INNER_C, func(): return phase == "floor2")
+	bedroom = preload("res://scripts/bedroom.gd").new()
+	add_child(bedroom)
+	bedroom.setup(self)
+	# тяжёлый подсвечник в прихожей издалека (со второго этажа сквозь стены) не нужен — экономим отрисовку
+	for mi in get_node("HallCandlestick").find_children("*", "GeometryInstance3D", true, false):
+		mi.visibility_range_end = 20.0
 	_setup_zombie()
 	player.mouse_sens *= SETTINGS.get_sens()
 	SETTINGS.apply_general()

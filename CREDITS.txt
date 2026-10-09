@@ -44,10 +44,14 @@
   giggle — «Creepy girl laugh», IENBA, CC0; «Child giggle», RaspberryTickle, CC0;
            «Creepy child giggle with reverb», wolfdoctor, CC BY 4.0 (freesound.org/s/578760)
 - Ванная «The Bathroom (Free)» — Evan, Sketchfab, CC BY 4.0 (текстуры уменьшены).
+- Спальня бабушки Веры «Abandoned mansion bedroom» — Katydid, Sketchfab (Fab), Free Standard License
+  (створки дверей отделены и посажены на петли; модель целиком, без переделки).
 
 Нужно проверить или заменить:
 - horror_corridor_1.glb («Horror corridor 1», Katydid, Sketchfab) — Free Standard:
   насколько известно, игры разрешены; перед релизом перечитать условия.
+- bedroom_vera.glb (та же лицензия Free Standard, Katydid): в игре можно; нельзя выкладывать модель
+  отдельно и использовать для обучения ИИ (пункт NoAI) — перед релизом перечитать условия.
 
 Не использовано: young_marceline_horror.glb — фан-модель персонажа из чужого мультфильма,
 такие нельзя ставить в свою игру.

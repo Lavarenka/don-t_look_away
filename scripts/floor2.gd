@@ -15,7 +15,7 @@ const HZ1 := -34.2
 const HX1 := 4.6
 ## двери: id → [центр (на высоте ручки), реплика при первой попытке]
 const DOORS := {
-	"f_bed": [Vector3(-3.2, Y2 + 1.0, HZ0 + 0.12), "LVL_69"],
+	"f_bed": [Vector3(-4.65, Y2 + 1.0, (HZ0 + HZ1) / 2), "LVL_69"],
 	"f_bath": [Vector3(-0.8, Y2 + 1.0, HZ0 + 0.12), "LVL_70"],
 	"f_study": [Vector3(1.6, Y2 + 1.0, HZ0 + 0.12), "LVL_71"],
 	"f_anya": [Vector3(HX1 - 0.12, Y2 + 1.0, (HZ0 + HZ1) / 2), "LVL_72"],
@@ -77,13 +77,15 @@ func _sign(key: String, pos: Vector3, yaw: float, col: Color, px: float, paper: 
 func target_ok(id: String) -> bool:
 	if id == "f_bath" and L.bath.unlocked:
 		return false
+	if id == "f_bed" and L.bedroom.unlocked:
+		return false
 	return L.phase == "floor2" and not L.busy
 
 
 func interact(id: String) -> void:
 	if not DOORS.has(id):
 		return
-	if id == "f_bed" and await L.bath.try_bedroom():
+	if id == "f_bed" and await L.bedroom.try_open():
 		return
 	var pos: Vector3 = DOORS[id][0]
 	L._sfx3d("click", pos, -6.0, 0.8)
@@ -230,12 +232,12 @@ func _process(delta: float) -> void:
 		return
 	var pp: Vector3 = L.player.global_position
 	# тёплый свет под дверью спальни горит, только пока ты далеко
-	var bd := Vector2(pp.x + 3.2, pp.z - HZ0).length()
-	if bd > 5.0 and bed_glow.light_energy == 0.0 and randf() < delta * 0.05:
+	var bd := Vector2(pp.x + 4.65, pp.z - (HZ0 + HZ1) / 2).length()
+	if bd > 5.0 and bed_glow.light_energy == 0.0 and not L.bedroom.unlocked and randf() < delta * 0.05:
 		bed_glow.light_energy = 0.7
 	elif bd < 2.8 and bed_glow.light_energy > 0.0:
 		bed_glow.light_energy = 0.0
-		L._sfx3d("click", Vector3(-3.2, Y2 + 0.5, HZ0 - 0.4), -12.0, 0.9)
+		L._sfx3d("click", Vector3(-5.1, Y2 + 0.5, (HZ0 + HZ1) / 2), -12.0, 0.9)
 	next_ev -= delta
 	if next_ev > 0.0:
 		return

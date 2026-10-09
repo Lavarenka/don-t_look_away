@@ -114,6 +114,7 @@
 [ext_resource type="PackedScene" path="res://models/vintage/photo_2.fbx" id="e112"]
 [ext_resource type="PackedScene" path="res://models/vintage/photo_3.fbx" id="e113"]
 [ext_resource type="PackedScene" path="res://models/vintage/photo_4.fbx" id="e114"]
+[ext_resource type="PackedScene" path="res://models/bedroom/bedroom_vera.glb" id="e115"]
 
 [sub_resource type="ORMMaterial3D" id="m_stone"]
 albedo_color = Color(0.6, 0.55, 0.5, 1)
@@ -1162,7 +1163,7 @@ size = Vector3(0.9, 0.86, 0.2)
 size = Vector3(5.6, 0.2, 5.7)
 
 [sub_resource type="BoxShape3D" id="shape_F2ColW"]
-size = Vector3(0.2, 2.8, 2.6)
+size = Vector3(0.2, 2.8, 0.44)
 
 [sub_resource type="BoxShape3D" id="shape_F2ColE"]
 size = Vector3(0.2, 2.8, 2.6)
@@ -1184,13 +1185,6 @@ size = Vector3(0.2, 2.8, 1.6)
 
 [sub_resource type="BoxShape3D" id="shape_f2door"]
 size = Vector3(0.87, 1.87, 0.08)
-
-[sub_resource type="QuadMesh" id="f2_night"]
-size = Vector2(2.4, 2.2)
-
-[sub_resource type="StandardMaterial3D" id="m_night"]
-shading_mode = 0
-albedo_color = Color(0.03, 0.045, 0.08, 1)
 
 [sub_resource type="ParticleProcessMaterial" id="dust_pm"]
 emission_shape = 3
@@ -4204,9 +4198,9 @@ rotation = Vector3(0, 0, 0)
 scale = Vector3(0.291667, 1, 0.5)
 position = Vector3(-4.5, -3.4, -36.8085)
 
-[node name="F2DoorBed" parent="." instance=ExtResource("e16")]
+[node name="F2WallBed" parent="." instance=ExtResource("e15")]
 rotation = Vector3(0, 0, 0)
-scale = Vector3(1, 1, 0.5)
+scale = Vector3(0.5, 1, 0.5)
 position = Vector3(-3.799, -3.4, -36.8085)
 
 [node name="F2Wall52" parent="." instance=ExtResource("e15")]
@@ -4236,18 +4230,13 @@ position = Vector3(2.2, -3.4, -36.8085)
 
 [node name="F2Wall55" parent="." instance=ExtResource("e15")]
 rotation = Vector3(0, 1.5708, 0)
-scale = Vector3(0.25, 1, 0.5)
-position = Vector3(-4.6085, -3.4, -36.1)
-
-[node name="F2Window" parent="." instance=ExtResource("e17")]
-rotation = Vector3(0, 1.5708, 0)
-scale = Vector3(1, 1, 0.5)
-position = Vector3(-4.6085, -3.4, -34.9)
+scale = Vector3(0.175, 1, 0.5)
+position = Vector3(-4.6085, -3.4, -36.38)
 
 [node name="F2Wall56" parent="." instance=ExtResource("e15")]
 rotation = Vector3(0, 1.5708, 0)
-scale = Vector3(0.25, 1, 0.5)
-position = Vector3(-4.6085, -3.4, -34.3)
+scale = Vector3(0.175, 1, 0.5)
+position = Vector3(-4.6085, -3.4, -34.2)
 
 [node name="F2Wall57" parent="." instance=ExtResource("e15")]
 rotation = Vector3(0, -1.5708, 0)
@@ -4335,9 +4324,15 @@ position = Vector3(-1.43, -3.5, -39.5)
 shape = SubResource("shape_F2BathSlab")
 
 [node name="F2ColW" type="StaticBody3D" parent="."]
-position = Vector3(-4.6, -2, -35.5)
+position = Vector3(-4.6, -2, -36.58)
 
 [node name="Shape" type="CollisionShape3D" parent="F2ColW"]
+shape = SubResource("shape_F2ColW")
+
+[node name="F2ColW2" type="StaticBody3D" parent="."]
+position = Vector3(-4.6, -2, -34.42)
+
+[node name="Shape" type="CollisionShape3D" parent="F2ColW2"]
 shape = SubResource("shape_F2ColW")
 
 [node name="F2ColE" type="StaticBody3D" parent="."]
@@ -4385,21 +4380,6 @@ position = Vector3(0.435, 0.935, 0)
 [node name="Shape" type="CollisionShape3D" parent="F2LandPivot/Body"]
 shape = SubResource("shape_f2door")
 
-[node name="F2Night" type="MeshInstance3D" parent="."]
-mesh = SubResource("f2_night")
-surface_material_override/0 = SubResource("m_night")
-rotation = Vector3(0, 1.5708, 0)
-position = Vector3(-5.2, -2, -35.5)
-
-[node name="F2Moon" type="SpotLight3D" parent="."]
-rotation = Vector3(-0.453678, -1.6557, 0)
-position = Vector3(-5.8, -1.1, -35.5)
-light_color = Color(0.5, 0.6, 0.95, 1)
-light_energy = 5.0
-spot_range = 9.0
-spot_angle = 24.0
-shadow_enabled = true
-
 [node name="F2Fill" type="OmniLight3D" parent="."]
 light_color = Color(0.4, 0.45, 0.65, 1)
 light_energy = 0.25
@@ -4409,8 +4389,11 @@ position = Vector3(0, -1.1, -35.5)
 [node name="F2BedGlow" type="OmniLight3D" parent="."]
 light_color = Color(1, 0.65, 0.35, 1)
 light_energy = 0.0
-omni_range = 1.4
-position = Vector3(-3.2, -3.32, -37.15)
+omni_range = 1.6
+position = Vector3(-4.95, -3.3, -35.5)
+
+[node name="Bedroom" parent="." instance=ExtResource("e115")]
+position = Vector3(3.647, -3.4, -10.28)
 
 [node name="F2Photo0" parent="." instance=ExtResource("e111")]
 rotation = Vector3(0, 3.14159, 0)

@@ -5,14 +5,15 @@ extends Node
 ## Запертые двери и двери, закрытые по сюжету, сюда не попадают или помечаются locked.
 
 var L: Node
-var doors := {}        ## id → {pivot, closed, open, center, ok: Callable, locked}
+var doors := {}        ## id → {pivot, closed, open, center, ok: Callable, locked, pair}
 var _busy := {}
 ## «Дом дышит»: в комнате, где игрок, иногда одна дверь сама чуть приоткрывается или призакрывается.
 var _creep_t := 4.0          ## первый раз — почти сразу, как только рядом есть подходящая дверь
 
 
-func add(id: String, pivot: Node3D, closed_a: float, open_a: float, center: Vector3, ok: Callable) -> void:
-	doors[id] = {"pivot": pivot, "closed": closed_a, "open": open_a, "center": center, "ok": ok, "locked": false}
+## pair — вторая створка двустворчатой двери: [петля, угол закрытой, угол открытой]; движется вместе с первой.
+func add(id: String, pivot: Node3D, closed_a: float, open_a: float, center: Vector3, ok: Callable, pair: Array = []) -> void:
+	doors[id] = {"pivot": pivot, "closed": closed_a, "open": open_a, "center": center, "ok": ok, "locked": false, "pair": pair}
 	L.targets.append({"id": "d_" + id, "pos": center, "th": 0.55, "dist": 2.1})
 
 
@@ -57,7 +58,10 @@ func interact(tid: String) -> void:
 		L._sfx3d("creak", d.center, -12.0, randf_range(1.3, 1.6))
 		get_tree().create_timer(0.45).timeout.connect(func(): L._sfx3d("door", d.center, -8.0, randf_range(1.0, 1.15)))   # закрылась — хлопок
 	var tw := create_tween()
-	tw.tween_property(d.pivot, "rotation:y", to, 0.75 if to == d.open else 0.55).set_trans(Tween.TRANS_SINE)
+	var sec := 0.75 if to == d.open else 0.55
+	tw.tween_property(d.pivot, "rotation:y", to, sec).set_trans(Tween.TRANS_SINE)
+	if not d.pair.is_empty():
+		tw.parallel().tween_property(d.pair[0], "rotation:y", d.pair[1] if to == d.closed else d.pair[2], sec * 1.08).set_trans(Tween.TRANS_SINE)
 	await tw.finished
 	_busy.erase(id)
 
@@ -107,5 +111,8 @@ func _creep() -> bool:
 	L._sfx3d("creak", d.center, randf_range(-20.0, -15.0), randf_range(0.5, 0.65))
 	var tw := create_tween()
 	tw.tween_property(d.pivot, "rotation:y", d.closed + span * to_k, sec).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	if not d.pair.is_empty():      # у двустворчатой двери вторая створка отстаёт и сдвигается меньше
+		var p2: Array = d.pair
+		tw.parallel().tween_property(p2[0], "rotation:y", p2[1] + (p2[2] - p2[1]) * to_k * 0.6, sec * 1.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_callback(func(): _busy.erase(id))
 	return true
