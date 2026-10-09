@@ -25,9 +25,15 @@ const ITEMS := {
 	"att_bow": ["INV_BOW", "INV_BOW_D"],
 	"att_shoes": ["INV_SHOES", "INV_SHOES_D"],
 }
-const MAX_ITEMS := 8          ## больше не унести
+const MAX_ITEMS := 8
+const PROPS := {
+	"key": "res://models/props/key_hall.glb",
+	"bedkey": "res://models/props/key_vera.glb",
+	"attic_key": "res://models/props/key_attic.glb",
+	"matches": "res://models/props/matchbox.glb",
+}          ## больше не унести
 ## как повернуть предмет к камере (ключи и крюк лежат плашмя — поднимаем кольцом к игроку)
-const POSE := {"key": Vector3(PI / 2, 0, 0.35), "bedkey": Vector3(PI / 2, 0, 0.35), "attic_key": Vector3(PI / 2, 0, 0.35), "hook": Vector3(PI / 2, 0, 0.55), "matches": Vector3(0.5, 0.6, 0), "mb_key": Vector3(0, 0, 0.4)}
+const POSE := {"key": Vector3(PI / 2, 0, 0.35), "bedkey": Vector3(PI / 2, 0, 0.35), "attic_key": Vector3(PI / 2, 0, 0.35), "hook": Vector3(PI / 2, 0, 0.55), "matches": Vector3(1.05, -0.5, 0), "mb_key": Vector3(0, 0, 0.4)}
 ## текст записки → её заголовок в инвентаре
 const NOTE_TITLES := {"LVL_01": "INV_N_GRANDMA", "LVL_02": "INV_N_CABINET", "NUR_11": "INV_N_ANYA",
 	"LVL_13": "INV_N_PHOTO75", "LVL_14": "INV_N_PHOTO76", "LVL_15": "INV_N_PHOTO77", "LVL_52": "INV_N_PHOTO79"}
@@ -386,69 +392,9 @@ func _collect(n: Node, xf: Transform3D, boxes: Array[AABB]) -> void:
 func _build_model(id: String) -> Node3D:
 	var root := Node3D.new()
 	match id:
-		"key", "bedkey", "attic_key":
-			var mat: Material = null
-			if id == "bedkey":
-				mat = _metal(Color(0.55, 0.55, 0.58), 0.9, 0.35)
-			elif id == "attic_key":
-				mat = _metal(Color(0.32, 0.18, 0.1), 0.35, 0.85)
-			for nm in ["Ring", "Shaft"]:
-				var p := L.key_node.get_node(nm).duplicate() as MeshInstance3D
-				if mat:
-					p.material_override = mat
-				root.add_child(p)
-			if id == "bedkey":
-				# выцветшая ленточка с биркой «Вера»
-				var rib := MeshInstance3D.new()
-				var bm := BoxMesh.new()
-				bm.size = Vector3(0.012, 0.07, 0.002)
-				rib.mesh = bm
-				rib.position = Vector3(-0.03, -0.04, 0)
-				rib.rotation.z = 0.35
-				var rm := StandardMaterial3D.new()
-				rm.albedo_color = Color(0.55, 0.22, 0.2)
-				rm.roughness = 0.9
-				rib.material_override = rm
-				root.add_child(rib)
-		"matches":
-			# коробок спичек: бумажная этикетка, тёмные «чиркалки» по бокам и одна спичка
-			var box := MeshInstance3D.new()
-			var bm := BoxMesh.new()
-			bm.size = Vector3(0.05, 0.015, 0.036)
-			box.mesh = bm
-			box.material_override = _metal(Color(0.55, 0.35, 0.18), 0.0, 0.85)
-			root.add_child(box)
-			var lab := MeshInstance3D.new()
-			var lm := BoxMesh.new()
-			lm.size = Vector3(0.034, 0.002, 0.024)
-			lab.mesh = lm
-			lab.position = Vector3(0, 0.0081, 0)
-			lab.material_override = _metal(Color(0.75, 0.68, 0.5), 0.0, 0.9)
-			root.add_child(lab)
-			for zz in [-0.0185, 0.0185]:
-				var st := MeshInstance3D.new()
-				var sm := BoxMesh.new()
-				sm.size = Vector3(0.048, 0.012, 0.0015)
-				st.mesh = sm
-				st.position = Vector3(0, 0, zz)
-				st.material_override = _metal(Color(0.2, 0.12, 0.08), 0.0, 1.0)
-				root.add_child(st)
-			var stick := MeshInstance3D.new()
-			var sk := BoxMesh.new()
-			sk.size = Vector3(0.045, 0.0025, 0.0025)
-			stick.mesh = sk
-			stick.position = Vector3(0.012, 0.011, 0.006)
-			stick.rotation.y = 0.4
-			stick.material_override = _metal(Color(0.85, 0.75, 0.55), 0.0, 0.9)
-			root.add_child(stick)
-			var head := MeshInstance3D.new()
-			var hm := SphereMesh.new()
-			hm.radius = 0.0028
-			hm.height = 0.0056
-			head.mesh = hm
-			head.position = stick.position + Vector3(0.0225 * cos(0.4), 0, -0.0225 * sin(0.4))
-			head.material_override = _metal(Color(0.45, 0.06, 0.04), 0.0, 0.7)
-			root.add_child(head)
+		"key", "bedkey", "attic_key", "matches":
+			# модели из Blender (tools/blender/make_props.py): геометрия + запечённые текстуры
+			root.add_child(load(PROPS[id]).instantiate())
 		"mb_key":
 			# латунный заводной ключик-«бабочка» от шкатулки
 			var brass := _metal(Color(0.78, 0.6, 0.3), 0.9, 0.3)

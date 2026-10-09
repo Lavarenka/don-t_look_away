@@ -714,6 +714,10 @@
 !/models/player/remy_alpha_0.png.import
 !/models/player/remy_alpha_1.png
 !/models/player/remy_alpha_1.png.import
+!/models/props/key_attic.glb
+!/models/props/key_hall.glb
+!/models/props/key_vera.glb
+!/models/props/matchbox.glb
 !/models/rubber_duck_toy/rubber_duck_toy.bin
 !/models/rubber_duck_toy/rubber_duck_toy_2k.gltf
 !/models/rubber_duck_toy/rubber_duck_toy_2k.gltf.import
@@ -1009,6 +1013,7 @@
 !/shaders/grain.gdshader
 !/shaders/grain.gdshader.uid
 !/shaders/hair.gdshader
+!/shaders/hair.gdshader.uid
 !/shaders/inv_bg.gdshader
 !/shaders/inv_bg.gdshader.uid
 !/shaders/murky_water.gdshader

@@ -174,6 +174,12 @@ func _ready() -> void:
 	hall_glow = _own_mat($HallBulbMesh)
 	exit_glow = _own_mat($ExitLampPanel)
 	add_child(preload("res://scripts/pause.gd").new())
+	# ключ в серванте — модель из Blender вместо кольца и стержня
+	for nm in ["Ring", "Shaft"]:
+		(key_node.get_node(nm) as Node3D).visible = false
+	var km: Node3D = load("res://models/props/key_hall.glb").instantiate()
+	km.name = "KeyModel"
+	key_node.add_child(km)
 	inv = preload("res://scripts/inventory.gd").new()
 	inv.L = self
 	add_child(inv)

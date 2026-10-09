@@ -243,7 +243,7 @@ func _build_props() -> void:
 	water_m.position = water.position
 	L.add_child(water_m)
 	_build_hair()
-	drowned_key = L.key_node.duplicate()
+	drowned_key = load("res://models/props/key_vera.glb").instantiate()
 	drowned_key.visible = true
 	for mi in drowned_key.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).layers = MIRROR_LAYER
@@ -780,7 +780,7 @@ func _drain() -> void:
 	tw.tween_property(water, "position:y", TUB.y + WATER_LOW, 6.0).set_trans(Tween.TRANS_SINE)
 	tw.parallel().tween_property(water, "scale", Vector3(0.82, 1, 0.9), 6.0)   # ко дну ванна уже
 	# ключ на дне
-	key_mesh = L.key_node.duplicate()
+	key_mesh = load("res://models/props/key_vera.glb").instantiate()
 	key_mesh.visible = true
 	L.add_child(key_mesh)
 	key_mesh.global_position = TUB + Vector3(0.05, WATER_LOW - 0.02, 0.2)
