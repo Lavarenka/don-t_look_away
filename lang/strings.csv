@@ -78,7 +78,7 @@ INV_ITEMS,ITEMS,ПРЕДМЕТЫ
 INV_KEY,Hallway key,Ключ от коридора
 INV_KEYS,A / D — browse      Hold mouse button — turn      Q / E — tabs      Tab — close,A / D — листать      зажми кнопку мыши — покрутить      Q / E — вкладки      Tab — закрыть
 INV_KEYS_N,A / D — browse      Q / E — tabs      Tab — close,A / D — листать      Q / E — вкладки      Tab — закрыть
-INV_KEY_D,"It was in the china cabinet, under a shard of mirror. The bit is worn smooth — this key has opened that door for years.",Лежал в серванте под осколком зеркала. Бородка стёрта до блеска — им открывали эту дверь много лет.
+INV_KEY_D,"It was in the china cabinet, under a shard of glass. The bit is worn smooth — this key has opened that door for years.",Лежал в серванте под осколком стекла. Бородка стёрта до блеска — им открывали эту дверь много лет.
 INV_MATCHES,Matches,Спички
 INV_MATCHES_D,From the shelf behind the clock pendulum. Grandma hid them from Anya.,С полочки за маятником часов. Бабушка прятала их от Ани.
 INV_MBKEY,Music box key,Ключик от шкатулки
@@ -96,9 +96,9 @@ INV_N_PHOTO79,"Photo of the mannequins, 1979","Фото манекенов, 1979
 INV_PICK,Pick what to put on: Tab — inventory.,"Выбери, что надеть: Tab — инвентарь."
 INV_SCARF,Red scarf,Красный шарф
 INV_SCARF_D,Hand-knitted and scratchy. Dark stains have dried on the ends.,"Вязаный, колючий. На концах засохли тёмные пятна."
-INV_SHARD,Mirror shard,Осколок зеркала
-INV_SHARD_D,"Cold, and the edges don't cut. Look through it and the room shows what isn't there.
-Q or right mouse button — raise it.","Холодный, края не режут. Если посмотреть сквозь него — в комнате видно то, чего там нет.\nQ или правая кнопка мыши — поднять."
+INV_SHARD,Glass shard,Осколок стекла
+INV_SHARD_D,"Old, thick glass, green at the break. The edges don't cut. Look through it and the room shows what isn't there.
+Q or right mouse button — raise it.","Старое стекло, толстое, с зеленцой на сломе. Края не режут. Если посмотреть сквозь него — в комнате видно то, чего там нет.\nQ или правая кнопка мыши — поднять."
 INV_SHOES,Black shoes,Чёрные туфли
 INV_SHOES_D,"Patent leather, a small size. The soles aren't worn at all — nobody ever walked in them.","Лакированные, маленький размер. Подошвы совсем не стёрты — в них никто не ходил."
 INV_WEAR,E — put on: %s,E — надеть: %s
@@ -107,7 +107,7 @@ ITEM_DRESS,the white dress,белое платье
 ITEM_SCARF,the red scarf,красный шарф
 ITEM_SHOES,the black shoes,чёрные туфли
 LVL_01,"Misha, if you're reading this, the power's out again.\n\nDon't be afraid of them. They won't hurt you, they only watch. The Guest in the living room is still waiting for his shows.\n\nThe papers are in the china cabinet. It opens once he has watched his three shows, in order. I wrote his channels on the back of the photos, by year. When it's his show, he turns his chair to the screen.\n\nAnd don't turn around if you hear breathing behind you.\n\nGrandma","Миша, если читаешь это, значит свет опять выбило.\n\nНе бойся их. Они ничего тебе не сделают, они только смотрят. Гость в зале всё ещё ждёт свои передачи.\n\nДокументы в серванте. Он откроется, когда Гость посмотрит свои три передачи, по порядку. Его каналы я записала на обороте фотографий, по годам. Когда идёт его передача, он поворачивает кресло к экрану.\n\nИ не оборачивайся, если услышишь дыхание за спиной.\n\nБабушка"
-LVL_02,"Key to the hallway — and a piece of the old mirror. Keep it with you.\n\nOur portraits hang in the hallway. Light the candles in the order we left you. Look at us through the glass: it remembers when.\n\nWhile the candles burn, don't turn your back on us. And if you get it wrong, they'll blow them out themselves.","Ключ от коридора — и осколок старого зеркала. Держи его при себе.\n\nВ коридоре висят наши портреты. Зажги свечи в том порядке, в каком мы ушли. Посмотри на нас через стекло: оно помнит когда.\n\nПока свечи горят, не поворачивайся к нам спиной. А если ошибёшься, они задуют свечи сами."
+LVL_02,"Key to the hallway — and a piece of old glass. Keep it with you.\n\nOur portraits hang in the hallway. Light the candles in the order we left you. Look at us through the glass: it remembers when.\n\nWhile the candles burn, don't turn your back on us. And if you get it wrong, they'll blow them out themselves.","Ключ от коридора — и осколок старого стекла. Держи его при себе.\n\nВ коридоре висят наши портреты. Зажги свечи в том порядке, в каком мы ушли. Посмотри на нас через стекло: оно помнит когда.\n\nПока свечи горят, не поворачивайся к нам спиной. А если ошибёшься, они задуют свечи сами."
 LVL_03,E — read the note,E — прочитать записку
 LVL_04,E — look at the photo,E — посмотреть фотографию
 LVL_05,E — change the channel,E — переключить канал
@@ -122,7 +122,7 @@ LVL_13,"Photo, 1975: Grandma on the porch. On the back: ""Pyotr, our lodger, mov
 LVL_14,"Photo, 1976: Grandpa up a power pole. On the back: ""Stepan fixed the antenna — nine channels now. Pyotr watches only music. Channel %d.""",Фото 1976 года: дед с проводами на столбе. На обороте: «Стёпа починил антенну — теперь девять каналов. А Пётр смотрит одну музыку. Канал %d».
 LVL_15,"Photo, 1977: a man in this very armchair. On the back: ""Pyotr. When his music came on, he turned his chair to the TV. Channel %d.""","Фото 1977 года: мужчина в этом же кресле. На обороте: «Пётр. Когда начиналась его музыка, он поворачивал кресло к телевизору. Канал %d»."
 LVL_16,"Locked. Scratched into the lock: ""TV"".",Заперто. На замке нацарапано: «Телевизор».
-LVL_17,The hallway key and a shard of mirror. There's a note under the key.,Ключ от коридора и осколок зеркала. Под ключом записка.
+LVL_17,The hallway key and a shard of glass. There's a note under the key.,Ключ от коридора и осколок стекла. Под ключом записка.
 LVL_18,Open the door to the hallway,Открой дверь в коридор
 LVL_19,Locked. The key must be in the cabinet.,Заперто. Ключ должен быть в серванте.
 LVL_20,Light the candles under the portraits in the right order,Зажги свечи у портретов в правильном порядке
@@ -249,7 +249,7 @@ PAUSE_03,Main Menu,В главное меню
 PZ_CHAIR1,The armchair creaked... and turned toward the screen by itself.,Кресло скрипнуло... и само повернулось к экрану.
 PZ_CHAIR2,It turned a little more. He's watching.,Повернулось ещё. Он смотрит.
 PZ_SHARD_1,The glass shows the house... but not quite this one.,В стекле этот дом... но не совсем этот.
-PZ_SHARD_H,Q or right mouse button — raise the mirror shard,Q или правая кнопка мыши — поднять осколок зеркала
+PZ_SHARD_H,Q or right mouse button — raise the glass shard,Q или правая кнопка мыши — поднять осколок стекла
 PZ_SHARD_NAG,"""Look at us through the glass""... Grandma meant the shard. (Q / right mouse button)",«Посмотри на нас через стекло»... Бабушка про осколок. (Q / правая кнопка мыши)
 PZ_SOOT,DON'T TURN AWAY,НЕ ОТВОРАЧИВАЙСЯ
 PZ_TURNED,I turned my back on them. The candles went out.,Я повернулся к ним спиной. Свечи погасли.

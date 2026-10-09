@@ -33,7 +33,7 @@ const PROPS := {
 	"matches": "res://models/props/matchbox.glb",
 }          ## больше не унести
 ## как повернуть предмет к камере (ключи и крюк лежат плашмя — поднимаем кольцом к игроку)
-const POSE := {"key": Vector3(PI / 2, 0, 0.35), "bedkey": Vector3(PI / 2, 0, 0.35), "attic_key": Vector3(PI / 2, 0, 0.35), "hook": Vector3(PI / 2, 0, 0.55), "matches": Vector3(1.05, -0.5, 0), "mb_key": Vector3(0, 0, 0.4)}
+const POSE := {"key": Vector3(PI / 2, 0, 0.35), "bedkey": Vector3(PI / 2, 0, 0.35), "attic_key": Vector3(PI / 2, 0, 0.35), "hook": Vector3(PI / 2, 0, 0.55), "matches": Vector3(1.05, -0.5, 0), "mb_key": Vector3(0, 0, 0.4), "shard": Vector3(PI / 2 - 0.25, 0, 0.5)}
 ## текст записки → её заголовок в инвентаре
 const NOTE_TITLES := {"LVL_01": "INV_N_GRANDMA", "LVL_02": "INV_N_CABINET", "NUR_11": "INV_N_ANYA",
 	"LVL_13": "INV_N_PHOTO75", "LVL_14": "INV_N_PHOTO76", "LVL_15": "INV_N_PHOTO77", "LVL_52": "INV_N_PHOTO79"}
@@ -418,11 +418,23 @@ func _build_model(id: String) -> Node3D:
 				w.material_override = brass
 				root.add_child(w)
 		"shard":
-			var s := L.key_node.get_node("Shard").duplicate() as MeshInstance3D
-			s.transform = Transform3D.IDENTITY
-			s.material_override = _metal(Color(0.78, 0.82, 0.86), 1.0, 0.04)
-			root.add_child(s)
+			root.add_child(glass_shard())
 	return root
+
+
+## Осколок стекла из Blender со своими материалами: прозрачные грани и зеленоватый торец.
+static func glass_shard() -> Node3D:
+	var n: Node3D = load("res://models/props/shard.glb").instantiate()
+	var face := ShaderMaterial.new()
+	face.shader = preload("res://shaders/glass.gdshader")
+	var rim := ShaderMaterial.new()
+	rim.shader = face.shader
+	rim.set_shader_parameter("edge", 1.0)
+	for mi in n.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		for k in m.mesh.get_surface_count():
+			m.set_surface_override_material(k, face if k == 0 else rim)
+	return n
 
 
 func _metal(c: Color, metallic: float, rough: float) -> StandardMaterial3D:

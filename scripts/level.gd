@@ -180,6 +180,12 @@ func _ready() -> void:
 	var km: Node3D = load("res://models/props/key_hall.glb").instantiate()
 	km.name = "KeyModel"
 	key_node.add_child(km)
+	# осколок стекла рядом с ключом — тоже из Blender
+	var old_shard := key_node.get_node("Shard") as Node3D
+	old_shard.visible = false
+	var gs: Node3D = preload("res://scripts/inventory.gd").glass_shard()
+	gs.transform = old_shard.transform
+	key_node.add_child(gs)
 	inv = preload("res://scripts/inventory.gd").new()
 	inv.L = self
 	add_child(inv)
