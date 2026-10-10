@@ -1275,6 +1275,10 @@ func _cheat_corridor() -> void:
 func _enter_tree() -> void:
 	if "shots" in OS.get_cmdline_user_args():
 		_shots.call_deferred()
+	if "trailer" in OS.get_cmdline_user_args():       # режим трейлера (scripts/trailer.gd)
+		var tr := preload("res://scripts/trailer.gd").new()
+		tr.L = self
+		add_child.call_deferred(tr)
 
 
 func _shot(n: String) -> void:

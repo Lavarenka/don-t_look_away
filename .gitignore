@@ -1166,6 +1166,7 @@
 !/scripts/settings.gd.uid
 !/scripts/spirit.gd
 !/scripts/spirit.gd.uid
+!/scripts/trailer.gd
 !/scripts/vintage.gd
 !/scripts/vintage.gd.uid
 !/shaders/crt.gdshader
