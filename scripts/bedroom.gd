@@ -1,7 +1,7 @@
 extends Node
-## Спальня бабушки Веры: вход из холла второго этажа через двустворчатую дверь в западной стене.
+## Спальня бабушки Веры: вход из холла второго этажа через дверь в западной стене.
 ## Комната — цельная модель (Katydid, «Abandoned mansion bedroom»): Г-образный коридор и сама спальня.
-## Здесь: столкновения, створки дверей на петлях, тусклый тёплый свет, отпирание ключом Веры.
+## Здесь: столкновения, обычные двери на петлях, тусклый тёплый свет, отпирание ключом Веры.
 
 const Y2 := -3.4
 const DOOR_C := Vector3(-4.65, Y2 + 1.0, -35.5)        ## входная дверь (из холла)
@@ -20,7 +20,6 @@ const LAMPS := [
 var L: Node
 var root: Node3D
 var unlocked := false
-var leaves := {}
 var lamps: Array[OmniLight3D] = []
 
 
@@ -31,27 +30,46 @@ func setup(level: Node) -> void:
 	for mi in root.find_children("*", "MeshInstance3D", true, false):
 		if mi.name.begins_with("FrontSide"):
 			mi.create_trimesh_collision()
-	# створки внутри модели лежат в повёрнутых (Z-вверх, сантиметры) узлах — вешаем каждую на свою петлю
-	# с обычными осями, чтобы поворот по Y был поворотом вокруг вертикали
+	# двустворчатые двери из модели убраны — вместо них обычные двери, как во всём доме
+	# (модуль стены с дверью из того же набора, что и холл)
 	for nm in ["DoorEastL", "DoorEastR", "DoorRoomL", "DoorRoomR"]:
-		var leaf: Node3D = root.find_child(nm, true, false)
-		var hinge := Node3D.new()
-		hinge.name = nm + "Hinge"
-		root.add_child(hinge)
-		hinge.global_position = leaf.global_position
-		leaf.reparent(hinge, true)
-		leaves[nm] = hinge
-		_leaf_body(hinge, leaf)
+		(root.find_child(nm, true, false) as Node3D).visible = false
 	_lights()
-	var ea: Node3D = leaves.DoorEastL
-	var eb: Node3D = leaves.DoorEastR
-	var ra: Node3D = leaves.DoorRoomL
-	var rb: Node3D = leaves.DoorRoomR
-	# вход открывается внутрь, в коридор спальни (на запад); внутренняя дверь — в спальню (на восток)
-	L.doors.add("bed", ea, ea.rotation.y, ea.rotation.y + 1.5, DOOR_C,
-		func(): return unlocked, [eb, eb.rotation.y, eb.rotation.y - 1.5])
-	L.doors.add("bed_in", ra, ra.rotation.y, ra.rotation.y - 1.5, INNER_C,
-		func(): return L.phase == "floor2", [rb, rb.rotation.y, rb.rotation.y + 1.5])
+	var ea := _door("F2DoorBed", -1.0)            # из холла — внутрь, в коридор спальни (на запад)
+	var ra := _door("BedInnerDoor", 1.0)          # из коридора — в спальню (на восток)
+	L.doors.add("bed", ea, 0.0, ea.get_meta("open"), DOOR_C, func(): return unlocked)
+	L.doors.add("bed_in", ra, 0.0, ra.get_meta("open"), INNER_C, func(): return L.phase == "floor2")
+
+
+## Полотно из модуля стены — на петлю; угол открытия выбирается так, чтобы дверь уходила
+## в сторону dir по X. Плюс коробки-столкновения вокруг проёма (бока и верх модуля).
+func _door(wall_name: String, dir: float) -> Node3D:
+	var wall: Node3D = L.get_node(wall_name)
+	var leaf: MeshInstance3D = wall.get_node("small_door")
+	var hinge := Node3D.new()
+	hinge.name = wall_name + "Hinge"
+	L.add_child(hinge)
+	hinge.global_position = leaf.global_position
+	leaf.reparent(hinge, true)
+	var c0: Vector3 = (leaf.global_transform * leaf.get_aabb()).get_center()
+	hinge.rotation.y = 1.6
+	var c1: Vector3 = (leaf.global_transform * leaf.get_aabb()).get_center()
+	hinge.rotation.y = 0.0
+	hinge.set_meta("open", 1.6 if (c1.x - c0.x) * dir > 0.0 else -1.6)
+	_leaf_body(hinge, leaf)
+	# проём модуля: x 0..1.2 (полотно 0.166..1.036), высота 2.82, полотно до 1.94
+	var sx: float = wall.scale.x
+	var gb := Basis(wall.global_transform.basis.get_rotation_quaternion())
+	var body := StaticBody3D.new()
+	L.add_child(body)
+	for b in [[0.083, 1.41, 0.166, 2.82], [1.118, 1.41, 0.164, 2.82], [0.6, 2.38, 1.2, 0.88]]:
+		var cs := CollisionShape3D.new()
+		var sh := BoxShape3D.new()
+		sh.size = Vector3(b[2] * sx, b[3], 0.2)
+		cs.shape = sh
+		body.add_child(cs)
+		cs.global_transform = Transform3D(gb, wall.global_transform * Vector3(b[0], b[1], 0.06))
+	return hinge
 
 
 ## Коробка-столкновение по габаритам створки (в её собственных координатах, чтобы крутилась вместе с ней).

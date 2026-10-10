@@ -1163,7 +1163,7 @@ size = Vector3(0.9, 0.86, 0.2)
 size = Vector3(5.6, 0.2, 5.7)
 
 [sub_resource type="BoxShape3D" id="shape_F2ColW"]
-size = Vector3(0.2, 2.8, 0.44)
+size = Vector3(0.2, 2.8, 0.7)
 
 [sub_resource type="BoxShape3D" id="shape_F2ColE"]
 size = Vector3(0.2, 2.8, 2.6)
@@ -4230,12 +4230,17 @@ position = Vector3(2.2, -3.4, -36.8085)
 
 [node name="F2Wall55" parent="." instance=ExtResource("e15")]
 rotation = Vector3(0, 1.5708, 0)
-scale = Vector3(0.175, 1, 0.5)
-position = Vector3(-4.6085, -3.4, -36.38)
+scale = Vector3(0.291667, 1, 0.5)
+position = Vector3(-4.6085, -3.4, -36.1)
+
+[node name="F2DoorBed" parent="." instance=ExtResource("e16")]
+rotation = Vector3(0, 1.5708, 0)
+scale = Vector3(1, 1, 0.5)
+position = Vector3(-4.6085, -3.4, -34.9)
 
 [node name="F2Wall56" parent="." instance=ExtResource("e15")]
 rotation = Vector3(0, 1.5708, 0)
-scale = Vector3(0.175, 1, 0.5)
+scale = Vector3(0.291667, 1, 0.5)
 position = Vector3(-4.6085, -3.4, -34.2)
 
 [node name="F2Wall57" parent="." instance=ExtResource("e15")]
@@ -4324,13 +4329,13 @@ position = Vector3(-1.43, -3.5, -39.5)
 shape = SubResource("shape_F2BathSlab")
 
 [node name="F2ColW" type="StaticBody3D" parent="."]
-position = Vector3(-4.6, -2, -36.58)
+position = Vector3(-4.6, -2, -36.45)
 
 [node name="Shape" type="CollisionShape3D" parent="F2ColW"]
 shape = SubResource("shape_F2ColW")
 
 [node name="F2ColW2" type="StaticBody3D" parent="."]
-position = Vector3(-4.6, -2, -34.42)
+position = Vector3(-4.6, -2, -34.55)
 
 [node name="Shape" type="CollisionShape3D" parent="F2ColW2"]
 shape = SubResource("shape_F2ColW")
@@ -4394,6 +4399,11 @@ position = Vector3(-4.95, -3.3, -35.5)
 
 [node name="Bedroom" parent="." instance=ExtResource("e115")]
 position = Vector3(3.647, -3.4, -10.28)
+
+[node name="BedInnerDoor" parent="." instance=ExtResource("e16")]
+rotation = Vector3(0, 1.5708, 0)
+scale = Vector3(1.125, 1, 0.5)
+position = Vector3(-14.12, -3.388, -27.76)
 
 [node name="F2Photo0" parent="." instance=ExtResource("e111")]
 rotation = Vector3(0, 3.14159, 0)
