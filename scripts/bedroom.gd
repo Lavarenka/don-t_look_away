@@ -36,8 +36,7 @@ func setup(level: Node) -> void:
 		(root.find_child(nm, true, false) as Node3D).visible = false
 	_lights()
 	var ea := _door("F2DoorBed", -1.0)            # из холла — внутрь, в коридор спальни (на запад)
-	var ra := _door("BedInnerDoor", 1.0)          # из коридора — в спальню (на восток)
-	_panel_leaf(ra)                               # у бабушки — текстура старой филёнчатой двери
+	var ra := _vera_door()                        # из коридора — в спальню (дубовая дверь из Blender)
 	_wallpaper()
 	L.doors.add("bed", ea, 0.0, ea.get_meta("open"), DOOR_C, func(): return unlocked)
 	L.doors.add("bed_in", ra, 0.0, ra.get_meta("open"), INNER_C, func(): return L.phase == "floor2")
@@ -74,37 +73,20 @@ func _door(wall_name: String, dir: float) -> Node3D:
 	return hinge
 
 
-## Дверь в спальню: обычное полотно, на обе стороны наклеена фотография старой филёнчатой двери
-## из модели (обе створки целиком — по пропорциям как раз одна обычная дверь); коробка — тёмное дерево.
-func _panel_leaf(hinge: Node3D) -> void:
-	var leaf: MeshInstance3D = hinge.get_node("small_door")
-	var m := StandardMaterial3D.new()
-	m.albedo_texture = load("res://models/bedroom/door_vera.png")
-	m.roughness = 0.75
-	m.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var ab: AABB = leaf.get_aabb()
-	# лицевые плоскости полотна (в его координатах): z ≈ -0.007 и ≈ 0.095, ручка торчит дальше
-	for side in [[-0.012, -1.0], [0.1, 1.0]]:
-		var st := SurfaceTool.new()
-		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		st.set_normal(Vector3(0, 0, side[1]))
-		var x0 := ab.position.x
-		var x1 := ab.end.x
-		var pts := [Vector3(x0, 0, side[0]), Vector3(x1, 0, side[0]), Vector3(x1, ab.size.y, side[0]), Vector3(x0, ab.size.y, side[0])]
-		var uvs := [Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]
-		var order := [0, 2, 1, 0, 3, 2] if side[1] > 0.0 else [0, 1, 2, 0, 2, 3]   # в Godot лицевая сторона — по часовой
-		for k in order:
-			var uv: Vector2 = uvs[k]
-			if side[1] < 0.0:
-				uv.x = 1.0 - uv.x          # с обратной стороны — зеркально, чтобы рисунок читался правильно
-			st.set_uv(uv)
-			st.add_vertex(pts[k])
-		var q := MeshInstance3D.new()
-		q.mesh = st.commit()
-		q.material_override = m
-		leaf.add_child(q)
-	var frame: MeshInstance3D = L.get_node("BedInnerDoor/small_door_frame")
-	frame.material_override = _mat("FrontSide_19")
+## Дверь в спальню бабушки: своя модель из Blender (обрамление под проём модели + филёнчатое
+## полотно с латунными ручками и петлями). Полотно уже лежит на оси петель; открывается в спальню (+X).
+func _vera_door() -> Node3D:
+	var unit: Node3D = L.get_node("BedDoorVera")
+	var surround: MeshInstance3D = unit.find_child("Surround", true, false)
+	surround.create_trimesh_collision()
+	var leaf: MeshInstance3D = unit.find_child("Leaf", true, false)
+	var c0: Vector3 = (leaf.global_transform * leaf.get_aabb()).get_center()
+	leaf.rotation.y = 1.6
+	var c1: Vector3 = (leaf.global_transform * leaf.get_aabb()).get_center()
+	leaf.rotation.y = 0.0
+	leaf.set_meta("open", 1.6 if c1.x > c0.x else -1.6)
+	_leaf_body(leaf, leaf)
+	return leaf
 
 
 ## С обратной стороны модулей стен (видно из спальни) — обои и деревянные панели, как на стенах комнаты.
@@ -113,14 +95,9 @@ const WALL_TOP := 2.46            ## верх полосы обоев
 func _wallpaper() -> void:
 	var paper: Material = _mat("FrontSide_12")
 	var wood_c: Material = _mat("FrontSide_19")        # нижние панели в коридоре
-	var wood_r: Material = _mat("FrontSide_16")        # нижние панели в самой спальне
 	# вход: сторона коридора спальни (смотрит на запад), дыра под дверную коробку
 	for r in [[-34.55, -35.0, 0.0, 2.6], [-36.0, -36.45, 0.0, 2.6], [-35.0, -36.0, 1.94, 2.6]]:
 		_rect(-4.71, -1.0, r, paper, wood_c)
-	# дверь в спальню: с обеих сторон
-	for r in [[-27.7, -27.932, 0.0, 2.4], [-28.941, -29.17, 0.0, 2.4], [-27.932, -28.941, 1.94, 2.4]]:
-		_rect(-13.995, 1.0, r, paper, wood_r)
-		_rect(-14.175, -1.0, r, paper, wood_c)
 
 
 func _mat(mesh_name: String) -> Material:
