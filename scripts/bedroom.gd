@@ -37,7 +37,7 @@ func setup(level: Node) -> void:
 	_lights()
 	var ea := _door("F2DoorBed", -1.0)            # из холла — внутрь, в коридор спальни (на запад)
 	var ra := _door("BedInnerDoor", 1.0)          # из коридора — в спальню (на восток)
-	_panel_leaf(ra)                               # у бабушки — старая филёнчатая дверь, а не фанера
+	_panel_leaf(ra)                               # у бабушки — текстура старой филёнчатой двери
 	_wallpaper()
 	L.doors.add("bed", ea, 0.0, ea.get_meta("open"), DOOR_C, func(): return unlocked)
 	L.doors.add("bed_in", ra, 0.0, ra.get_meta("open"), INNER_C, func(): return L.phase == "floor2")
@@ -74,25 +74,37 @@ func _door(wall_name: String, dir: float) -> Node3D:
 	return hinge
 
 
-## Полотно двери в спальню: створка из модели (DoorEastL), ужатая до размера обычной двери.
+## Дверь в спальню: обычное полотно, на обе стороны наклеена фотография старой филёнчатой двери
+## из модели (обе створки целиком — по пропорциям как раз одна обычная дверь); коробка — тёмное дерево.
 func _panel_leaf(hinge: Node3D) -> void:
 	var leaf: MeshInstance3D = hinge.get_node("small_door")
-	var src: MeshInstance3D = root.find_child("DoorEastL", true, false)
-	var ta: AABB = leaf.global_transform * leaf.get_aabb()
-	var sa: AABB = src.global_transform * src.get_aabb()
-	var hm: Vector3 = src.global_position                      # петля створки модели (она уходит от петли в -Z)
-	var ht := Vector3(ta.get_center().x, hinge.global_position.y, hinge.global_position.z)
-	var dir: float = signf(ta.get_center().z - ht.z)
-	var b := Basis.IDENTITY if dir < 0.0 else Basis(Vector3.UP, PI)
-	b = b * Basis.from_scale(Vector3(1.0, ta.size.y / sa.size.y, ta.size.z / sa.size.z))
-	var fit := Node3D.new()
-	hinge.add_child(fit)
-	fit.global_transform = Transform3D(b, ht - b * hm)
-	var g := src.global_transform
-	src.reparent(fit, false)
-	src.transform = g
-	src.visible = true
-	leaf.visible = false
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = load("res://models/bedroom/door_vera.png")
+	m.roughness = 0.75
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var ab: AABB = leaf.get_aabb()
+	# лицевые плоскости полотна (в его координатах): z ≈ -0.007 и ≈ 0.095, ручка торчит дальше
+	for side in [[-0.012, -1.0], [0.1, 1.0]]:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		st.set_normal(Vector3(0, 0, side[1]))
+		var x0 := ab.position.x
+		var x1 := ab.end.x
+		var pts := [Vector3(x0, 0, side[0]), Vector3(x1, 0, side[0]), Vector3(x1, ab.size.y, side[0]), Vector3(x0, ab.size.y, side[0])]
+		var uvs := [Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]
+		var order := [0, 2, 1, 0, 3, 2] if side[1] > 0.0 else [0, 1, 2, 0, 2, 3]   # в Godot лицевая сторона — по часовой
+		for k in order:
+			var uv: Vector2 = uvs[k]
+			if side[1] < 0.0:
+				uv.x = 1.0 - uv.x          # с обратной стороны — зеркально, чтобы рисунок читался правильно
+			st.set_uv(uv)
+			st.add_vertex(pts[k])
+		var q := MeshInstance3D.new()
+		q.mesh = st.commit()
+		q.material_override = m
+		leaf.add_child(q)
+	var frame: MeshInstance3D = L.get_node("BedInnerDoor/small_door_frame")
+	frame.material_override = _mat("FrontSide_19")
 
 
 ## С обратной стороны модулей стен (видно из спальни) — обои и деревянные панели, как на стенах комнаты.
