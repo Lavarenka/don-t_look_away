@@ -147,13 +147,13 @@ func _build_room() -> void:
 	moon.look_at(Vector3(-1.2, Y2, -40.4))
 	var night := MeshInstance3D.new()
 	var nq := QuadMesh.new()
-	nq.size = Vector2(2.0, 2.0)
+	nq.size = Vector2(3.4, 3.4)        # с запасом: под углом из окна не видно, что за ним
 	night.mesh = nq
 	var nm := StandardMaterial3D.new()
 	nm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	nm.albedo_color = Color(0.03, 0.045, 0.08)
 	night.material_override = nm
-	night.position = Vector3(1.9, Y2 + 1.5, -41.06)
+	night.position = Vector3(1.45, Y2 + 1.4, -41.07)
 	night.rotation.y = -PI / 2
 	L.add_child(night)
 
