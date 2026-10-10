@@ -115,6 +115,7 @@ func try_open() -> bool:
 	L._sfx3d("click", DOOR_C, -4.0, 0.6)
 	await get_tree().create_timer(0.35).timeout
 	unlocked = true
+	preload("res://scripts/settings.gd").reach(6)
 	L.inv.remove("bedkey")
 	L.busy = false
 	L.doors.interact("d_bed")

@@ -678,6 +678,24 @@ func interact(id: String) -> void:
 			exit_scare = 1
 
 
+## Меню «Главы» → 6: ванная уже пройдена — дверь открыта, вода спущена, ключ Веры у игрока.
+func skip_solved() -> void:
+	unlocked = true
+	door_pivot.rotation.y = door_angle
+	lock_open = true
+	drained = true
+	key_taken = true
+	has_bedkey = true
+	exit_scare = 3
+	hair.visible = false
+	hair_eye.visible = false
+	drowned_key.visible = false
+	water_m.visible = false
+	(water.material_override as ShaderMaterial).set_shader_parameter("shape_a", 0.0)
+	water.position.y = TUB.y + WATER_LOW
+	water.scale = Vector3(0.82, 1, 0.9)
+
+
 ## Дверь ванной открывается сама (когда игрок подёргал несколько дверей).
 func unlock() -> void:
 	if unlocked:
