@@ -4402,8 +4402,8 @@ position = Vector3(3.647, -3.4, -10.28)
 
 [node name="BedInnerDoor" parent="." instance=ExtResource("e16")]
 rotation = Vector3(0, 1.5708, 0)
-scale = Vector3(1.125, 1, 0.5)
-position = Vector3(-14.12, -3.388, -27.76)
+scale = Vector3(1, 1, 0.5)
+position = Vector3(-14.12, -3.388, -27.835)
 
 [node name="F2Photo0" parent="." instance=ExtResource("e111")]
 rotation = Vector3(0, 3.14159, 0)

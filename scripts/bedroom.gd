@@ -37,6 +37,8 @@ func setup(level: Node) -> void:
 	_lights()
 	var ea := _door("F2DoorBed", -1.0)            # из холла — внутрь, в коридор спальни (на запад)
 	var ra := _door("BedInnerDoor", 1.0)          # из коридора — в спальню (на восток)
+	_panel_leaf(ra)                               # у бабушки — старая филёнчатая дверь, а не фанера
+	_wallpaper()
 	L.doors.add("bed", ea, 0.0, ea.get_meta("open"), DOOR_C, func(): return unlocked)
 	L.doors.add("bed_in", ra, 0.0, ra.get_meta("open"), INNER_C, func(): return L.phase == "floor2")
 
@@ -70,6 +72,78 @@ func _door(wall_name: String, dir: float) -> Node3D:
 		body.add_child(cs)
 		cs.global_transform = Transform3D(gb, wall.global_transform * Vector3(b[0], b[1], 0.06))
 	return hinge
+
+
+## Полотно двери в спальню: створка из модели (DoorEastL), ужатая до размера обычной двери.
+func _panel_leaf(hinge: Node3D) -> void:
+	var leaf: MeshInstance3D = hinge.get_node("small_door")
+	var src: MeshInstance3D = root.find_child("DoorEastL", true, false)
+	var ta: AABB = leaf.global_transform * leaf.get_aabb()
+	var sa: AABB = src.global_transform * src.get_aabb()
+	var hm: Vector3 = src.global_position                      # петля створки модели (она уходит от петли в -Z)
+	var ht := Vector3(ta.get_center().x, hinge.global_position.y, hinge.global_position.z)
+	var dir: float = signf(ta.get_center().z - ht.z)
+	var b := Basis.IDENTITY if dir < 0.0 else Basis(Vector3.UP, PI)
+	b = b * Basis.from_scale(Vector3(1.0, ta.size.y / sa.size.y, ta.size.z / sa.size.z))
+	var fit := Node3D.new()
+	hinge.add_child(fit)
+	fit.global_transform = Transform3D(b, ht - b * hm)
+	var g := src.global_transform
+	src.reparent(fit, false)
+	src.transform = g
+	src.visible = true
+	leaf.visible = false
+
+
+## С обратной стороны модулей стен (видно из спальни) — обои и деревянные панели, как на стенах комнаты.
+const WALL_SPLIT := 0.79          ## высота, где панели переходят в обои
+const WALL_TOP := 2.46            ## верх полосы обоев
+func _wallpaper() -> void:
+	var paper: Material = _mat("FrontSide_12")
+	var wood_c: Material = _mat("FrontSide_19")        # нижние панели в коридоре
+	var wood_r: Material = _mat("FrontSide_16")        # нижние панели в самой спальне
+	# вход: сторона коридора спальни (смотрит на запад), дыра под дверную коробку
+	for r in [[-34.55, -35.0, 0.0, 2.6], [-36.0, -36.45, 0.0, 2.6], [-35.0, -36.0, 1.94, 2.6]]:
+		_rect(-4.71, -1.0, r, paper, wood_c)
+	# дверь в спальню: с обеих сторон
+	for r in [[-27.7, -27.932, 0.0, 2.4], [-28.941, -29.17, 0.0, 2.4], [-27.932, -28.941, 1.94, 2.4]]:
+		_rect(-13.995, 1.0, r, paper, wood_r)
+		_rect(-14.175, -1.0, r, paper, wood_c)
+
+
+func _mat(mesh_name: String) -> Material:
+	var m: Material = (root.find_child(mesh_name, true, false) as MeshInstance3D).mesh.surface_get_material(0).duplicate()
+	if m is BaseMaterial3D:
+		(m as BaseMaterial3D).cull_mode = BaseMaterial3D.CULL_DISABLED
+	return m
+
+
+## Прямоугольник на плоскости x = px (нормаль по X со знаком nx): r = [z0, z1, y0, y1] от пола (Y2).
+## Ниже WALL_SPLIT — дерево, выше — обои; развёртка такая же, как у стен модели.
+func _rect(px: float, nx: float, r: Array, paper: Material, wood: Material) -> void:
+	for part in [[r[2], minf(r[3], WALL_SPLIT), wood], [maxf(r[2], WALL_SPLIT), r[3], paper]]:
+		var y0: float = part[0]
+		var y1: float = part[1]
+		if y1 - y0 < 0.01:
+			continue
+		var is_paper: bool = part[2] == paper
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		st.set_normal(Vector3(nx, 0, 0))
+		var pts := [Vector2(r[0], y0), Vector2(r[1], y0), Vector2(r[1], y1), Vector2(r[0], y1)]
+		for i in [0, 1, 2, 0, 2, 3]:
+			var q: Vector2 = pts[i]
+			var uv: Vector2
+			if is_paper:
+				uv = Vector2(-q.x * 0.21, (q.y - WALL_TOP) * 0.598)
+			else:
+				uv = Vector2(-q.x * 0.69, (q.y - 0.74) * 0.561 - 0.552)
+			st.set_uv(uv)
+			st.add_vertex(Vector3(px, Y2 + q.y, q.x))
+		var mi := MeshInstance3D.new()
+		mi.mesh = st.commit()
+		mi.material_override = part[2]
+		L.add_child(mi)
 
 
 ## Коробка-столкновение по габаритам створки (в её собственных координатах, чтобы крутилась вместе с ней).
