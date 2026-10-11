@@ -329,6 +329,13 @@ func _page_settings() -> void:
 		SETTINGS.set_val("video", "scale", SETTINGS.RENDER_SCALES[(i + 1) % SETTINGS.RENDER_SCALES.size()])
 		SETTINGS.apply_general()
 		cupd.call())
+	var pb := _button("", func(): pass)
+	var pupd := func(): pb.text = tr("MENU_FPS") + tr("MENU_ON" if SETTINGS.get_show_fps() else "MENU_OFF")
+	pupd.call()
+	pb.pressed.connect(func():
+		SETTINGS.set_val("video", "fps", not SETTINGS.get_show_fps())
+		SETTINGS.apply_general()
+		pupd.call())
 	# язык: English ⇄ Русский (меню перезагружается, чтобы обновить все надписи)
 	_button("MENU_LANG", func():
 		var i := SETTINGS.LANGS.find(SETTINGS.get_lang())

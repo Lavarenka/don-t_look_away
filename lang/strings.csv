@@ -199,6 +199,7 @@ MENU_12,Failed to load the level.,Не удалось загрузить уро�
 MENU_BACK,Back,Назад
 MENU_CHAPTERS,Chapters,Главы
 MENU_FS,Fullscreen: ,Полный экран: 
+MENU_FPS,FPS counter (F3): ,Счётчик FPS (F3): 
 MENU_LANG,Language: English,Язык: Русский
 MENU_OFF,Off,Выкл
 MENU_ON,On,Вкл

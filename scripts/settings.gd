@@ -132,8 +132,22 @@ static func get_render_scale() -> float:
 	return float(get_val("video", "scale", 1.0))
 
 
+## Счётчик FPS в углу экрана (F3 или галочка в настройках).
+static func get_show_fps() -> bool:
+	return bool(get_val("video", "fps", false))
+
+
 ## Громкость и экран — применяются сразу ко всей игре.
 static func apply_general() -> void:
+	var tr0 := Engine.get_main_loop() as SceneTree
+	if tr0:
+		var fc := tr0.root.get_node_or_null("FpsCounter")
+		if fc == null:
+			fc = preload("res://scripts/fps_counter.gd").new()
+			fc.name = "FpsCounter"
+			tr0.root.add_child.call_deferred(fc)
+		else:
+			fc.visible = get_show_fps()
 	var v := get_volume()
 	AudioServer.set_bus_mute(0, v <= 0.001)
 	AudioServer.set_bus_volume_db(0, linear_to_db(max(v, 0.001)))
