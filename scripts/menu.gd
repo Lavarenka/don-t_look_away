@@ -284,7 +284,7 @@ func _page_settings() -> void:
 	var upd := func(): gb.text = tr("MENU_08") + tr(SETTINGS.NAMES[SETTINGS.get_quality()])
 	upd.call()
 	gb.pressed.connect(func():
-		SETTINGS.set_quality((SETTINGS.get_quality() + 2) % 3)   # высокое → среднее → низкое → высокое
+		SETTINGS.set_quality((SETTINGS.get_quality() + 3) % 4)   # ультра → высокое → среднее → низкое → ультра
 		upd.call()
 		SETTINGS.apply(null, _grain_mat, SETTINGS.get_quality()))
 	var vb := _button("", func(): pass)

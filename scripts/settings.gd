@@ -1,15 +1,15 @@
 extends RefCounted
-## Настройки графики: 0 — низкое, 1 — среднее, 2 — высокое качество.
+## Настройки графики: 0 — низкое, 1 — среднее, 2 — высокое, 3 — ультра.
 ## Сохраняются в user://settings.cfg (папка сохранений игры).
 
-const NAMES := ["SET_01", "SET_02", "SET_03"]
+const NAMES := ["SET_01", "SET_02", "SET_03", "SET_04"]
 const PATH := "user://settings.cfg"
 
 
 static func get_quality() -> int:
 	var cf := ConfigFile.new()
 	if cf.load(PATH) == OK:
-		return clampi(int(cf.get_value("graphics", "quality", 2)), 0, 2)
+		return clampi(int(cf.get_value("graphics", "quality", 2)), 0, 3)
 	return 2
 
 
@@ -26,7 +26,7 @@ static func apply(env: Environment, post: ShaderMaterial, q: int) -> void:
 		# мягкий отражённый свет (только «высокое»)
 		env.sdfgi_enabled = q >= 2
 		env.sdfgi_use_occlusion = true
-		env.sdfgi_cascades = 2
+		env.sdfgi_cascades = 4 if q >= 3 else 2
 		env.sdfgi_min_cell_size = 0.1
 		env.sdfgi_energy = 0.9
 		env.ssil_enabled = q >= 2
@@ -42,9 +42,22 @@ static func apply(env: Environment, post: ShaderMaterial, q: int) -> void:
 		post.set_shader_parameter("fx", 1.0 if q >= 1 else 0.6)
 	var vp := Engine.get_main_loop() as SceneTree
 	if vp:
-		vp.root.positional_shadow_atlas_size = 4096 if q >= 1 else 2048
-		vp.root.msaa_3d = Viewport.MSAA_2X if q >= 1 else Viewport.MSAA_DISABLED
-		vp.root.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if q >= 2 else Viewport.SCREEN_SPACE_AA_DISABLED
+		var ultra := q >= 3
+		vp.root.positional_shadow_atlas_size = 8192 if ultra else (4096 if q >= 1 else 2048)
+		vp.root.msaa_3d = Viewport.MSAA_4X if ultra else (Viewport.MSAA_2X if q >= 1 else Viewport.MSAA_DISABLED)
+		# ультра: временное сглаживание (TAA) вместо FXAA — без «лесенок» и мерцания мелких деталей
+		vp.root.use_taa = ultra
+		vp.root.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if q == 2 else Viewport.SCREEN_SPACE_AA_DISABLED
+		vp.root.anisotropic_filtering_level = Viewport.ANISOTROPY_16X if ultra else Viewport.ANISOTROPY_4X
+		vp.root.mesh_lod_threshold = 0.0 if ultra else 1.0          # ультра: модели всегда в полной детализации
+	# тени, затенение углов и объёмный туман — качество задаётся на весь рендер
+	var hi := q >= 3
+	RenderingServer.directional_shadow_atlas_set_size(8192 if hi else 4096, true)
+	RenderingServer.positional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_HIGH if hi else RenderingServer.SHADOW_QUALITY_SOFT_LOW)
+	RenderingServer.directional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_HIGH if hi else RenderingServer.SHADOW_QUALITY_SOFT_LOW)
+	RenderingServer.environment_set_ssao_quality(RenderingServer.ENV_SSAO_QUALITY_ULTRA if hi else RenderingServer.ENV_SSAO_QUALITY_MEDIUM, not hi, 0.5, 3 if hi else 2, 50.0, 300.0)
+	RenderingServer.environment_set_ssil_quality(RenderingServer.ENV_SSIL_QUALITY_HIGH if hi else RenderingServer.ENV_SSIL_QUALITY_MEDIUM, not hi, 0.5, 4, 50.0, 300.0)
+	RenderingServer.environment_set_volumetric_fog_volume_size(128 if hi else 64, 128 if hi else 64)
 
 
 # ---------------- язык ----------------
