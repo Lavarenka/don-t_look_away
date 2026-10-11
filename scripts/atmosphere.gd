@@ -12,6 +12,12 @@ extends Node
 ## Работает везде, и на чердаке тоже (но не во время его сценок).
 
 const SPIRIT = preload("res://scripts/spirit.gd")
+## Тень за дверью: на каком расстоянии от игрока (м), насколько дверь может быть в стороне от взгляда (рад),
+## и сколько метров она проходит в каждую сторону от середины проёма.
+const SHADOW_MIN := 3.0
+const SHADOW_MAX := 22.0
+const SHADOW_ANGLE := 0.55
+const SHADOW_SPAN := 1.4
 
 var L: Node
 var dust_tex: Texture2D        ## мягкая круглая пылинка
@@ -191,7 +197,7 @@ func _event() -> bool:
 		return false
 	if L.attic and L.attic.has_method("is_active") and L.attic.is_active():
 		return false
-	if randf() < 0.55 and _shadow_pass():
+	if randf() < 0.7 and _shadow_pass():
 		return true
 	return _ceiling_dust()
 
@@ -208,9 +214,9 @@ func _shadow_pass() -> bool:
 		var c: Vector3 = L.doors.doors[id].center
 		var to := c - eye
 		var dist := Vector2(to.x, to.z).length()
-		if dist < 6.0 or dist > 15.0 or absf(c.y - eye.y) > 1.6:
+		if dist < SHADOW_MIN or dist > SHADOW_MAX or absf(c.y - eye.y) > 1.6:
 			continue
-		if fwd.angle_to(to) > 0.3:
+		if fwd.angle_to(to) > SHADOW_ANGLE:
 			continue
 		var q := PhysicsRayQueryParameters3D.create(eye, c)
 		q.exclude = [p.get_rid()]
@@ -225,8 +231,8 @@ func _shadow_pass() -> bool:
 		var away := Vector3(to.x, 0, to.z).normalized()
 		var side := away.cross(Vector3.UP).normalized()
 		var base := Vector3(c.x, floor_y, c.z) + away * 0.9      # сразу за проёмом
-		var a := base - side * 1.0
-		var b := base + side * 1.0
+		var a := base - side * SHADOW_SPAN
+		var b := base + side * SHADOW_SPAN
 		if randf() < 0.5:
 			var tmp := a
 			a = b
@@ -245,7 +251,7 @@ func _shadow_pass() -> bool:
 		g.play("walk", 1.25, 0.0)
 		shadow_n += 1
 		var tw := create_tween()
-		tw.tween_property(g, "global_position", b, 1.4)
+		tw.tween_property(g, "global_position", b, 1.4 * SHADOW_SPAN)
 		tw.tween_callback(g.queue_free)
 		get_tree().create_timer(0.9).timeout.connect(func(): L._sfx3d("step%d" % (randi() % 4), base, -16.0, 0.8))
 		return true
