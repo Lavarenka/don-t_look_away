@@ -278,13 +278,61 @@ func _press(k: int) -> void:
 		L.busy = false
 
 
-## Завести шкатулку ключиком из коридора.
+## Завести шкатулку ключиком из коридора: ключик вставляется в гнездо сбоку и проворачивается.
 func _wind() -> void:
 	wound = true
 	L.inv.remove("mb_key")
+	L.busy = true
+	var piv := _insert_key()
+	var tw := create_tween()
+	tw.tween_property(mb_key, "position:x", 0.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	await tw.finished
+	L._sfx3d("click", L.get_node("MusicBox").global_position, -10.0, 1.3)
 	L._sfx3d("mb_windup", L.get_node("MusicBox").global_position, -4.0)
+	await _turn_key(piv, 3)
+	L.busy = false
 	L._set_objective("NUR_19")
 	L.extra_hints["n_box"] = "NUR_20"
+
+
+var mb_key: Node3D            ## ключик в гнезде шкатулки (после завода так и торчит)
+const KEY_SCALE := 1.6        ## ключик чуть крупнее «карманного» — под размер шкатулки
+const STEM_END := 0.1428      ## конец штырька-гнезда (по X шкатулки)
+
+
+## Ключик на оси гнезда (pivot крутится вокруг X шкатулки). Возвращает pivot; ключик пока снаружи.
+func _insert_key() -> Node3D:
+	var box: Node3D = L.get_node("MusicBox")
+	var stem: MeshInstance3D = box.get_node("Crank")
+	# штырёк короче и тоньше — на него надевается трубка ключика
+	stem.scale = Vector3(0.6, 0.38, 0.6)
+	stem.position = Vector3(0.12 + 0.0114, 0.05, 0.0)
+	var piv := Node3D.new()
+	piv.position = Vector3(STEM_END, 0.05, 0.0)
+	box.add_child(piv)
+	mb_key = Node3D.new()
+	piv.add_child(mb_key)
+	var m: Node3D = load("res://models/props/mb_key.glb").instantiate()
+	mb_key.add_child(m)
+	# у модели трубка вниз (-Y), «бабочка» в плоскости XY: трубку — к шкатулке (-X), крылья — вертикально
+	m.basis = Basis(Vector3(0, 1, 0), Vector3(1, 0, 0), Vector3(0, 0, -1)).scaled(Vector3.ONE * KEY_SCALE)
+	var lo := INF
+	for mi in m.find_children("*", "MeshInstance3D", true, false):
+		var a: AABB = (mi as MeshInstance3D).get_aabb()
+		lo = minf(lo, a.position.y)
+		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	m.position = Vector3(-lo * KEY_SCALE - 0.012, 0.0, 0.0)     # трубка заходит на штырёк на 12 мм
+	mb_key.position.x = 0.07                                     # пока снаружи — въезжает твином
+	return piv
+
+
+## Провернуть ключик n раз по пол-оборота — рывками, как заводят пружину.
+func _turn_key(piv: Node3D, n: int, t := 0.36) -> void:
+	for i in n:
+		var tw := create_tween()
+		tw.tween_property(piv, "rotation:x", piv.rotation.x - PI, t).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		await tw.finished
+		await get_tree().create_timer(0.12).timeout
 
 
 func _note(k: int, pitch := 1.0, db := -2.0) -> void:
@@ -382,6 +430,8 @@ func _solve() -> void:
 	if not door_locked:
 		_lock_door()
 	L._sfx3d("mb_windup", L.get_node("MusicBox").global_position, -2.0)   # шкатулка заводится сама
+	if mb_key:
+		_turn_key(mb_key.get_parent(), 3, 0.3)                            # ключик крутится сам
 	await get_tree().create_timer(1.6).timeout
 	# шкатулка играет мелодию сама, все игрушки разом поворачиваются к игроку
 	for rep in 2:
