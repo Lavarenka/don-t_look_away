@@ -924,6 +924,21 @@
 !/models/steel_frame_shelves_01/textures/steel_frame_shelves_01_diff_1k.jpg.import
 !/models/steel_frame_shelves_01/textures/steel_frame_shelves_01_nor_gl_1k.jpg
 !/models/steel_frame_shelves_01/textures/steel_frame_shelves_01_nor_gl_1k.jpg.import
+!/models/vera/anim_idle.res
+!/models/vera/anim_reach.res
+!/models/vera/anim_run.res
+!/models/vera/anim_walk.res
+!/models/vera/anim_zidle.res
+!/models/vera/vera.glb
+!/models/vera/vera.glb.import
+!/models/vera/vera_Image_0.jpg
+!/models/vera/vera_Image_0.jpg.import
+!/models/vera/vera_Image_1.jpg
+!/models/vera/vera_Image_1.jpg.import
+!/models/vera/vera_Image_2.jpg
+!/models/vera/vera_Image_2.jpg.import
+!/models/vera/vera_Image_3.jpg
+!/models/vera/vera_Image_3.jpg.import
 !/models/vintage/antique_light.fbx
 !/models/vintage/antique_light.fbx.import
 !/models/vintage/book_1.fbx
@@ -1170,6 +1185,7 @@
 !/scripts/intro.gd.uid
 !/scripts/inventory.gd
 !/scripts/inventory.gd.uid
+!/scripts/jaw_open.gd
 !/scripts/level.gd
 !/scripts/level.gd.uid
 !/scripts/mannequin.gd
@@ -1194,6 +1210,7 @@
 !/scripts/spirit_life.gd.uid
 !/scripts/trailer.gd
 !/scripts/trailer.gd.uid
+!/scripts/vera.gd
 !/scripts/vintage.gd
 !/scripts/vintage.gd.uid
 !/shaders/crt.gdshader
