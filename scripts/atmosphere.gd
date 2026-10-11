@@ -9,7 +9,7 @@ extends Node
 ## Мелкие события (раз в 1–2 минуты, только когда тихо):
 ##  - тень проходит мимо открытой двери в конце коридора (далеко, без звука, не скример);
 ##  - над головой скрипят доски — с потолка сыплется пыль.
-## На чердаке теней не бывает (там свои сценки).
+## Работает везде, и на чердаке тоже (но не во время его сценок).
 
 const SPIRIT = preload("res://scripts/spirit.gd")
 
@@ -202,7 +202,7 @@ func _lamp_flicker() -> void:
 
 # ---------------- мелкие события ----------------
 func _event() -> bool:
-	if L.busy or L.phase in ["intro", "end", "attic"] or not L.quiet_for(15.0):
+	if L.busy or L.phase in ["intro", "end"] or not L.quiet_for(15.0):
 		return false
 	if L.attic and L.attic.has_method("is_active") and L.attic.is_active():
 		return false
