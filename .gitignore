@@ -1140,6 +1140,7 @@
 !/scenes/intro.tscn
 !/scenes/main.tscn
 !/scenes/menu.tscn
+!/scripts/atmosphere.gd
 !/scripts/attic.gd
 !/scripts/attic.gd.uid
 !/scripts/bathroom.gd

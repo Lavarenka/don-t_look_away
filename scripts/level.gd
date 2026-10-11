@@ -254,6 +254,9 @@ func _ready() -> void:
 	bedroom = preload("res://scripts/bedroom.gd").new()
 	add_child(bedroom)
 	bedroom.setup(self)
+	var atmo := preload("res://scripts/atmosphere.gd").new()     # туман по полу, пыль, облака на луне, мелкие события
+	add_child(atmo)
+	atmo.setup(self)
 	# тяжёлый подсвечник в прихожей издалека (со второго этажа сквозь стены) не нужен — экономим отрисовку
 	for mi in get_node("HallCandlestick").find_children("*", "GeometryInstance3D", true, false):
 		mi.visibility_range_end = 20.0
