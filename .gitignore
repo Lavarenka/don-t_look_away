@@ -580,6 +580,13 @@
 !/models/detskaya_sf/wooden_horse_2.png
 !/models/detskaya_sf/wooden_horse_2.png.import
 !/models/doors/door_kit.glb
+!/models/doors/door_kit.glb.import
+!/models/doors/door_kit_Image_0.png
+!/models/doors/door_kit_Image_0.png.import
+!/models/doors/door_kit_Image_1.png
+!/models/doors/door_kit_Image_1.png.import
+!/models/doors/door_kit_Image_2.png
+!/models/doors/door_kit_Image_2.png.import
 !/models/forest/car/sedan.glb
 !/models/forest/car/sedan.glb.import
 !/models/forest/car/sedan_0.jpg
@@ -856,6 +863,13 @@
 !/models/props/matchbox_label.png
 !/models/props/matchbox_label.png.import
 !/models/props/mb_key.glb
+!/models/props/mb_key.glb.import
+!/models/props/mb_key_MBKey_color.png
+!/models/props/mb_key_MBKey_color.png.import
+!/models/props/mb_key_MBKey_normal.png
+!/models/props/mb_key_MBKey_normal.png.import
+!/models/props/mb_key_MBKey_rough.png
+!/models/props/mb_key_MBKey_rough.png.import
 !/models/props/padlock.glb
 !/models/props/padlock.glb.import
 !/models/props/padlock_Cube_color.png
@@ -1137,6 +1151,7 @@
 !/scripts/distant.gd
 !/scripts/distant.gd.uid
 !/scripts/door_kit.gd
+!/scripts/door_kit.gd.uid
 !/scripts/doors.gd
 !/scripts/doors.gd.uid
 !/scripts/flicker.gd

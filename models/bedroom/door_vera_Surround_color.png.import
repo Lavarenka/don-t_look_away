@@ -2,24 +2,23 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dsrootueavqqv"
-path.s3tc="res://.godot/imported/door_vera_Surround_color.png-1147d58f29e6a09059c39e006c65a495.s3tc.ctex"
+uid="uid://bl3bb4ogsd3c0"
+path="res://.godot/imported/door_vera_Surround_color.png-1147d58f29e6a09059c39e006c65a495.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
+"vram_texture": false
 }
 generator_parameters={
-"md5": "c9d0277cf9a5a3138483f5eb2ffa491e"
+"md5": "46c01bc2e352d4b8ee89d50eb56b760b"
 }
 
 [deps]
 
 source_file="res://models/bedroom/door_vera_Surround_color.png"
-dest_files=["res://.godot/imported/door_vera_Surround_color.png-1147d58f29e6a09059c39e006c65a495.s3tc.ctex"]
+dest_files=["res://.godot/imported/door_vera_Surround_color.png-1147d58f29e6a09059c39e006c65a495.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -41,4 +40,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=0
+detect_3d/compress_to=1

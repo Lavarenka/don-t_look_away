@@ -17,6 +17,7 @@ const Y2 := -3.4
 const O := Vector3(-1.56, -3.4, -39.33)          ## куда поставлена модель ванной
 const MIRROR_LAYER := 1 << 10
 const REAL_LAYER := 1 << 11
+const NO_PROBE_LAYER := 1 << 12                ## отражение пробы ванной сюда не ложится (стекло окна)
 const TAP := Vector3(-0.46, Y2 + 1.0, -38.62)     ## кран раковины
 const MIRROR_C := Vector3(-0.455, Y2 + 1.5, -38.57)
 const LOCK := Vector3(-3.035, Y2 + 0.6, -40.23)    ## замок висит на ящике тумбы у западной стены
@@ -155,7 +156,22 @@ func _build_room() -> void:
 	night.material_override = nm
 	night.position = Vector3(1.45, Y2 + 1.4, -41.07)
 	night.rotation.y = -PI / 2
+	night.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF     # лунный свет проходит в окно
 	L.add_child(night)
+	# вплотную за стеклом (внутри толщины стены) — ещё одна «ночь»: под любым углом за окном только темнота
+	var night2 := MeshInstance3D.new()
+	var nq2 := QuadMesh.new()
+	nq2.size = Vector2(1.6, 1.75)
+	night2.mesh = nq2
+	night2.material_override = nm
+	night2.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	night2.position = Vector3(1.235, Y2 + 1.55, -41.06)
+	night2.rotation.y = -PI / 2
+	L.add_child(night2)
+	# стекло окна не берёт отражение из пробы ванной (на высоком качестве в нём «висела» чужая комната)
+	var glass := room.find_child("Wall_Window_001_Door and windows_0", true, false) as GeometryInstance3D
+	if glass:
+		glass.layers |= NO_PROBE_LAYER
 
 
 ## Дверь из холла: полотно из модуля стены — на петлю.
@@ -223,6 +239,7 @@ func _build_props() -> void:
 	probe.box_projection = true
 	probe.interior = true
 	probe.update_mode = ReflectionProbe.UPDATE_ONCE
+	probe.reflection_mask = 0xFFFFF & ~NO_PROBE_LAYER
 	probe.position = Vector3(-1.43, Y2 + 1.4, -39.55)
 	L.add_child(probe)
 	water.material_override = wm
