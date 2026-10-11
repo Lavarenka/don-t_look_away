@@ -31,6 +31,7 @@ const PROPS := {
 	"bedkey": "res://models/props/key_vera.glb",
 	"attic_key": "res://models/props/key_attic.glb",
 	"matches": "res://models/props/matchbox.glb",
+	"mb_key": "res://models/props/mb_key.glb",
 }          ## больше не унести
 ## как повернуть предмет к камере (ключи и крюк лежат плашмя — поднимаем кольцом к игроку)
 const POSE := {"key": Vector3(PI / 2, 0, 0.35), "bedkey": Vector3(PI / 2, 0, 0.35), "attic_key": Vector3(PI / 2, 0, 0.35), "hook": Vector3(PI / 2, 0, 0.55), "matches": Vector3(1.05, -0.5, 0), "mb_key": Vector3(0, 0, 0.4), "shard": Vector3(PI / 2 - 0.25, 0, 0.5)}
@@ -440,31 +441,9 @@ func _collect(n: Node, xf: Transform3D, boxes: Array[AABB]) -> void:
 func _build_model(id: String) -> Node3D:
 	var root := Node3D.new()
 	match id:
-		"key", "bedkey", "attic_key", "matches":
-			# модели из Blender (tools/blender/make_props.py): геометрия + запечённые текстуры
+		"key", "bedkey", "attic_key", "matches", "mb_key":
+			# модели из Blender (tools/blender/make_props.py, make_mbkey.py): геометрия + запечённые текстуры
 			root.add_child(load(PROPS[id]).instantiate())
-		"mb_key":
-			# латунный заводной ключик-«бабочка» от шкатулки
-			var brass := _metal(Color(0.78, 0.6, 0.3), 0.9, 0.3)
-			var shaft := MeshInstance3D.new()
-			var cm := CylinderMesh.new()
-			cm.top_radius = 0.0025
-			cm.bottom_radius = 0.0025
-			cm.height = 0.03
-			shaft.mesh = cm
-			shaft.position = Vector3(0, -0.012, 0)
-			shaft.material_override = brass
-			root.add_child(shaft)
-			for sx in [-1.0, 1.0]:
-				var w := MeshInstance3D.new()
-				var wm := SphereMesh.new()
-				wm.radius = 0.011
-				wm.height = 0.022
-				w.mesh = wm
-				w.scale = Vector3(1.0, 0.8, 0.22)
-				w.position = Vector3(sx * 0.011, 0.01, 0)
-				w.material_override = brass
-				root.add_child(w)
 		"shard":
 			root.add_child(glass_shard())
 	return root
