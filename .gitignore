@@ -1159,6 +1159,7 @@
 !/scripts/floor2.gd
 !/scripts/floor2.gd.uid
 !/scripts/fps_counter.gd
+!/scripts/fps_counter.gd.uid
 !/scripts/hall_puzzle.gd
 !/scripts/hall_puzzle.gd.uid
 !/scripts/haunts.gd

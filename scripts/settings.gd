@@ -124,8 +124,9 @@ static func get_resolution() -> int:
 
 
 ## Масштаб 3D-картинки: меньше 100% — рендер в меньшем разрешении с чётким растягиванием AMD FSR
-## (больше FPS на слабых видеокартах). Интерфейс и текст всегда в полном разрешении.
-const RENDER_SCALES := [1.0, 0.85, 0.75, 0.6]
+## (больше FPS на слабых видеокартах); больше 100% — суперсэмплинг: рендер крупнее экрана и сжатие,
+## гладкие края и мелкие детали без ряби (для мощных видеокарт). Интерфейс всегда в полном разрешении.
+const RENDER_SCALES := [1.0, 1.25, 1.5, 0.85, 0.75, 0.6]
 
 
 static func get_render_scale() -> float:
@@ -168,7 +169,7 @@ static func apply_general() -> void:
 	if tree:
 		var sc := get_render_scale()
 		tree.root.scaling_3d_mode = Viewport.SCALING_3D_MODE_FSR if sc < 0.999 else Viewport.SCALING_3D_MODE_BILINEAR
-		tree.root.scaling_3d_scale = sc
+		tree.root.scaling_3d_scale = clampf(sc, 0.25, 2.0)
 		tree.root.fsr_sharpness = 0.3
 
 

@@ -322,7 +322,7 @@ func _page_settings() -> void:
 	var cb := _button("", func(): pass)
 	var cupd := func():
 		var sc: float = SETTINGS.get_render_scale()
-		cb.text = tr("MENU_SCALE") + "%d%%" % roundi(sc * 100.0) + (" (FSR)" if sc < 0.999 else "")
+		cb.text = tr("MENU_SCALE") + "%d%%" % roundi(sc * 100.0) + (" (FSR)" if sc < 0.999 else (" (SSAA)" if sc > 1.001 else ""))
 	cupd.call()
 	cb.pressed.connect(func():
 		var i: int = SETTINGS.RENDER_SCALES.find(snappedf(SETTINGS.get_render_scale(), 0.01))
