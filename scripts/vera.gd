@@ -13,6 +13,7 @@ var sk: Skeleton3D
 var ap: AnimationPlayer
 var life: SkeletonModifier3D
 var jaw: SkeletonModifier3D
+var pose: SkeletonModifier3D      ## доп. повороты костей (тянет руку)
 var mat: ShaderMaterial
 var float_h := 0.0
 var _float := 0.0
@@ -45,7 +46,16 @@ func _ready() -> void:
 	sk.add_child(life)
 	jaw = preload("res://scripts/jaw_open.gd").new()
 	sk.add_child(jaw)
+	pose = preload("res://scripts/menu_pose.gd").new()
+	pose.speed = 2.5
+	sk.add_child(pose)
 	play("idle")
+
+
+## Тянет к игроку левую руку (скрюченные пальцы вперёд) / опускает.
+## Своя поза, не анимация Ани: у той руки «под рукава» и на Вере выходят перекрученными.
+func reach(on := true) -> void:
+	pose.target = {"LeftForeArm": Vector3(0, 0, 1.0), "LeftHand": Vector3(0, 0, 0.2)} if on else {}
 
 
 ## Нагнетание 0..1: темнеет, ореол по краю ярче.
