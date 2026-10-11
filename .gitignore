@@ -1211,6 +1211,7 @@
 !/scripts/trailer.gd
 !/scripts/trailer.gd.uid
 !/scripts/vera.gd
+!/scripts/vera_showcase.gd
 !/scripts/vintage.gd
 !/scripts/vintage.gd.uid
 !/shaders/crt.gdshader
@@ -1229,6 +1230,7 @@
 !/shaders/murky_water.gdshader.uid
 !/shaders/spirit.gdshader
 !/shaders/spirit.gdshader.uid
+!/shaders/vera.gdshader
 !/textures/attic_photo.png
 !/textures/attic_photo.png.import
 !/textures/cobweb.png

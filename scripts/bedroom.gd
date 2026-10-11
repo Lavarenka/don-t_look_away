@@ -17,6 +17,8 @@ const LAMPS := [
 	[Vector3(-15.68, Y2 + 1.3, -35.9), 0.5, 3.5, false],     # торшер в углу коридора
 ]
 
+const VERA_TEST := true     ## ТЕСТ: Вера стоит в спальне и меняет позы (scripts/vera_showcase.gd)
+
 var L: Node
 var root: Node3D
 var unlocked := false
@@ -40,6 +42,10 @@ func setup(level: Node) -> void:
 	_wallpaper()
 	L.doors.add("bed", ea, 0.0, ea.get_meta("open"), DOOR_C, func(): return unlocked)
 	L.doors.add("bed_in", ra, 0.0, ra.get_meta("open"), INNER_C, func(): return L.phase == "floor2")
+	if VERA_TEST:
+		var vs := preload("res://scripts/vera_showcase.gd").new()
+		add_child(vs)
+		vs.setup(L)
 
 
 ## Полотно из модуля стены — на петлю; угол открытия выбирается так, чтобы дверь уходила

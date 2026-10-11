@@ -6,14 +6,14 @@ extends Node3D
 ## Анимации: idle, zidle, walk, run, reach — как у Ани (spirit.gd).
 
 const ANIMS := ["idle", "zidle", "walk", "run", "reach"]
-const TINT := Color(0.78, 0.76, 0.76)      ## чуть темнее и холоднее, «в тени»
+const TINT := Color(0.8, 0.78, 0.78)       ## чуть темнее и холоднее, «в тени»
 
 var model: Node3D
 var sk: Skeleton3D
 var ap: AnimationPlayer
 var life: SkeletonModifier3D
 var jaw: SkeletonModifier3D
-var mats: Array[BaseMaterial3D] = []
+var mat: ShaderMaterial
 var float_h := 0.0
 var _float := 0.0
 var _t := 0.0
@@ -33,18 +33,24 @@ func _ready() -> void:
 		lib.add_animation(n, a)
 	ap.add_animation_library("g", lib)
 	for mi in model.find_children("*", "MeshInstance3D", true, false):
-		var m := (mi as MeshInstance3D).get_active_material(0)
-		if m is BaseMaterial3D:
-			var d := (m as BaseMaterial3D).duplicate() as BaseMaterial3D
-			d.albedo_color = TINT
-			d.metallic = 0.0
-			(mi as MeshInstance3D).material_override = d
-			mats.append(d)
+		var src := (mi as MeshInstance3D).get_active_material(0) as BaseMaterial3D
+		mat = ShaderMaterial.new()
+		mat.shader = preload("res://shaders/vera.gdshader")
+		mat.set_shader_parameter("albedo_tex", src.albedo_texture)
+		mat.set_shader_parameter("orm_tex", src.roughness_texture)
+		mat.set_shader_parameter("normal_tex", src.normal_texture)
+		mat.set_shader_parameter("tint", TINT)
+		(mi as MeshInstance3D).material_override = mat
 	life = preload("res://scripts/spirit_life.gd").new()
 	sk.add_child(life)
 	jaw = preload("res://scripts/jaw_open.gd").new()
 	sk.add_child(jaw)
 	play("idle")
+
+
+## Нагнетание 0..1: темнеет, ореол по краю ярче.
+func set_dread(v: float) -> void:
+	mat.set_shader_parameter("dread", v)
 
 
 func play(n: String, speed := 1.0, blend := 0.25) -> void:
@@ -83,7 +89,8 @@ func scream(hold := 0.8) -> void:
 	tw.tween_interval(hold)
 	tw.tween_property(jaw, "open", 0.15, 0.9).set_trans(Tween.TRANS_SINE)
 	life.shiver = 1.0
-	get_tree().create_timer(hold + 0.3).timeout.connect(func(): life.shiver = 0.0)
+	set_dread(1.0)
+	get_tree().create_timer(hold + 0.3).timeout.connect(func(): life.shiver = 0.0; set_dread(0.0))
 
 
 func set_layer(mask: int) -> void:
