@@ -12,6 +12,8 @@ uniform float drop = 2.6;          // во сколько раз ткань св
 uniform float sway = 1.0;          // общая сила колыхания
 uniform float lift = 0.0;          // испуг: волосы поднимаются
 uniform float blood = 0.0;         // 0..1: кровь проступает пятнами и потёками
+uniform float pallor = 0.85;       // насколько кожа мертвенно-бледная
+uniform float rim = 0.06;          // холодный ореол по краю силуэта (скрипт усиливает при испуге)
 uniform int debug = 0;
 varying vec4 masks;
 
@@ -48,17 +50,51 @@ float vnoise(vec2 p) {
 
 void fragment() {
 	vec4 c = texture(albedo_tex, vec2(UV.x, 1.0 - UV.y)) * tint;
-	ALBEDO = c.rgb;
-	ROUGHNESS = 0.85;
+	vec3 col = c.rgb;
+	float lum = dot(col, vec3(0.3, 0.59, 0.11));
+	float mx = max(col.r, max(col.g, col.b));
+	float mn = min(col.r, min(col.g, col.b));
+	float sat = (mx - mn) / max(mx, 0.001);
+	// что где: волосы — тёмное, кровь — насыщенно-красное, кожа — тёплая средняя, остальное — ткань
+	float hair = smoothstep(0.16, 0.07, lum);
+	float red = smoothstep(0.45, 0.7, sat) * step(col.g * 1.6, col.r) * (1.0 - hair);
+	float skin = smoothstep(0.18, 0.32, sat) * (1.0 - smoothstep(0.5, 0.65, sat)) * smoothstep(0.1, 0.22, lum)
+		* step(col.b, col.g * 1.05) * (1.0 - red) * (1.0 - hair);
+	float cloth = clamp(1.0 - hair - red - skin, 0.0, 1.0);
+	// кожа мёртвая: серо-синяя, с пятнами (трупные пятна, вены)
+	float liv = vnoise(UV * 23.0) * 0.6 + vnoise(UV * 71.0) * 0.4;
+	vec3 dead = mix(vec3(lum), vec3(0.62, 0.68, 0.74) * lum * 1.25, 0.55);
+	dead = mix(dead, dead * vec3(0.55, 0.5, 0.65), smoothstep(0.55, 0.8, liv) * 0.7);
+	col = mix(col, dead, skin * pallor);
+	// ткань — грязная, отсыревшая, местами темнее
+	float damp = smoothstep(0.45, 0.75, vnoise(UV * 13.0 + 3.1));
+	col = mix(col, col * vec3(0.72, 0.7, 0.66), cloth * damp * 0.6);
+	col *= mix(1.0, 0.75, hair);                           // волосы — мокрые, почти чёрные
+	col = mix(col, col * vec3(0.7, 0.45, 0.42), red * 0.5); // старая кровь темнее
+	float rough = 0.85;
+	rough = mix(rough, 0.48, hair);
+	rough = mix(rough, 0.25, red);
+	rough = mix(rough, 0.6, skin);
+	rough = mix(rough, 0.55, cloth * damp);
+	ALBEDO = col;
+	SPECULAR = mix(0.5, 0.65, clamp(hair + red, 0.0, 1.0));
 	if (blood > 0.0) {
 		// пятна + вертикальные потёки (растянутый шум), чем больше blood — тем шире
 		float n = vnoise(UV * vec2(9.0, 9.0)) * 0.6 + vnoise(UV * vec2(31.0, 31.0)) * 0.4;
 		float drip = vnoise(vec2(UV.x * 70.0, UV.y * 4.0));
 		float m = smoothstep(0.78 - 0.45 * blood, 0.86 - 0.4 * blood, max(n, drip * 0.95));
 		m *= blood;
-		m *= smoothstep(0.07, 0.2, dot(c.rgb, vec3(0.3, 0.59, 0.11)));   // по чёрным волосам кровь не видна — не красим их
-		ALBEDO = mix(ALBEDO, vec3(0.22, 0.008, 0.006), m * 0.92);
-		ROUGHNESS = mix(0.85, 0.3, m);
+		m *= 1.0 - hair;                                   // по чёрным волосам кровь не видна — не красим их
+		ALBEDO = mix(ALBEDO, vec3(0.2, 0.006, 0.005), m * 0.92);
+		rough = mix(rough, 0.2, m);
 	}
+	ROUGHNESS = rough;
+	// тонкая ткань и кожа светятся насквозь, когда свет сзади
+	BACKLIGHT = vec3(0.55, 0.42, 0.36) * (cloth * 0.5 + skin * 0.35);
+	// холодный ореол по краю силуэта — видна в темноте, хоть и не освещена
+	float fr = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
+	EMISSION = vec3(0.45, 0.55, 0.7) * fr * rim * (1.0 - hair * 0.7);
 	if (debug == 1) ALBEDO = masks.rgb + vec3(masks.a, masks.a, 0.0);
+	if (debug == 2) ALBEDO = vec3(hair, skin, red);
+	if (debug == 3 && hair > 0.5) discard;
 }

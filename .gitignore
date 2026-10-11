@@ -1184,6 +1184,7 @@
 !/scripts/settings.gd.uid
 !/scripts/spirit.gd
 !/scripts/spirit.gd.uid
+!/scripts/spirit_life.gd
 !/scripts/trailer.gd
 !/scripts/trailer.gd.uid
 !/scripts/vintage.gd

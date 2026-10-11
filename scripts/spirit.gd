@@ -7,6 +7,7 @@ extends Node3D
 ## run — бег, reach — тянет руку.
 
 const HEIGHT := 1.7          ## рост, м (один для всех появлений призрака)
+const EYE_OFS := Vector3(0.031, 0.095, 0.097)   ## глаза от кости головы (м): в стороны, вверх, вперёд
 const ANIMS := ["idle", "zidle", "walk", "run", "reach"]
 
 var model: Node3D
@@ -17,6 +18,8 @@ var float_h := 0.0           ## на сколько парит над полом
 var _float := 0.0
 var _t := 0.0
 var _arms := {}
+var life: SkeletonModifier3D      ## подёргивания головы, дыхание, дрожь (spirit_life.gd)
+var eyes: Array[MeshInstance3D] = []   ## еле видные блики глаз сквозь волосы
 
 
 func _ready() -> void:
@@ -37,6 +40,9 @@ func _ready() -> void:
 	mi.material_override = mat
 	for s in ["Left", "Right"]:
 		_arms[s] = [sk.find_bone("mixamorig_%sArm" % s), sk.find_bone("mixamorig_%sForeArm" % s), sk.find_bone("mixamorig_%sHand" % s)]
+	life = preload("res://scripts/spirit_life.gd").new()
+	sk.add_child(life)
+	_make_eyes()
 	play("idle")
 
 
@@ -62,6 +68,45 @@ func play_from(n: String, t: float, speed := 0.8) -> void:
 
 func set_speed(s: float) -> void:
 	ap.speed_scale = s
+
+
+## Блики глаз: две крошечные холодные точки у головы — в темноте видно, что она смотрит.
+func _make_eyes() -> void:
+	var head := sk.find_bone("mixamorig_Head")
+	var ba := BoneAttachment3D.new()
+	ba.bone_idx = head
+	sk.add_child(ba)
+	var hp := sk.get_bone_global_rest(head)
+	var em := StandardMaterial3D.new()
+	em.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	em.albedo_color = Color(0.85, 0.9, 0.8)
+	var sph := SphereMesh.new()
+	sph.radius = 0.0045 / model.scale.x
+	sph.height = sph.radius * 2.0
+	sph.radial_segments = 8
+	sph.rings = 4
+	for sx in [-1.0, 1.0]:
+		var e := MeshInstance3D.new()
+		e.mesh = sph
+		e.material_override = em
+		e.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		ba.add_child(e)
+		var p := hp.origin + Vector3(sx * EYE_OFS.x, EYE_OFS.y, EYE_OFS.z) / model.scale.x
+		e.position = hp.affine_inverse() * p
+		eyes.append(e)
+	set_eyes(0.45)
+
+
+## Яркость бликов глаз (0 — не видно).
+func set_eyes(v: float) -> void:
+	for e in eyes:
+		e.visible = v > 0.01
+		(e.material_override as StandardMaterial3D).albedo_color = Color(0.85, 0.9, 0.8) * v
+
+
+## Дрожь (0..1) — например, перед броском.
+func set_shiver(v: float) -> void:
+	life.shiver = v
 
 
 func set_blood(v: float) -> void:
