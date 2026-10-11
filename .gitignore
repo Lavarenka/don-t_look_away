@@ -1176,6 +1176,7 @@
 !/scripts/mannequin.gd.uid
 !/scripts/menu.gd
 !/scripts/menu.gd.uid
+!/scripts/menu_pose.gd
 !/scripts/mirror.gd
 !/scripts/mirror.gd.uid
 !/scripts/nursery.gd

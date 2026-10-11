@@ -27,6 +27,42 @@ var CAM_XF: Transform3D = str_to_var("Transform3D(0.99782705, -0.0063137123, 0.0
 var FLASH_XF: Transform3D = str_to_var("Transform3D(0.9942423, 0.013865624, -0.10625452, 0, 0.9915928, 0.12939733, 0.10715539, -0.1286523, 0.98588353, -0.07921533, 1.4509205, 2.5046284)")
 var GIRL_XF: Transform3D = str_to_var("Transform3D(0.98412704, 0, -0.17746553, 0, 1, 0, 0.17746553, 0, 0.98412704, 0.25, 0, -0.55)")
 const FLASH_E := 7.0
+const GHOST_TINT := Color(0.74, 0.74, 0.8)     ## призрак темнее, будто в тени
+## Позы: [позиция, поворот, анимация ("" — живая idle), секунда анимации, повороты костей, прячется за стеной]
+var POSES: Array = [
+	# стоит в проёме
+	[Vector3(0.25, 0, -0.55), -0.18, "", 0.0, {}, false],
+	# выглядывает из-за правого косяка и держится за него рукой
+	[Vector3(0.95, 0, -0.9), -0.35, "idle", 1.0, {"Spine": Vector3(0, 0, 0.18), "Spine1": Vector3(0, 0, 0.14), "Spine2": Vector3(0, 0, 0.1),
+		"Neck": Vector3(0, 0, 0.14), "Head": Vector3(0, 0, 0.3), "RightArm": Vector3(0.6, 0, -0.5), "RightForeArm": Vector3(0, 0, 1.5)}, true],
+	# из-за правого косяка — только голова
+	[Vector3(0.95, 0, -0.9), -0.35, "idle", 1.0, {"Spine": Vector3(0, 0, 0.18), "Spine1": Vector3(0, 0, 0.14), "Spine2": Vector3(0, 0, 0.1),
+		"Neck": Vector3(0, 0, 0.14), "Head": Vector3(0, 0, 0.35)}, true],
+	# из-за левого косяка, рука на косяке
+	[Vector3(-0.8, 0, -0.9), 0.1, "idle", 1.0, {"Spine": Vector3(0, 0, -0.2), "Spine1": Vector3(0, 0, -0.15), "Spine2": Vector3(0, 0, -0.12),
+		"Neck": Vector3(0, 0, -0.15), "Head": Vector3(0, 0, -0.3), "LeftArm": Vector3(0.6, 0, 0.5), "LeftForeArm": Vector3(0, 0, -1.5)}, true],
+]
+var _pose: SkeletonModifier3D
+var _pose_i := 0
+var _mask_mat: ShaderMaterial
+## Слой призрака виден только внутри проёма двери (там, где за ним нет стены) — когда она за стеной.
+## Проём в пикселях фона 1920×1080: верх-лево, верх-право, низ-право, низ-лево.
+const MASK_SHADER := """
+shader_type canvas_item;
+uniform float masked = 0.0;
+const vec2 A = vec2(970.0, 392.0);
+const vec2 B = vec2(1257.0, 390.0);
+const vec2 C = vec2(1240.0, 1080.0);
+const vec2 D = vec2(968.0, 1080.0);
+float side(vec2 p, vec2 a, vec2 b) { return (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x); }
+void fragment() {
+	vec4 c = texture(TEXTURE, UV);
+	vec2 p = UV * vec2(1920.0, 1080.0);
+	bool inside = side(p, A, B) >= 0.0 && side(p, B, C) >= 0.0 && side(p, C, D) >= 0.0 && side(p, D, A) >= 0.0;
+	if (masked > 0.5 && !inside) c.a = 0.0;
+	COLOR = c;
+}
+"""
 var _plate: TextureRect
 var _live: TextureRect
 var _flash: SpotLight3D
@@ -168,8 +204,6 @@ func _build_live() -> void:
 	_girl.transform = GIRL_XF
 	vp.add_child(_girl)
 	_girl.play("idle", 0.4)
-	_girl.set_blood(0.35)
-	_girl.ap.seek(randf() * 3.0, true)
 	# пылинки в луче фонарика
 	var pm := ParticleProcessMaterial.new()
 	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
@@ -196,7 +230,18 @@ func _build_live() -> void:
 	dust.visibility_aabb = AABB(Vector3(-3, -3, -3), Vector3(6, 6, 6))
 	vp.add_child(dust)
 	_live = _cover(vp.get_texture())
+	var sh := Shader.new()
+	sh.code = MASK_SHADER
+	_mask_mat = ShaderMaterial.new()
+	_mask_mat.shader = sh
+	_live.material = _mask_mat
 	add_child(_live)
+	# поза поверх анимации (выглядывает из-за косяка) и темнее, «в тени»
+	_pose = preload("res://scripts/menu_pose.gd").new()
+	_girl.sk.add_child(_pose)
+	_girl.mat.set_shader_parameter("tint", GHOST_TINT)
+	_girl.set_blood(0.25)
+	_set_pose(0, true)
 
 
 ## Фонарик: почти всегда ровный, иногда коротко «моргает»,
@@ -223,17 +268,32 @@ func _flicker(delta: float) -> void:
 	_plate.modulate = c
 
 
-## Пока фонарик моргает, она успевает «перемениться».
+## Пока фонарик моргает, она успевает «перемениться»: то стоит в проёме,
+## то выглядывает из-за косяка (держится за него рукой), то её нет.
 func _ghost_shift() -> void:
-	if not _girl.visible:
-		_girl.visible = true
-		_girl.play("idle", 0.4, 0.0)
-	elif randf() < 0.3:
+	if _girl.visible and randf() < 0.2:
 		_girl.visible = false
-	elif randf() < 0.5:
-		_girl.play_from("zidle", randf() * 2.0, 0.5)
-	else:
+		return
+	_girl.visible = true
+	var i := _pose_i
+	while i == _pose_i:
+		i = randi() % POSES.size()
+	_set_pose(i, true)
+
+
+func _set_pose(i: int, instant := false) -> void:
+	_pose_i = i
+	var p: Array = POSES[i]
+	_girl.transform = Transform3D(Basis(Vector3.UP, p[1]), p[0])
+	if p[2] == "":
 		_girl.play("idle", 0.4, 0.0)
+		_girl.ap.seek(randf() * 3.0, true)
+	else:
+		_girl.freeze(p[2], p[3])
+	_pose.target = p[4]
+	if instant:
+		_pose.snap()
+	_mask_mat.set_shader_parameter("masked", 1.0 if p[5] else 0.0)
 
 
 func _clear() -> void:
