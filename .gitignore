@@ -1141,6 +1141,7 @@
 !/scenes/main.tscn
 !/scenes/menu.tscn
 !/scripts/atmosphere.gd
+!/scripts/atmosphere.gd.uid
 !/scripts/attic.gd
 !/scripts/attic.gd.uid
 !/scripts/bathroom.gd

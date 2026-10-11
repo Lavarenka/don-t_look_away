@@ -3,7 +3,7 @@ extends Node
 ##
 ## Свет и туман:
 ##  - стелющийся по полу туман (FogVolume с медленно плывущим шумом) на обоих этажах и на чердаке;
-##  - пыль в воздухе: крошечные пылинки, видимые только в луче фонаря и у ламп;
+##  - пыль в воздухе: мягкие круглые пылинки (вместо квадратных), реже и мельче;
 ##  - облака на луне: лунный свет из окон время от времени медленно меркнет и возвращается;
 ##  - лампы в соседних комнатах сами мигают, иногда гаснут на несколько секунд.
 ## Мелкие события (раз в 1–2 минуты, только когда тихо):
@@ -14,7 +14,7 @@ extends Node
 const SPIRIT = preload("res://scripts/spirit.gd")
 
 var L: Node
-var dust: GPUParticles3D
+var dust_tex: Texture2D        ## мягкая круглая пылинка
 var moons: Array[Light3D] = []
 var moon_base := {}
 var lamps: Array[Light3D] = []
@@ -28,7 +28,7 @@ var shadow_n := 0
 func setup(level: Node) -> void:
 	L = level
 	_ground_fog()
-	_dust()
+	_soft_dust()
 	for n in ["MoonW", "MoonE", "MoonNW", "MoonNE", "AMoonN", "AMoonS"]:
 		var m := L.get_node_or_null(n) as Light3D
 		if m:
@@ -85,59 +85,44 @@ void fog() {
 
 
 # ---------------- пыль в воздухе ----------------
-func _dust() -> void:
-	dust = GPUParticles3D.new()
-	dust.amount = 420
-	dust.lifetime = 9.0
-	dust.preprocess = 9.0
-	dust.local_coords = false
-	dust.visibility_aabb = AABB(Vector3(-6, -4, -9), Vector3(12, 8, 18))
-	var pm := ParticleProcessMaterial.new()
-	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	pm.emission_box_extents = Vector3(2.6, 1.3, 3.6)
-	pm.gravity = Vector3(0, -0.004, 0)
-	pm.initial_velocity_min = 0.0
-	pm.initial_velocity_max = 0.03
-	pm.direction = Vector3(0, 1, 0)
-	pm.spread = 180.0
-	pm.turbulence_enabled = true
-	pm.turbulence_noise_strength = 0.6
-	pm.turbulence_noise_scale = 3.0
-	pm.turbulence_noise_speed = Vector3(0.02, 0.01, 0.02)
-	pm.turbulence_influence_min = 0.02
-	pm.turbulence_influence_max = 0.06
-	pm.scale_min = 0.5
-	pm.scale_max = 1.4
-	var fade := Gradient.new()                     # пылинка плавно появляется и исчезает
-	fade.set_color(0, Color(1, 1, 1, 0))
-	fade.add_point(0.2, Color(1, 1, 1, 1))
-	fade.add_point(0.8, Color(1, 1, 1, 1))
-	fade.set_color(fade.get_point_count() - 1, Color(1, 1, 1, 0))
-	var gt := GradientTexture1D.new()
-	gt.gradient = fade
-	pm.color_ramp = gt
-	dust.process_material = pm
-	var q := QuadMesh.new()
-	q.size = Vector2(0.007, 0.007)
-	var m := StandardMaterial3D.new()
-	m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	m.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX     # освещается: видна только в свете
-	m.vertex_color_use_as_albedo = true
-	m.albedo_color = Color(1.0, 0.95, 0.85, 0.75)
-	m.disable_receive_shadows = true
-	q.material = m
-	dust.draw_pass_1 = q
-	dust.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	L.add_child(dust)
+## Пыль уже есть в сцене (у игрока и на чердаке), но квадратная и слишком частая: делаем пылинки
+## круглыми и мягкими, мельче, реже, и прячем те, что у самых глаз (там они выглядели «кубиками»).
+func _soft_dust() -> void:
+	var g := Gradient.new()
+	g.set_color(0, Color(1, 1, 1, 1))
+	g.set_color(1, Color(1, 1, 1, 0))
+	g.add_point(0.35, Color(1, 1, 1, 0.55))
+	var tex := GradientTexture2D.new()
+	tex.gradient = g
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(1.0, 0.5)
+	tex.width = 32
+	tex.height = 32
+	dust_tex = tex
+	for path in ["Player/Dust", "Attic/Dust0", "Attic/Dust1"]:
+		var ps := L.get_node_or_null(path) as GPUParticles3D
+		if ps == null:
+			continue
+		ps.amount = int(ps.amount * (0.3 if path == "Player/Dust" else 0.5))
+		var q := (ps.draw_pass_1 as QuadMesh).duplicate() as QuadMesh
+		q.size = Vector2(0.01, 0.01)
+		var m := StandardMaterial3D.new()
+		m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.albedo_texture = tex
+		m.albedo_color = Color(0.92, 0.9, 0.84, 0.8)
+		m.disable_receive_shadows = true
+		m.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_PIXEL_ALPHA   # у самых глаз — не видно
+		m.distance_fade_min_distance = 0.35
+		m.distance_fade_max_distance = 1.2
+		q.material = m
+		ps.draw_pass_1 = q
+		ps.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 func _process(delta: float) -> void:
 	t += delta
-	var p = L.player
-	if dust and p:
-		# облако пылинок держится перед глазами (сами пылинки остаются на месте в мире)
-		dust.global_position = p.cam.global_position + p.forward() * 2.8
 	next_cloud -= delta
 	if next_cloud <= 0.0:
 		next_cloud = randf_range(35.0, 70.0)
@@ -314,6 +299,7 @@ func _spawn_dust(top: Vector3) -> void:
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
 	m.albedo_color = Color(0.75, 0.7, 0.62, 0.8)
+	m.albedo_texture = dust_tex
 	qm.material = m
 	ps.draw_pass_1 = qm
 	ps.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
