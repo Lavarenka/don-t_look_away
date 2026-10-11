@@ -8,7 +8,7 @@ signal toggled_light
 @export var walk_speed := 1.9
 @export var run_speed := 3.1
 @export var mouse_sens := 0.0022
-@export var flash_energy := 7.0
+@export var flash_energy := 5.6
 
 var frozen := false
 var light_on := true
@@ -20,10 +20,26 @@ var _step_acc := 0.0
 @onready var head: Node3D = $Head
 @onready var cam: Camera3D = $Head/Camera3D
 @onready var flash: SpotLight3D = $Head/Camera3D/Flashlight
+var spill: SpotLight3D          ## рассеянный ореол вокруг пятна фонаря
+const SPILL := 0.16
 
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	# фонарь как настоящий: яркое пятно в центре плавно уходит в мягкий рассеянный ореол —
+	# без ровного круга с резкой границей
+	flash.spot_angle = 26.0
+	flash.spot_angle_attenuation = 0.55
+	spill = SpotLight3D.new()
+	spill.light_color = flash.light_color
+	spill.spot_range = flash.spot_range
+	spill.spot_attenuation = flash.spot_attenuation
+	spill.spot_angle = 44.0
+	spill.spot_angle_attenuation = 0.22
+	spill.shadow_enabled = false
+	spill.light_volumetric_fog_energy = 0.6
+	spill.light_specular = 0.2
+	flash.add_child(spill)
 
 
 func _unhandled_input(e: InputEvent) -> void:
@@ -75,6 +91,8 @@ func _process(delta: float) -> void:
 	if flicker > 0.0:
 		flicker -= delta
 	flash.light_energy = flash_energy * randf_range(0.95, 1.0) if is_light_lit() else 0.0
+	if spill:
+		spill.light_energy = flash.light_energy * SPILL
 	cam.position = Vector3(0, sin(_bob) * 0.03, 0)
 	if shake > 0.0:
 		cam.h_offset = randf_range(-1, 1) * shake * 0.05
