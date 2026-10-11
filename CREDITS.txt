@@ -44,6 +44,8 @@
   giggle — «Creepy girl laugh», IENBA, CC0; «Child giggle», RaspberryTickle, CC0;
            «Creepy child giggle with reverb», wolfdoctor, CC BY 4.0 (freesound.org/s/578760)
 - Ванная «The Bathroom (Free)» — Evan, Sketchfab, CC BY 4.0 (текстуры уменьшены).
+- Двери и дверные коробки «Door Pack Asset + key pack (one material)» — Daniil Evseev (T_i_a_D), Sketchfab,
+  CC BY 4.0 (взяты только двери и коробки, текстуры уменьшены до 2048).
 - Портреты в коридоре (состарены и затемнены, глаза выцарапаны):
   Вера — Шандор Бихари, «Старая женщина» (ок. 1900), общественное достояние (Wikimedia Commons,
   File:Bihari, Sandor - Old Woman (ca 1900).jpg);

@@ -195,6 +195,7 @@ func _ready() -> void:
 	player.action.connect(_interact)
 	player.toggled_light.connect(func(): _sfx("click", -6.0))
 	guest.visible = false
+	preload("res://scripts/door_kit.gd").apply_all(self)     # двери из набора вместо фанерных
 	_setup_house()
 	_setup_girl()
 	shade.visible = false

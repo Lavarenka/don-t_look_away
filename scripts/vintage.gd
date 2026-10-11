@@ -56,6 +56,8 @@ static func material_for(name: String) -> Material:
 static func apply(root: Node) -> void:
 	for mi in root.find_children("*", "MeshInstance3D", true, false):
 		var m: MeshInstance3D = mi
+		if m.has_meta("door_kit"):          # двери из другого набора — свои материалы
+			continue
 		for s in m.mesh.get_surface_count():
 			var src := m.mesh.surface_get_material(s)
 			m.set_surface_override_material(s, material_for(src.resource_name if src else ""))

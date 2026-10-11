@@ -579,6 +579,7 @@
 !/models/detskaya_sf/wooden_horse_1.png.import
 !/models/detskaya_sf/wooden_horse_2.png
 !/models/detskaya_sf/wooden_horse_2.png.import
+!/models/doors/door_kit.glb
 !/models/forest/car/sedan.glb
 !/models/forest/car/sedan.glb.import
 !/models/forest/car/sedan_0.jpg
@@ -1135,6 +1136,7 @@
 !/scripts/creature.gd.uid
 !/scripts/distant.gd
 !/scripts/distant.gd.uid
+!/scripts/door_kit.gd
 !/scripts/doors.gd
 !/scripts/doors.gd.uid
 !/scripts/flicker.gd
