@@ -6,7 +6,7 @@ const ROAD_START := 30.0      ## лес вдоль дороги: от z = ROAD_S
 const ROAD_END := -246.0      ## ... до z = ROAD_END (машина едет в сторону −Z), дальше — двор и дом
 const SPEED := 7.0            ## м/с
 const HOUSE_Z := -270.0       ## дом в конце дороги
-const ATTIC_WIN := Vector3(3.0, 8.75, 5.1)   ## чердачное окно (относительно дома)
+const ATTIC_WIN := Vector3(3.865, 9.0, 4.05)   ## чердачное окно во фронтоне: центр окна (относительно дома)
 const GAME_MENU := "res://scenes/menu.tscn"
 const SETTINGS = preload("res://scripts/settings.gd")
 const FLICKER = preload("res://scripts/flicker.gd")
@@ -433,7 +433,9 @@ func _house() -> void:
 	lit.emission_enabled = true
 	lit.emission = Color(1, 0.55, 0.25)
 	lit.emission_energy_multiplier = 0.9
-	_box(Vector3(0.55, 1.0, 0.04), ATTIC_WIN + Vector3(0, 0, -0.06), lit, h)
+	# два стекла — каждое ровно в своей раме (верхнее стекло выступает сильнее нижнего)
+	_box(Vector3(0.72, 0.82, 0.01), Vector3(ATTIC_WIN.x, 9.5, 4.072), lit, h)
+	_box(Vector3(0.72, 0.82, 0.01), Vector3(ATTIC_WIN.x, 8.5, 4.015), lit, h)
 	window_light = OmniLight3D.new()
 	window_light.light_color = Color(1, 0.6, 0.3)
 	window_light.light_energy = 0.6
