@@ -172,6 +172,15 @@ func _build_room() -> void:
 	var glass := room.find_child("Wall_Window_001_Door and windows_0", true, false) as GeometryInstance3D
 	if glass:
 		glass.layers |= NO_PROBE_LAYER
+		# и вообще ничего не отражает: у пака стекло «металлическое», и на высоком качестве
+		# в нём отражалась (через тонкие стены) соседняя спальня
+		var gm := (glass as MeshInstance3D).get_active_material(0).duplicate() as BaseMaterial3D
+		gm.metallic = 0.0
+		gm.metallic_texture = null
+		gm.roughness = 0.7
+		gm.roughness_texture = null
+		gm.metallic_specular = 0.15
+		(glass as MeshInstance3D).set_surface_override_material(0, gm)
 
 
 ## Дверь из холла: полотно из модуля стены — на петлю.
