@@ -2240,7 +2240,7 @@ position = Vector3(0, 1.7, 0)
 
 [node name="Picture" type="Sprite3D" parent="Portrait3"]
 texture = ExtResource("e9")
-pixel_size = 0.00105
+pixel_size = 0.000525
 shaded = true
 double_sided = false
 rotation = Vector3(0, 1.5708, 0)
