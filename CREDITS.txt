@@ -44,6 +44,12 @@
   giggle — «Creepy girl laugh», IENBA, CC0; «Child giggle», RaspberryTickle, CC0;
            «Creepy child giggle with reverb», wolfdoctor, CC BY 4.0 (freesound.org/s/578760)
 - Ванная «The Bathroom (Free)» — Evan, Sketchfab, CC BY 4.0 (текстуры уменьшены).
+- Портреты в коридоре (состарены и затемнены, глаза выцарапаны):
+  Вера — Шандор Бихари, «Старая женщина» (ок. 1900), общественное достояние (Wikimedia Commons,
+  File:Bihari, Sandor - Old Woman (ca 1900).jpg);
+  Степан — Архип Куинджи, «Портрет неизвестного» (1890–1895), общественное достояние (Wikimedia Commons,
+  File:Kuindzhi Portrait of unknown man 1890 1895.jpg);
+  Аня — рендер девочки-призрака из игры (модель adhamasalah, CC BY 4.0, см. выше).
 - Спальня бабушки Веры «Abandoned mansion bedroom» — Katydid, Sketchfab (Fab), Free Standard License
   (створки дверей отделены и посажены на петли; модель целиком, без переделки).
 
