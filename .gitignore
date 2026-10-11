@@ -1186,6 +1186,7 @@
 !/scripts/inventory.gd
 !/scripts/inventory.gd.uid
 !/scripts/jaw_open.gd
+!/scripts/jaw_open.gd.uid
 !/scripts/level.gd
 !/scripts/level.gd.uid
 !/scripts/mannequin.gd
@@ -1211,7 +1212,9 @@
 !/scripts/trailer.gd
 !/scripts/trailer.gd.uid
 !/scripts/vera.gd
+!/scripts/vera.gd.uid
 !/scripts/vera_showcase.gd
+!/scripts/vera_showcase.gd.uid
 !/scripts/vintage.gd
 !/scripts/vintage.gd.uid
 !/shaders/crt.gdshader
@@ -1231,6 +1234,7 @@
 !/shaders/spirit.gdshader
 !/shaders/spirit.gdshader.uid
 !/shaders/vera.gdshader
+!/shaders/vera.gdshader.uid
 !/textures/attic_photo.png
 !/textures/attic_photo.png.import
 !/textures/cobweb.png
