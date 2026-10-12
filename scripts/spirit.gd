@@ -7,7 +7,7 @@ extends Node3D
 ## run — бег, reach — тянет руку.
 
 const HEIGHT := 1.7          ## рост, м (один для всех появлений призрака)
-const EYE_OFS := Vector3(0.031, 0.095, 0.097)   ## глаза от кости головы (м): в стороны, вверх, вперёд
+const EYE_OFS := Vector3(0.017, 0.098, 0.1)   ## глаза от кости головы (м): в стороны, вверх, вперёд
 const ANIMS := ["idle", "zidle", "walk", "run", "reach"]
 
 var model: Node3D
@@ -84,24 +84,22 @@ func set_speed(s: float) -> void:
 	ap.speed_scale = s
 
 
-## Блики глаз: две крошечные холодные точки у головы — в темноте видно, что она смотрит.
+## Глаза: две светящиеся точки на лице (между прядями), жёлто-белые с багровым ореолом,
+## мерцают; в крике вспыхивают ярче. Волосы перед лицом их перекрывают.
 func _make_eyes() -> void:
 	var head := sk.find_bone("mixamorig_Head")
 	var ba := BoneAttachment3D.new()
 	ba.bone_idx = head
 	sk.add_child(ba)
 	var hp := sk.get_bone_global_rest(head)
-	var em := StandardMaterial3D.new()
-	em.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	em.albedo_color = Color(0.85, 0.9, 0.8)
-	var sph := SphereMesh.new()
-	sph.radius = 0.0045 / model.scale.x
-	sph.height = sph.radius * 2.0
-	sph.radial_segments = 8
-	sph.rings = 4
+	var q := QuadMesh.new()
+	q.size = Vector2(0.03, 0.03)
 	for sx in [-1.0, 1.0]:
 		var e := MeshInstance3D.new()
-		e.mesh = sph
+		e.mesh = q
+		var em := ShaderMaterial.new()
+		em.shader = preload("res://shaders/spirit_eye.gdshader")
+		em.set_shader_parameter("seed", randf() * 10.0)
 		e.material_override = em
 		e.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		ba.add_child(e)
@@ -111,11 +109,13 @@ func _make_eyes() -> void:
 	set_eyes(0.45)
 
 
-## Яркость бликов глаз (0 — не видно).
+## Яркость глаз (0 — не видно).
+var eye_power := 0.45
 func set_eyes(v: float) -> void:
+	eye_power = v
 	for e in eyes:
 		e.visible = v > 0.01
-		(e.material_override as StandardMaterial3D).albedo_color = Color(0.85, 0.9, 0.8) * v
+		(e.material_override as ShaderMaterial).set_shader_parameter("power", v)
 
 
 ## Дрожь (0..1) — например, перед броском.
@@ -140,6 +140,10 @@ func scream(hold := 0.7) -> void:
 	tw.tween_property(self, "mouth", 0.0, 0.9).set_trans(Tween.TRANS_SINE)
 	tw.parallel().tween_property(self, "grimace", 0.0, 1.2)
 	life.shiver = 1.0
+	if eye_power > 0.01:
+		var e0 := eye_power
+		set_eyes(e0 * 2.4)
+		get_tree().create_timer(hold + 0.3).timeout.connect(func(): set_eyes(e0))
 	get_tree().create_timer(hold + 0.3).timeout.connect(func(): life.shiver = 0.0)
 
 
