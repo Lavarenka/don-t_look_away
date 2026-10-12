@@ -159,27 +159,36 @@ func set_lift(v: float) -> void:
 ## сквозь неё виден фон, тело «дышит» пятнами плотности, по краю холодный ореол, ноги тают к полу.
 ## Шейдер — тот же spirit.gdshader с добавленной прозрачностью (собирается один раз).
 static var _ghost_shader: Shader
+## Прозрачность — «alpha hash» (рассыпчатое зерно вместо смешивания): рисуется как непрозрачная,
+## с предпроходом глубины, поэтому 200 тыс. треугольников волос не пересчитываются слоями — нет просадки FPS.
 func set_ghostly(v: float) -> void:
 	if v <= 0.0:
-		mat.shader = load("res://shaders/spirit.gdshader")
+		if mat.shader == _ghost_shader:
+			mat.shader = load("res://shaders/spirit.gdshader")
 		return
+	if mat.shader != ghost_shader():
+		mat.shader = _ghost_shader
+		for mi in find_children("*", "GeometryInstance3D", true, false):
+			(mi as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mat.set_shader_parameter("ghost", v)
+
+
+static func ghost_shader() -> Shader:
 	if _ghost_shader == null:
 		var code: String = (load("res://shaders/spirit.gdshader") as Shader).code
-		code = code.replace("shader_type spatial;", "shader_type spatial;\nrender_mode depth_draw_always, cull_back;\nuniform float ghost = 0.5;\nvarying float v_h;")
+		code = code.replace("shader_type spatial;", "shader_type spatial;\nrender_mode cull_back;\nuniform float ghost = 0.5;\nvarying float v_h;")
 		code = code.replace("void vertex() {", "void vertex() {\n\tv_h = (MODEL_MATRIX * vec4(VERTEX, 1.0)).y - NODE_POSITION_WORLD.y;")
 		code = code.replace("\tif (debug == 1)", "\tfloat gfr = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 2.0);\n" \
 			+ "\tfloat breath = vnoise(UV * 5.0 + vec2(TIME * 0.21, -TIME * 0.17)) * 0.6 + vnoise(UV * 17.0 - TIME * 0.4) * 0.4;\n" \
 			+ "\tfloat a = mix(0.72, 0.28, ghost) + breath * 0.3 + gfr * 0.35;\n" \
 			+ "\ta *= smoothstep(0.0, 0.5, v_h);\n" \
 			+ "\tALPHA = clamp(a, 0.0, 1.0);\n" \
+			+ "\tALPHA_HASH_SCALE = 1.0;\n" \
 			+ "\tEMISSION += vec3(0.4, 0.5, 0.65) * gfr * ghost * 0.35;\n" \
 			+ "\tif (debug == 1)")
 		_ghost_shader = Shader.new()
 		_ghost_shader.code = code
-	mat.shader = _ghost_shader
-	mat.set_shader_parameter("ghost", v)
-	for mi in find_children("*", "GeometryInstance3D", true, false):
-		(mi as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return _ghost_shader
 
 
 ## Видна только на заданном слое отрисовки (например, только в зеркале).

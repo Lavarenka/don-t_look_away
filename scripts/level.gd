@@ -674,33 +674,56 @@ func _glance_ghost() -> void:
 
 ## Первое появление: за проёмом зала, сгорбившись, медленно проходит полупрозрачная фигура
 ## (через весь проём, слева направо) и растворяется. Отдельный призрак — shade не трогаем.
+## Создаётся заранее (_prep_pass_ghost), чтобы в момент появления не было подгрузки и компиляции шейдера.
+var pass_g: Node3D
+var pass_lamp: OmniLight3D
+const PASS_A := Vector3(-1.4, 0, -1.6)
+const PASS_B := Vector3(1.6, 0, -1.6)
+
+
+func _prep_pass_ghost() -> void:
+	pass_g = preload("res://scripts/spirit.gd").new()
+	add_child(pass_g)
+	pass_g.set_ghostly(0.55)
+	pass_g.set_blood(0.2)
+	pass_g.set_eyes(0.0)
+	pass_g.mat.set_shader_parameter("rim", 0.18)
+	pass_lamp = OmniLight3D.new()          # еле заметный холодный отсвет — видно и без фонаря
+	pass_lamp.light_color = Color(0.6, 0.7, 1.0)
+	pass_lamp.light_energy = 0.0
+	pass_lamp.omni_range = 1.8
+	pass_lamp.position = Vector3(0, 1.3, 0.3)
+	pass_g.add_child(pass_lamp)
+	# «прогрев»: пару кадров рисуем её крошечной в проёме — шейдер скомпилируется сейчас, а не в момент появления
+	pass_g.global_position = PASS_A.lerp(PASS_B, 0.5) + Vector3(0, 1.2, 0)
+	pass_g.scale = Vector3.ONE * 0.001
+	pass_g.play("walk", 0.9, 0.0)
+	for i in 3:
+		await get_tree().process_frame
+	pass_g.visible = false
+	pass_g.scale = Vector3.ONE
+	pass_g.set_process(false)
+	pass_g.ap.stop()
+
+
 func _doorway_pass() -> void:
-	var a := Vector3(-1.4, 0, -1.6)
-	var b := Vector3(1.6, 0, -1.6)
-	var g: Node3D = preload("res://scripts/spirit.gd").new()
-	add_child(g)
-	g.global_position = a
-	g.rotation.y = atan2(b.x - a.x, b.z - a.z)
+	var g := pass_g
+	g.global_position = PASS_A
+	g.rotation.y = atan2(PASS_B.x - PASS_A.x, PASS_B.z - PASS_A.z)
 	g.set_ghostly(0.55)
-	g.set_blood(0.2)
-	g.set_eyes(0.0)
-	g.mat.set_shader_parameter("rim", 0.18)
 	g.play("walk", 0.9, 0.0)
-	var lamp := OmniLight3D.new()          # еле заметный холодный отсвет — видно и без фонаря
-	lamp.light_color = Color(0.6, 0.7, 1.0)
-	lamp.light_energy = 0.35
-	lamp.omni_range = 1.8
-	lamp.position = Vector3(0, 1.3, 0.3)
-	g.add_child(lamp)
+	g.visible = true
+	g.set_process(true)
+	pass_lamp.light_energy = 0.35
 	var dur := 3.6
 	var tw := create_tween()
-	tw.tween_property(g, "global_position", b, dur)
+	tw.tween_property(g, "global_position", PASS_B, dur)
 	tw.parallel().tween_method(func(v: float): g.set_ghostly(v), 0.55, 0.95, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tw.parallel().tween_property(lamp, "light_energy", 0.0, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tw.tween_callback(g.queue_free)
+	tw.parallel().tween_property(pass_lamp, "light_energy", 0.0, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_callback(func(): g.visible = false; g.ap.stop(); g.set_process(false))
 	_sfx3d("whisper", Vector3(0.2, 1.4, -1.5), -10.0, 0.9)
 	for k in 4:
-		get_tree().create_timer(0.5 + k * 0.8).timeout.connect(func(): _sfx3d("step%d" % (randi() % 4), a.lerp(b, (0.5 + k * 0.8) / dur), -14.0, 0.8))
+		get_tree().create_timer(0.5 + k * 0.8).timeout.connect(func(): _sfx3d("step%d" % (randi() % 4), PASS_A.lerp(PASS_B, (0.5 + k * 0.8) / dur), -14.0, 0.8))
 
 
 func _shade_show(pos: Vector3, mode: String) -> void:
@@ -1157,6 +1180,7 @@ func _setup_girl() -> void:
 	shade.add_child(sh)
 	sh.play("idle", 0.4)
 	sh.set_blood(0.35)
+	_prep_pass_ghost()
 
 
 func _girl_anim(speed: float) -> void:
