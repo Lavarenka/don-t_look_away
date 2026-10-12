@@ -270,6 +270,7 @@ func _face_pop() -> void:
 	# резко и громко: удар, короткий крик, злой шёпот, тряска, красная вспышка
 	L._sfx("sting", 3.0, 0.9)
 	L._sfx("scream", -2.0, 1.35)
+	_anya.scream(0.8)
 	L._sfx("whisper_harsh", 0.0)
 	L._sfx("heartbeat", -2.0, 1.25)
 	L.player.shake = 0.9
@@ -313,6 +314,8 @@ func ghost_lunge(g: Node3D, after := Callable(), keep_pos := false) -> void:
 	face.position = Vector3(0, 1.45, 0.55)
 	g.add_child(face)
 	L._sfx("scream", 0.0, 1.25)
+	if g.has_method("scream"):
+		g.scream(0.6)
 	L._sfx("sting", 0.0)
 	var to := cam.global_position + fwd * 0.38
 	create_tween().tween_property(g, "global_position", Vector3(to.x, feet_y + 0.06, to.z), 0.16).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)

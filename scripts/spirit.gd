@@ -21,6 +21,17 @@ var _arms := {}
 var life: SkeletonModifier3D      ## подёргивания головы, дыхание, дрожь (spirit_life.gd)
 var eyes: Array[MeshInstance3D] = []   ## еле видные блики глаз сквозь волосы
 
+## Мимика (челюсть, уголки рта) — через шейдер, без новых костей.
+## Откатить: FACE = false — лицо снова неподвижное, всё остальное как раньше.
+const FACE := true
+var mouth := 0.0             ## 0..1: рот раскрыт (крик); анимировать через set_mouth/scream
+var grimace := 0.0           ## 0..1: уголки рта вниз (злость, плач)
+var murmur := true           ## сама по себе иногда беззвучно шевелит губами
+var _head_b := -1
+var _mur := 0.0
+var _mur_next := 3.0
+var _mur_to := 0.0
+
 
 func _ready() -> void:
 	model = load("res://models/spirit/spirit.fbx").instantiate()
@@ -43,6 +54,9 @@ func _ready() -> void:
 	life = preload("res://scripts/spirit_life.gd").new()
 	sk.add_child(life)
 	_make_eyes()
+	_head_b = sk.find_bone("mixamorig_Head")
+	mat.set_shader_parameter("head_k", model.scale.x)
+	sk.skeleton_updated.connect(_head_to_shader)
 	play("idle")
 
 
@@ -109,6 +123,26 @@ func set_shiver(v: float) -> void:
 	life.shiver = v
 
 
+## Рот: 0 — закрыт, 1 — раскрыт. sec > 0 — плавно.
+func set_mouth(v: float, sec := 0.0) -> void:
+	if sec <= 0.0:
+		mouth = v
+	else:
+		create_tween().tween_property(self, "mouth", v, sec).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+
+## Крик: рот резко распахивается, дрожит, потом медленно закрывается.
+func scream(hold := 0.7) -> void:
+	var tw := create_tween()
+	tw.tween_property(self, "mouth", 1.0, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(self, "grimace", 1.0, 0.1)
+	tw.tween_interval(hold)
+	tw.tween_property(self, "mouth", 0.0, 0.9).set_trans(Tween.TRANS_SINE)
+	tw.parallel().tween_property(self, "grimace", 0.0, 1.2)
+	life.shiver = 1.0
+	get_tree().create_timer(hold + 0.3).timeout.connect(func(): life.shiver = 0.0)
+
+
 func set_blood(v: float) -> void:
 	mat.set_shader_parameter("blood", v)
 
@@ -153,6 +187,7 @@ func set_layer(mask: int) -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
+	_update_face(delta)
 	# парит: плавно поднимается и медленно покачивается вверх-вниз
 	_float = move_toward(_float, float_h, delta * 0.6)
 	model.position.y = _float + (sin(_t * 1.4) * 0.035 if _float > 0.01 else 0.0)
@@ -168,3 +203,36 @@ func _process(delta: float) -> void:
 		mat.set_shader_parameter(k + "1", p1)
 		mat.set_shader_parameter(k + "2", p2)
 		mat.set_shader_parameter("arm_up_" + k, up)
+
+
+## Губы шевелятся сами: изредка чуть приоткрывает рот и беззвучно что-то шепчет, потом снова замирает.
+func _update_face(delta: float) -> void:
+	if not FACE:
+		mat.set_shader_parameter("mouth", 0.0)
+		mat.set_shader_parameter("grimace", 0.0)
+		return
+	if murmur:
+		_mur_next -= delta
+		if _mur_next <= 0.0:
+			_mur_to = randf_range(0.08, 0.2) if _mur_to == 0.0 else 0.0
+			_mur_next = randf_range(1.2, 2.5) if _mur_to > 0.0 else randf_range(3.0, 8.0)
+		var tgt := _mur_to
+		if _mur_to > 0.0:            # шепчет: губы мелко двигаются
+			tgt *= 0.55 + 0.45 * absf(sin(_t * 7.3) * sin(_t * 3.1 + 1.0))
+		_mur = move_toward(_mur, tgt, delta * 0.8)
+	else:
+		_mur = move_toward(_mur, 0.0, delta)
+	var m := maxf(mouth, _mur)
+	if mouth > 0.3:                  # в крике челюсть подрагивает
+		m += sin(_t * 41.0) * 0.04 * mouth
+	mat.set_shader_parameter("mouth", m)
+	mat.set_shader_parameter("grimace", grimace)
+
+
+## Поза головы — уже после «живости» (рывки головы), иначе рот съезжал бы при рывках.
+func _head_to_shader() -> void:
+	if not FACE:
+		return
+	var hp := sk.get_bone_global_pose(_head_b)
+	mat.set_shader_parameter("head_inv", Projection(hp.affine_inverse()))
+	mat.set_shader_parameter("head_rot", hp.basis.orthonormalized())

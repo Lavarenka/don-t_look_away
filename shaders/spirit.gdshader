@@ -16,9 +16,38 @@ uniform float pallor = 0.85;       // насколько кожа мертвен
 uniform float rim = 0.06;          // холодный ореол по краю силуэта (скрипт усиливает при испуге)
 uniform int debug = 0;
 varying vec4 masks;
+// мимика (scripts/spirit.gd, FACE): челюсть и уголки рта, в системе кости головы (метры)
+uniform mat4 head_inv;             // обратная поза кости головы (пространство скелета)
+uniform mat3 head_rot;             // поворот кости головы
+uniform float head_k = 1.0;        // масштаб модели: единицы скелета -> метры
+uniform float mouth = 0.0;         // 0 — закрыт, 1 — раскрыт в крике
+uniform float grimace = 0.0;       // уголки рта вниз, губы чуть разжаты
+uniform vec3 mouth_at = vec3(0.0, 0.053, 0.09);
+varying float v_jaw;
 
 void vertex() {
 	masks = COLOR;
+	v_jaw = 0.0;
+	if (mouth + grimace > 0.001) {
+		vec3 hp = (head_inv * vec4(VERTEX, 1.0)).xyz * head_k;
+		vec3 m = hp - mouth_at;
+		// лицо: перед головой, не волосы, по ширине рта/подбородка
+		float face = smoothstep(0.0, 0.035, hp.z) * (1.0 - COLOR.b) * (1.0 - smoothstep(0.02, 0.034, abs(m.x)));
+		// нижняя челюсть: ниже линии рта и выше шеи
+		float w = face * smoothstep(0.003, -0.004, m.y) * smoothstep(-0.085, -0.055, m.y);
+		vec3 hinge = vec3(0.0, mouth_at.y + 0.015, mouth_at.z - 0.085);
+		vec3 r = hp - hinge;
+		float a = mouth * 0.36;
+		float c = cos(a); float sn = sin(a);
+		vec3 rr = vec3(r.x, r.y * c - r.z * sn, r.y * sn + r.z * c);
+		vec3 d = (hinge + rr - hp) * w;
+		// уголки рта вниз
+		float corner = face * smoothstep(0.008, 0.022, abs(m.x)) * (1.0 - smoothstep(0.0, 0.018, abs(m.y)));
+		d.y -= corner * 0.006 * grimace;
+		d.y -= w * 0.004 * grimace;
+		VERTEX += head_rot * d / head_k;
+		v_jaw = w;
+	}
 	vec3 down = normalize((inverse(MODEL_MATRIX) * vec4(0.0, -1.0, 0.0, 0.0)).xyz);
 	vec3 up = -down;
 	float t = TIME;
@@ -94,6 +123,12 @@ void fragment() {
 	// холодный ореол по краю силуэта — видна в темноте, хоть и не освещена
 	float fr = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
 	EMISSION = vec3(0.45, 0.55, 0.7) * fr * rim * (1.0 - hair * 0.7);
+	// раскрытый рот: растянутая полоса между губами — тёмная глотка
+	float gap = smoothstep(0.08, 0.3, v_jaw) * smoothstep(0.98, 0.7, v_jaw) * clamp(mouth * 3.0 + grimace * 0.5, 0.0, 1.0);
+	ALBEDO = mix(ALBEDO, vec3(0.025, 0.008, 0.008), gap);
+	ROUGHNESS = mix(ROUGHNESS, 0.35, gap);
+	EMISSION *= 1.0 - gap;
+	if (debug >= 4) ALBEDO = mix(ALBEDO, vec3(1.0, 0.0, 0.0), v_jaw);
 	if (debug == 1) ALBEDO = masks.rgb + vec3(masks.a, masks.a, 0.0);
 	if (debug == 2) ALBEDO = vec3(hair, skin, red);
 	if (debug == 3 && hair > 0.5) discard;

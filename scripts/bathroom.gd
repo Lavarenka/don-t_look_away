@@ -789,6 +789,7 @@ func _drain() -> void:
 	await rise.finished
 	L._sfx("sting", 0.0, 0.9)
 	L._sfx("scream", -8.0, 1.2)
+	g.scream(0.8)
 	L.player.shake = 0.6
 	await get_tree().create_timer(1.1).timeout
 	L.player.flicker = 1.0

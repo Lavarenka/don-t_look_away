@@ -290,6 +290,7 @@ func _zombie_start() -> void:
 	run_girl.play("run", 2.0, 0.0)
 	run_girl.set_blood(0.8)
 	_sfx("scream", -2.0, 1.35)
+	run_girl.scream(1.2)
 	player.flicker = 0.15
 	bulb.light_energy = 0.0
 

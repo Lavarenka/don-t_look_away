@@ -409,6 +409,7 @@ func _under_bed() -> void:
 	girl.visible = true
 	L._sfx("sting", 2.0)
 	L._sfx("scream", 0.0, 1.25)
+	L.girl_sp.scream(0.7)
 	p.shake = 0.9
 	L.red_flash.color.a = 0.5
 	create_tween().tween_property(L.red_flash, "color:a", 0.0, 0.8)
@@ -613,6 +614,7 @@ func _finale_count() -> void:
 	p.shake = 1.0
 	L._sfx("sting", 2.0)
 	L._sfx("scream", 0.0, 1.15)
+	L.girl_sp.scream(0.9)
 	L.red_flash.color.a = 0.3
 	create_tween().tween_property(L.red_flash, "color:a", 0.0, 0.9)
 	await get_tree().create_timer(0.9).timeout
