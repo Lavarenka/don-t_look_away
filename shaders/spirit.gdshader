@@ -23,11 +23,15 @@ uniform float head_k = 1.0;        // масштаб модели: единиц�
 uniform float mouth = 0.0;         // 0 — закрыт, 1 — раскрыт в крике
 uniform float grimace = 0.0;       // уголки рта вниз, губы чуть разжаты
 uniform vec3 mouth_at = vec3(0.0, 0.053, 0.09);
+uniform vec3 mouth_col : source_color = vec3(0.13, 0.01, 0.008);   // цвет полости у губ
+uniform float mouth_deep = 1.0;    // 0 — вся полость mouth_col, 1 — в глубине чернеет
 varying float v_jaw;
+varying float v_mx;          // 1 — середина рта, 0 — у краёв лица
 
 void vertex() {
 	masks = COLOR;
 	v_jaw = 0.0;
+	v_mx = 0.0;
 	if (mouth + grimace > 0.001) {
 		vec3 hp = (head_inv * vec4(VERTEX, 1.0)).xyz * head_k;
 		vec3 m = hp - mouth_at;
@@ -47,6 +51,7 @@ void vertex() {
 		d.y -= w * 0.004 * grimace;
 		VERTEX += head_rot * d / head_k;
 		v_jaw = w;
+		v_mx = 1.0 - smoothstep(0.01, 0.024, abs(m.x));
 	}
 	vec3 down = normalize((inverse(MODEL_MATRIX) * vec4(0.0, -1.0, 0.0, 0.0)).xyz);
 	vec3 up = -down;
@@ -124,9 +129,13 @@ void fragment() {
 	float fr = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
 	EMISSION = vec3(0.45, 0.55, 0.7) * fr * rim * (1.0 - hair * 0.7);
 	// раскрытый рот: растянутая полоса между губами — тёмная глотка
-	float gap = smoothstep(0.08, 0.3, v_jaw) * smoothstep(0.98, 0.7, v_jaw) * clamp(mouth * 3.0 + grimace * 0.5, 0.0, 1.0);
-	ALBEDO = mix(ALBEDO, vec3(0.025, 0.008, 0.008), gap);
-	ROUGHNESS = mix(ROUGHNESS, 0.35, gap);
+	float gap = smoothstep(0.08, 0.3, v_jaw) * smoothstep(0.98, 0.7, v_jaw) * clamp(mouth * 3.0 + grimace * 0.5, 0.0, 1.0) * smoothstep(0.0, 0.5, v_mx);
+	// у губ — мокрое тёмно-красное (кровь, дёсны), в глубине — чёрная глотка
+	float deep = smoothstep(0.34, 0.06, abs(v_jaw - 0.5)) * smoothstep(0.3, 0.8, v_mx) * mouth_deep;
+	vec3 throat = mix(mouth_col, vec3(0.008, 0.002, 0.002), deep);
+	ALBEDO = mix(ALBEDO, throat, gap);
+	ROUGHNESS = mix(ROUGHNESS, 0.18, gap);
+	SPECULAR = mix(SPECULAR, 0.7, gap * (1.0 - deep));
 	EMISSION *= 1.0 - gap;
 	if (debug >= 4) ALBEDO = mix(ALBEDO, vec3(1.0, 0.0, 0.0), v_jaw);
 	if (debug == 1) ALBEDO = masks.rgb + vec3(masks.a, masks.a, 0.0);
