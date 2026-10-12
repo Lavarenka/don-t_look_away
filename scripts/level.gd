@@ -671,6 +671,37 @@ func _glance_ghost() -> void:
 	player.flicker = 0.2
 
 
+## Первое появление: за проёмом зала, сгорбившись, медленно проходит полупрозрачная фигура
+## (через весь проём, слева направо) и растворяется. Отдельный призрак — shade не трогаем.
+func _doorway_pass() -> void:
+	var a := Vector3(-1.4, 0, -1.6)
+	var b := Vector3(1.6, 0, -1.6)
+	var g: Node3D = preload("res://scripts/spirit.gd").new()
+	add_child(g)
+	g.global_position = a
+	g.rotation.y = atan2(b.x - a.x, b.z - a.z)
+	g.set_ghostly(0.55)
+	g.set_blood(0.2)
+	g.set_eyes(0.0)
+	g.mat.set_shader_parameter("rim", 0.18)
+	g.play("walk", 0.9, 0.0)
+	var lamp := OmniLight3D.new()          # еле заметный холодный отсвет — видно и без фонаря
+	lamp.light_color = Color(0.6, 0.7, 1.0)
+	lamp.light_energy = 0.35
+	lamp.omni_range = 1.8
+	lamp.position = Vector3(0, 1.3, 0.3)
+	g.add_child(lamp)
+	var dur := 3.6
+	var tw := create_tween()
+	tw.tween_property(g, "global_position", b, dur)
+	tw.parallel().tween_method(func(v: float): g.set_ghostly(v), 0.55, 0.95, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(lamp, "light_energy", 0.0, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_callback(g.queue_free)
+	_sfx3d("whisper", Vector3(0.2, 1.4, -1.5), -10.0, 0.9)
+	for k in 4:
+		get_tree().create_timer(0.5 + k * 0.8).timeout.connect(func(): _sfx3d("step%d" % (randi() % 4), a.lerp(b, (0.5 + k * 0.8) / dur), -14.0, 0.8))
+
+
 func _shade_show(pos: Vector3, mode: String) -> void:
 	_shade_light(mode == "glance")
 	shade.global_position = pos
@@ -803,7 +834,7 @@ func _check_events() -> void:
 		var p := Vector3(0.2, 0, -1.2)
 		if player.forward().angle_to(p + Vector3(0, 1.4, 0) - player.cam.global_position) < 0.35:
 			events["doorway"] = true
-			_shade_show(p, "doorway")
+			_doorway_pass()
 	# 3. зомби: игрок светит в конец коридора — он с рёвом несётся из темноты
 	if RUNNER_ON and phase == "corridor" and events.has("corridor_step") and not shade.visible and not events.has("zombie") \
 			and player.global_position.z > -11.0 and player.forward().z < -0.85 and player.is_light_lit():
