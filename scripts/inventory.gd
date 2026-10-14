@@ -38,6 +38,8 @@ const POSE := {"key": Vector3(PI / 2, 0, 0.35), "bedkey": Vector3(PI / 2, 0, 0.3
 ## текст записки → её заголовок в инвентаре
 const NOTE_TITLES := {"LVL_01": "INV_N_GRANDMA", "LVL_02": "INV_N_CABINET", "NUR_11": "INV_N_ANYA",
 	"LVL_13": "INV_N_PHOTO75", "LVL_14": "INV_N_PHOTO76", "LVL_15": "INV_N_PHOTO77", "LVL_52": "INV_N_PHOTO79"}
+## записки-фотографии: сам снимок показывается под текстом
+const NOTE_IMAGES := {"LVL_52": "res://textures/attic_photo.png"}
 
 var L: Node
 var items: Array[String] = []
@@ -64,6 +66,7 @@ var _row: HBoxContainer
 var _empty: Label
 var _note_title: Label
 var _note_text: Label
+var _note_img: TextureRect
 var _keys: Label
 var _toast: Label
 
@@ -320,6 +323,7 @@ func _refresh() -> void:
 		n.visible = on_items and not items.is_empty()
 	_note_title.visible = not on_items and not notes.is_empty()
 	_note_text.visible = _note_title.visible
+	_note_img.visible = false
 	_empty.visible = (on_items and items.is_empty()) or (not on_items and notes.is_empty())
 	_empty.text = tr("INV_EMPTY") if on_items else tr("INV_NOTES_EMPTY")
 	if on_items:
@@ -334,6 +338,9 @@ func _refresh() -> void:
 			_note_title.text = tr(NOTE_TITLES.get(k, "INV_NOTE"))
 			_note_text.text = _note_txt.get(k, tr(k))
 			_note_text.add_theme_font_size_override("font_size", 15 if _note_text.text.length() > 380 else 18)
+			if NOTE_IMAGES.has(k):
+				_note_img.texture = load(NOTE_IMAGES[k])
+				_note_img.visible = true
 
 
 func _show_items() -> void:
@@ -612,6 +619,15 @@ func _build_ui() -> void:
 	_note_text.position = Vector2(-360, 156)
 	_note_text.size = Vector2(720, 440)
 	_root.add_child(_note_text)
+	_note_img = TextureRect.new()
+	_note_img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_note_img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_note_img.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_note_img.position = Vector2(-280, 238)
+	_note_img.size = Vector2(560, 424)
+	_note_img.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_note_img.visible = false
+	_root.add_child(_note_img)
 
 	_keys = _label(15, Color(0.55, 0.52, 0.47))
 	_keys.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
