@@ -324,28 +324,115 @@ func _place_mcam() -> void:
 
 
 # ---------------------------------------------------------------- свет
-## Дверь захлопнулась: лампы гаснут по одной (от двери вглубь), ночник остаётся.
+## Дверь захлопнулась: гаснет всё, кроме первого светильника — он моргает. Дойдёшь до него — загорается
+## следующий по пути, а позади гаснет. Из темноты (только оттуда) — звуки, будто там кто-то есть:
+## шаги, дыхание, скрежет, шёпот; свет ушёл вперёд — звуки перебираются в темноту за спиной.
+const PATH := [1, 0, 6, 2, 3, NIGHT_LAMP]    ## светильники по пути: коридор → угол → дверь спальни → ночник
+const DARK_SFX := [["step0", -4.0, 0.7], ["step2", -4.0, 0.65], ["breath_dark", -6.0, 1.0], ["scratch", -6.0, 0.75],
+	["whisper", -8.0, 0.8], ["drag", -6.0, 0.7], ["knock", -8.0, 0.6], ["creak", -6.0, 0.6]]
+var path_i := -1                     ## какой светильник сейчас горит (индекс в PATH)
+var _base := {}                      ## исходная яркость светильников
+var _dark_t := 3.0
+var _lamp_t := 0.0
+
+
 func lights_out() -> void:
 	started = true
-	var order: Array = []
 	for i in B.lamps.size():
-		if i != NIGHT_LAMP:
-			order.append(i)
-	var p: Vector3 = L.player.global_position
-	order.sort_custom(func(a, b): return (B.lamps[a] as Node3D).global_position.distance_to(p) < (B.lamps[b] as Node3D).global_position.distance_to(p))
-	await get_tree().create_timer(1.6).timeout
-	for i in order:
-		var l: OmniLight3D = B.lamps[i]
-		var e := l.light_energy
-		for k in 3:
-			l.light_energy = 0.0
-			await get_tree().create_timer(randf_range(0.04, 0.09)).timeout
-			l.light_energy = e
-			await get_tree().create_timer(randf_range(0.04, 0.12)).timeout
-		l.light_energy = 0.0
-		L._sfx3d("click", l.global_position, -10.0, randf_range(0.7, 0.9), true)
-		await get_tree().create_timer(randf_range(0.5, 0.9)).timeout
+		_base[i] = (B.lamps[i] as OmniLight3D).light_energy
+	await get_tree().create_timer(0.8).timeout
+	# всё гаснет разом с хлопком, первый светильник остаётся и моргает
+	for i in B.lamps.size():
+		if i != PATH[0]:
+			(B.lamps[i] as OmniLight3D).light_energy = 0.0
+	L._sfx3d("click", L.player.global_position + Vector3(0, 2.0, 0), -2.0, 0.6, true)
+	path_i = 0
+	_dark_t = 2.5
 	L._set_objective("BR_OBJ2")
+
+
+func _lamp(i: int) -> OmniLight3D:
+	return B.lamps[PATH[i]]
+
+
+## Свет ведёт вперёд: подошёл к горящему — загорается следующий, этот гаснет; в темноте сзади оживают звуки.
+func _update_path(delta: float) -> void:
+	if path_i < 0:
+		return
+	_lamp_t += delta
+	var cur := _lamp(path_i)
+	var last := path_i == PATH.size() - 1
+	# горящий светильник неровно моргает (ночник в конце — спокойнее)
+	var e: float = _base[PATH[path_i]]
+	var f := 1.0
+	if not last:
+		f = 0.0 if randf() < 0.06 else randf_range(0.65, 1.05)
+		if fmod(_lamp_t, 3.7) < 0.25:
+			f *= randf_range(0.0, 0.4)
+	cur.light_energy = e * f
+	if last:
+		return
+	var p: Vector3 = L.player.global_position
+	var lp := cur.global_position
+	if Vector2(p.x - lp.x, p.z - lp.z).length() > 1.7:
+		return
+	path_i += 1
+	_lamp_t = 0.0
+	var nxt := _lamp(path_i)
+	# следующий загорается с потрескиванием, этот через миг гаснет — и в его темноте сразу кто-то есть
+	L._sfx3d("click", nxt.global_position, -8.0, 1.2, true)
+	var target: float = _base[PATH[path_i]]
+	var tw := create_tween()
+	nxt.light_energy = 0.0
+	for k in 3:
+		tw.tween_property(nxt, "light_energy", target * 0.8, 0.05)
+		tw.tween_property(nxt, "light_energy", 0.0, 0.07)
+	tw.tween_property(nxt, "light_energy", target, 0.3)
+	var old := cur
+	get_tree().create_timer(0.7).timeout.connect(func():
+		old.light_energy = 0.0
+		L._sfx3d("click", old.global_position, -10.0, 0.7, true)
+		get_tree().create_timer(1.2).timeout.connect(func():
+			var s: Array = DARK_SFX.pick_random()
+			L._sfx3d(s[0], old.global_position + Vector3(randf_range(-0.8, 0.8), -0.6, randf_range(-0.8, 0.8)), s[1], s[2], true)))
+
+
+## Где темно — там и звуки: точка подальше от горящего света, лучше за спиной у игрока.
+func _dark_sounds(delta: float) -> void:
+	if path_i < 0:
+		return
+	_dark_t -= delta
+	if _dark_t > 0.0:
+		return
+	_dark_t = randf_range(2.5, 5.5) if not lit else randf_range(9.0, 18.0)
+	var p: Vector3 = L.player.global_position
+	var lit_pos := _lamp(path_i).global_position
+	var back: Vector3 = -L.player.forward()
+	back.y = 0.0
+	var best := Vector3.ZERO
+	var best_s := -INF
+	for k in 12:
+		var a := randf() * TAU
+		var r := randf_range(2.5, 6.0)
+		var c := p + Vector3(cos(a), 0, sin(a)) * r
+		c.x = clampf(c.x, -16.2, -5.7)                    # внутри спальни и её коридора
+		c.z = clampf(c.z, -36.2, -27.8)
+		c.y = Y2 + randf_range(0.2, 1.6)
+		var dl := Vector2(c.x - lit_pos.x, c.z - lit_pos.z).length()
+		if dl < 2.4 or (lit and Vector2(c.x - p.x, c.z - p.z).length() < 4.0):
+			continue                                      # на свету (и рядом со свечой) никого нет
+		var score := dl + (c - p).normalized().dot(back.normalized()) * 2.0 + randf()
+		if score > best_s:
+			best_s = score
+			best = c
+	if best_s == -INF:
+		return
+	var s: Array = DARK_SFX.pick_random()
+	L._sfx3d(s[0], best, s[1], s[2] * randf_range(0.9, 1.1), true)
+	if s[0].begins_with("step"):                         # шаги — несколько подряд, кто-то ходит
+		for k in randi_range(2, 4):
+			var q := best + Vector3(randf_range(-0.4, 0.4), 0, randf_range(-0.4, 0.4)) * (k + 1)
+			get_tree().create_timer(0.7 * (k + 1)).timeout.connect(func(): L._sfx3d("step%d" % (randi() % 4), q, -5.0, 0.7, true))
 
 
 func _light_candle() -> void:
@@ -523,6 +610,8 @@ func _process(delta: float) -> void:
 	if not started:
 		return
 	_update_flame(delta)
+	_update_path(delta)
+	_dark_sounds(delta)
 	# подсказка у шкатулки: со всеми зубцами — «вставить»
 	L.extra_hints["v_box"] = "BR_MB_FIX" if _teeth_count() == 3 else "BR_MB"
 	# зеркало: отражение через кадр, только когда на него смотрят
