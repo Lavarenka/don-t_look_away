@@ -1,5 +1,5 @@
 keys,en,ru
-A_STASH,E — look in the crate,E — заглянуть в ящик
+A_STASH,E — pull off the sheet,E — сдёрнуть простыню
 B_DRAIN,Got the chain with the hook... The water is going down.,Подцепил цепочку крюком... Вода уходит.
 B_FOG,The mirror fogged up... and something is written on it.,Зеркало запотело... и на нём что-то написано.
 B_KEY,"A key on a faded ribbon. The tag says: ""Vera"". Grandma's bedroom.",Ключ на выцветшей ленточке. На бирке: «Вера». От бабушкиной спальни.
@@ -259,3 +259,5 @@ SET_01,Low,Низкое
 SET_02,Medium,Среднее
 SET_03,High,Высокое
 SET_04,Ultra,Ультра
+A_STAND,E — put something here,E — поставить сюда
+INV_PUT,E — put here: %s,E — поставить: %s

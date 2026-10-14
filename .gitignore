@@ -369,6 +369,8 @@
 !/models/attic/scarf/tex1.jpg.import
 !/models/attic/scarf/tex2.jpg
 !/models/attic/scarf/tex2.jpg.import
+!/models/attic/shoe_rack/shoe_rack.glb
+!/models/attic/shoe_stand/shoe_stand.glb
 !/models/attic/shoes/shoes.bin
 !/models/attic/shoes/shoes.gltf
 !/models/attic/shoes/shoes.gltf.import
@@ -1219,6 +1221,7 @@
 !/scripts/vintage.gd.uid
 !/shaders/crt.gdshader
 !/shaders/crt.gdshader.uid
+!/shaders/dress.gdshader
 !/shaders/fog.gdshader
 !/shaders/fog.gdshader.uid
 !/shaders/glass.gdshader

@@ -10,7 +10,7 @@ const GW := 0.56            ## ширина стекла, м
 const GH := 1.5             ## высота стекла, м
 const EYE := 3.47           ## высота глаз модели Remy в её единицах
 const BODY_LAYER := 2       ## слой «тело игрока»
-const REFL_H := 900         ## разрешение отражения по высоте (ширина — по пропорции)
+const REFL_H := 560         ## разрешение отражения по высоте (ширина — по пропорции); старое стекло мутное — больше не нужно
 const GHOST_LAYER := 3      ## слой «только в зеркале»: призрак и двойник
 const STILL_T := 2.5        ## сколько стоять неподвижно перед зеркалом до испуга
 
@@ -30,6 +30,26 @@ var stage := 0
 var still := 0.0
 var cooldown := 0.0
 var _lib: AnimationLibrary
+var _frame := 0
+
+
+## Прогрев: один кадр отражения в темноте при входе на чердак — шейдеры тела и окружения
+## компилируются заранее, а не в тот момент, когда простыня сползает.
+func prewarm() -> void:
+	# своё, облегчённое окружение для отражения: без объёмного тумана, SSAO/SSIL/SSR и свечения —
+	# иначе сцена фактически рисуется дважды со всеми тяжёлыми эффектами
+	var we := L.get_node_or_null("WorldEnvironment") as WorldEnvironment
+	if we and we.environment:
+		var env: Environment = we.environment.duplicate()
+		env.volumetric_fog_enabled = false
+		env.ssao_enabled = false
+		env.ssil_enabled = false
+		env.ssr_enabled = false
+		env.sdfgi_enabled = false
+		env.glow_enabled = false
+		mcam.environment = env
+	_place_camera()
+	vp.render_target_update_mode = SubViewport.UPDATE_ONCE
 
 
 func setup(level: Node, mirror: Node3D) -> void:
@@ -58,6 +78,7 @@ func setup(level: Node, mirror: Node3D) -> void:
 	mcam.current = true
 	mcam.cull_mask &= ~(1 << 10)        # «отражённый» слой осколка в обычном зеркале не виден
 	vp.add_child(mcam)
+	vp.positional_shadow_atlas_size = 1024
 	# материал старого зеркала: отражение темнее, с пятнами облезлой амальгамы и тёмными краями
 	var sh := Shader.new()
 	sh.code = """
@@ -160,9 +181,13 @@ func _process(delta: float) -> void:
 		return
 	_animate(delta)
 	var active: bool = open and L.phase == "attic" and _in_view()
-	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS if active else SubViewport.UPDATE_DISABLED
-	if active:
+	# отражение обновляется через кадр (30 к/с при 60) — на глаз не заметно, а нагрузка вдвое меньше
+	_frame += 1
+	if active and _frame % 2 == 0:
 		_place_camera()
+		vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+	elif not active:
+		vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	_scares(delta, active)
 
 

@@ -217,7 +217,7 @@ func _event(e: String) -> void:
 			L._sfx3d("sheet_rustle", cm.global_position + Vector3(0, 1.2, 0), 0.0, 0.85)
 			L._sfx3d("whoosh", cm.global_position + Vector3(0, 1.0, 0), -10.0, 0.7)
 			# ткань оседает и сползает вперёд, собираясь в кучу у подножия
-			create_tween().tween_method(func(t: float): sheet.mesh = _sheet_mesh(t), 0.0, 1.0, 1.1).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+			create_tween().tween_method(func(t: float): sheet.set_blend_shape_value(0, t), 0.0, 1.0, 1.1).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 			mirror_fx.open = true
 		"ball":        # из-под дивана выкатывается детский мячик — прямо к тебе
 			var b := MeshInstance3D.new()
@@ -386,7 +386,12 @@ var mirror_look := 0.0         ## сколько секунд игрок смо�
 var cloth: MeshInstance3D      ## скомканное платье в сундуке
 var viewer: TextureRect
 var origin := {}             ## где лежала вещь — туда она возвращается, если взять другую
-const STASH := Vector3(4.3, 0.45, -32.6)   ## ящик, где спрятаны туфли (Crate3)
+const STASH := Vector3(4.25, 0.45, -32.6)  ## обувная полка под простынёй, где стоят туфли (вместо ящика Crate3)
+const RACK_YAW := -PI / 2 + 0.08           ## полка спиной к скату крыши, лицом в комнату
+const STAND := 4                           ## четвёртое место с фотографии — не манекен, а подставка для обуви
+var drape: MeshInstance3D                  ## простыня на полке
+var drape_lift := 0
+var drape_fall := 1
 var stash_open := false
 var _gaze: Array[Node3D] = []              ## двойники манекенов, развёрнутые к тайнику (только в осколке)
 
@@ -399,28 +404,26 @@ func _ready() -> void:
 	var h: Node3D = L.get_node("Attic/Hatch")
 	_target("a_hatch", h.global_position + Vector3(0.45, 0.05, 0), 0.45, 2.6, "LVL_38")
 	_target("a_trunk", L.get_node("Attic/Trunk1").global_position + Vector3(0, 0.35, 0), 0.45, 2.4, "LVL_42")
-	# у модели платья белый материал по умолчанию — под фонарём он «светится». Приглушённая старая ткань:
-	var dm := StandardMaterial3D.new()
-	dm.albedo_color = Color(0.3, 0.28, 0.25)
-	dm.roughness = 0.95
-	dm.cull_mode = BaseMaterial3D.CULL_DISABLED
+	# платье: старая слоновая кость — тканое полотно, пожелтевшее пятнами, подол в пыли (shaders/dress.gdshader)
+	var dm := ShaderMaterial.new()
+	dm.shader = preload("res://shaders/dress.gdshader")
+	dm.set_shader_parameter("weave", load("res://textures/linen_diff.jpg"))
 	for i in range(1, 5):
 		for mi in L.get_node("Attic/PForm%d/Dress" % i).find_children("*", "MeshInstance3D", true, false):
 			mi.material_override = dm
 	cloth = _make_cloth()
 	sheet = MeshInstance3D.new()
 	sheet.name = "Sheet"
-	sheet.mesh = _sheet_mesh(0.0)
+	sheet.mesh = _sheet_morph()
 	sheet.material_override = _linen(Color(0.5, 0.48, 0.45), 0.45)
 	L.get_node("Attic/CovMirror").add_child(sheet)
 	mirror_fx = preload("res://scripts/mirror.gd").new()
 	add_child(mirror_fx)
 	mirror_fx.setup(L, L.get_node("Attic/CovMirror/Mirror"))
 	L.get_node("Attic/Trunk1").add_child(cloth)
-	# туфли спрятаны в ящике — куда «на самом деле» смотрят манекены, видно только в осколке
-	var shoes: Node3D = L.get_node("Attic/ItemShoes")
-	shoes.global_position = STASH + Vector3(0, 0.0, 0)
-	shoes.visible = false
+	# туфли стоят на обувной полке под простынёй — куда «на самом деле» смотрят манекены, видно только в осколке
+	_setup_rack()
+	_setup_stand()
 	_target("a_stash", STASH, 0.4, 2.4, "A_STASH")
 	_build_gaze()
 	for it in ["Scarf", "Bow", "Shoes"]:
@@ -428,7 +431,7 @@ func _ready() -> void:
 		origin[it] = n
 		_target("a_take_" + it, n.global_position + Vector3(0, 0.12, 0), 0.4, 2.5, "LVL_44")
 	for i in range(1, 5):
-		_target("a_form%d" % i, L.get_node("Attic/PForm%d" % i).global_position + Vector3(0, 1.1, 0), 0.4, 2.4, "LVL_48")
+		_target("a_form%d" % i, L.get_node("Attic/PForm%d" % i).global_position + Vector3(0, 0.4 if i == STAND else 1.1, 0), 0.4, 2.4, "A_STAND" if i == STAND else "LVL_48")
 	_target("a_photo", L.get_node("Attic/Photo").global_position + Vector3(0, 0.05, 0), 0.45, 2.4, "LVL_62")
 	_target("a_board", L.get_node("Attic/Board").global_position + Vector3(0, 0.05, 0), 0.45, 2.6, "LVL_55")
 	# окно для фотографии
@@ -638,6 +641,7 @@ func enter() -> void:
 	var sp: Node3D = L.get_node("AtticSpawn")
 	p.teleport(sp.global_position, 0.0)
 	p.light_on = false
+	mirror_fx.prewarm()                 # пока экран тёмный — один кадр отражения, чтобы потом не подвисало
 	await get_tree().create_timer(2.5).timeout
 	# дождь барабанит прямо по крыше, жесть на крыше дребезжит от ветра
 	if L.amb_layers.has("rain_window"):
@@ -744,13 +748,18 @@ func _set_layers(n: Node, mask: int) -> void:
 		(n as VisualInstance3D).layers = mask
 
 
-## Заглянуть в ящик: среди тряпья — чёрные туфли.
+## Сдёрнуть простыню с обувной полки: на средней полке — чёрные туфли.
 func _open_stash() -> void:
 	stash_open = true
-	L._sfx3d("creak", STASH, -8.0, 1.1)
-	L._sfx3d("sheet_rustle", STASH, -8.0, 0.8)
+	L._sfx3d("sheet_rustle", STASH, -2.0, 0.85)
+	L._sfx3d("whoosh", STASH, -12.0, 0.8)
 	var shoes: Node3D = L.get_node("Attic/ItemShoes")
 	shoes.visible = true
+	# ткань приподнимается и падает кучей сбоку (формы Lift и Fallen из Blender)
+	var tw := create_tween()
+	tw.tween_method(func(t: float):
+		drape.set_blend_shape_value(drape_lift, sin(t * PI) * 0.9)
+		drape.set_blend_shape_value(drape_fall, t), 0.0, 1.0, 0.85).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	for t in L.targets:
 		if t.id == "a_take_Shoes":
 			t.pos = shoes.global_position + Vector3(0, 0.12, 0)
@@ -781,7 +790,10 @@ func _update_carry() -> void:
 	var sel: String = L.inv.selected()
 	carry = sel.trim_prefix("att_").capitalize() if sel.begins_with("att_") else ""
 	for i in range(1, 5):
-		L.extra_hints["a_form%d" % i] = ["INV_WEAR", ITEM_KEY[carry]] if carry != "" else "LVL_48"
+		if i == STAND:
+			L.extra_hints["a_form%d" % i] = ["INV_PUT", ITEM_KEY[carry]] if carry != "" else "A_STAND"
+		else:
+			L.extra_hints["a_form%d" % i] = ["INV_WEAR", ITEM_KEY[carry]] if carry != "" else "LVL_48"
 
 
 func _dress(i: int) -> void:
@@ -895,3 +907,68 @@ func _hatch() -> void:
 		return
 	L.inv.remove("attic_key")
 	L.floor2.descend()
+
+
+## Обувная полка (models/attic/shoe_rack: своя модель из Blender, ткань — симуляция в Blender)
+## на месте ящика Crate3. Туфли — на средней полке, под простынёй.
+func _setup_rack() -> void:
+	for n in ["Attic/Crate3", "Attic/Crate3Col"]:
+		var c: Node3D = L.get_node(n)
+		c.visible = false
+		if c is CollisionObject3D:
+			(c as CollisionObject3D).process_mode = Node.PROCESS_MODE_DISABLED
+	var r: Node3D = load("res://models/attic/shoe_rack/shoe_rack.glb").instantiate()
+	r.name = "ShoeRack"
+	L.get_node("Attic").add_child(r)
+	r.global_position = Vector3(STASH.x, 0.0, STASH.z)
+	r.rotation.y = RACK_YAW
+	var body := StaticBody3D.new()
+	var cs := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	bs.size = Vector3(0.89, 0.83, 0.35)
+	cs.shape = bs
+	cs.position = Vector3(0, 0.415, 0)
+	body.add_child(cs)
+	r.add_child(body)
+	drape = r.find_child("Drape", true, false) as MeshInstance3D
+	drape.material_override = _linen(Color(0.46, 0.44, 0.41), 0.45)
+	drape.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	drape_lift = drape.find_blend_shape_by_name("Lift")
+	drape_fall = drape.find_blend_shape_by_name("Fallen")
+	for k in drape.get_blend_shape_count():
+		drape.set_blend_shape_value(k, 0.0)
+	var shoes: Node3D = L.get_node("Attic/ItemShoes")
+	shoes.global_transform = r.global_transform * Transform3D(Basis(), Vector3(-0.045, 0.385, 0.025))
+	shoes.visible = false
+
+
+## Место 4: вместо манекена — точёная подставка с бархатной подушкой (models/attic/shoe_stand), туфли ставятся на неё.
+func _setup_stand() -> void:
+	var f: Node3D = L.get_node("Attic/PForm%d" % STAND)
+	f.get_node("Model").visible = false
+	var st: Node3D = load("res://models/attic/shoe_stand/shoe_stand.glb").instantiate()
+	st.name = "Stand"
+	f.add_child(st)
+	var body: StaticBody3D = f.get_node("Body")
+	body.position = Vector3(0, 0.16, 0)
+	var sh := BoxShape3D.new()
+	sh.size = Vector3(0.48, 0.32, 0.48)
+	(body.get_node("Shape") as CollisionShape3D).shape = sh
+	(f.get_node("Shoes") as Node3D).position = Vector3(-0.045, 0.312, 0.025)
+
+
+## Простыня на зеркале с формой «сползла» (blend shape): при сползании меняется только вес формы —
+## видеокарта смешивает вершины сама, сетка больше не пересобирается каждый кадр (раньше — 7 тыс. вершин за кадр).
+func _sheet_morph() -> ArrayMesh:
+	var a0 := _sheet_mesh(0.0).surface_get_arrays(0)
+	var a1 := _sheet_mesh(1.0).surface_get_arrays(0)
+	var shape := []
+	shape.resize(Mesh.ARRAY_MAX)
+	shape[Mesh.ARRAY_VERTEX] = a1[Mesh.ARRAY_VERTEX]
+	shape[Mesh.ARRAY_NORMAL] = a1[Mesh.ARRAY_NORMAL]
+	shape[Mesh.ARRAY_TANGENT] = a1[Mesh.ARRAY_TANGENT]
+	var am := ArrayMesh.new()
+	am.blend_shape_mode = Mesh.BLEND_SHAPE_MODE_NORMALIZED
+	am.add_blend_shape("down")
+	am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, a0, [shape])
+	return am
