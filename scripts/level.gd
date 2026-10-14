@@ -61,6 +61,7 @@ var inv: Node              ## инвентарь (Tab)
 var bath: Node             ## ванная второго этажа
 var doors: Node            ## двери, которые открываются и закрываются по E
 var bedroom: Node          ## спальня бабушки Веры
+var hush := false          ## в спальне Веры: все звуки дома выключены (bedroom.gd); свои звуки там — с force = true
 var events := {}            ## какие сценки уже случились
 var shade_mode := ""        ## что сейчас делает призрак
 var shade_t := 0.0
@@ -485,7 +486,9 @@ func _stream(n: String) -> AudioStream:
 	return arr[randi() % arr.size()]
 
 
-func _sfx(n: String, db := 0.0, pitch := 1.0) -> void:
+func _sfx(n: String, db := 0.0, pitch := 1.0, force := false) -> void:
+	if hush and not force:
+		return
 	if n in LOUD and db > -12.0:
 		last_loud = time_now
 	var p := AudioStreamPlayer.new()
@@ -497,7 +500,9 @@ func _sfx(n: String, db := 0.0, pitch := 1.0) -> void:
 	p.play()
 
 
-func _sfx3d(n: String, pos: Vector3, db := 0.0, pitch := 1.0) -> void:
+func _sfx3d(n: String, pos: Vector3, db := 0.0, pitch := 1.0, force := false) -> void:
+	if hush and not force:
+		return
 	if n in LOUD and db > -12.0:
 		last_loud = time_now
 	var p := AudioStreamPlayer3D.new()
@@ -512,7 +517,7 @@ func _sfx3d(n: String, pos: Vector3, db := 0.0, pitch := 1.0) -> void:
 
 
 func _on_step() -> void:
-	_sfx("step%d" % (randi() % 4), -10.0, randf_range(0.9, 1.1))
+	_sfx("step%d" % (randi() % 4), -10.0, randf_range(0.9, 1.1), true)     # свои шаги слышны всегда
 	if randf() < 0.07:
 		_sfx("creak", -18.0, randf_range(0.8, 1.2))
 
@@ -711,11 +716,11 @@ func _doorway_pass() -> void:
 	g.global_position = PASS_A
 	g.rotation.y = atan2(PASS_B.x - PASS_A.x, PASS_B.z - PASS_A.z)
 	g.set_ghostly(0.55)
-	g.play("walk", 0.9, 0.0)
+	g.play("walk", 1.9, 0.0)
 	g.visible = true
 	g.set_process(true)
 	pass_lamp.light_energy = 0.35
-	var dur := 3.6
+	var dur := 1.7
 	var tw := create_tween()
 	tw.tween_property(g, "global_position", PASS_B, dur)
 	tw.parallel().tween_method(func(v: float): g.set_ghostly(v), 0.55, 0.95, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
@@ -723,7 +728,7 @@ func _doorway_pass() -> void:
 	tw.tween_callback(func(): g.visible = false; g.ap.stop(); g.set_process(false))
 	_sfx3d("whisper", Vector3(0.2, 1.4, -1.5), -10.0, 0.9)
 	for k in 4:
-		get_tree().create_timer(0.5 + k * 0.8).timeout.connect(func(): _sfx3d("step%d" % (randi() % 4), PASS_A.lerp(PASS_B, (0.5 + k * 0.8) / dur), -14.0, 0.8))
+		get_tree().create_timer(0.2 + k * 0.38).timeout.connect(func(): _sfx3d("step%d" % (randi() % 4), PASS_A.lerp(PASS_B, (0.2 + k * 0.38) / dur), -14.0, 0.9))
 
 
 func _shade_show(pos: Vector3, mode: String) -> void:

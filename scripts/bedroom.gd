@@ -23,6 +23,7 @@ var L: Node
 var root: Node3D
 var unlocked := false
 var lamps: Array[OmniLight3D] = []
+var sealed := false         ## игрок вошёл — дверь за ним захлопнулась насмерть
 
 
 func setup(level: Node) -> void:
@@ -190,3 +191,52 @@ func try_open() -> bool:
 	L.doors.interact("d_bed")
 	L._set_objective("BR_OBJ1")
 	return true
+
+
+## Вошёл к Вере: дверь из холла за спиной захлопывается и больше не открывается,
+## все звуки дома стихают, фонарь гаснет и не включается. Дальше — только то, что в этой комнате.
+func _process(_delta: float) -> void:
+	if sealed or not unlocked:
+		return
+	var p: Vector3 = L.player.global_position
+	if p.x < DOOR_C.x - 1.0 and absf(p.y - Y2) < 1.2 and p.z > -37.5 and p.z < -27.0:
+		_seal()
+
+
+func _seal() -> void:
+	sealed = true
+	var d: Dictionary = L.doors.doors["bed"]
+	L.doors.lock("bed")
+	var tw := create_tween()
+	tw.tween_property(d.pivot, "rotation:y", d.closed, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	await get_tree().create_timer(0.2).timeout
+	L.hush = true
+	_silence_house()
+	L._sfx3d("door", DOOR_C, 2.0, 0.8, true)                  # хлопок — последний звук дома
+	L._sfx3d("click", DOOR_C, -2.0, 0.6, true)                # и щелчок замка
+	L.player.shake = 0.45
+	# фонарь: пара судорожных вспышек и гаснет насовсем
+	var pl = L.player
+	pl.light_locked = true
+	for k in 3:
+		pl.flicker = 0.08
+		await get_tree().create_timer(0.16).timeout
+	pl.light_on = false
+
+
+## Всё, что уже звучит (гул, дождь, тиканье, далёкие звуки), плавно затихает и останавливается;
+## модули, которые сами запускают звуки, выключаются.
+func _silence_house() -> void:
+	for n in ["haunts"]:
+		var m: Node = L.get(n)
+		if m:
+			m.process_mode = Node.PROCESS_MODE_DISABLED
+	for c in L.get_children():
+		if c.get_script() == preload("res://scripts/distant.gd"):
+			c.process_mode = Node.PROCESS_MODE_DISABLED
+	for a in L.find_children("*", "AudioStreamPlayer", true, false) + L.find_children("*", "AudioStreamPlayer3D", true, false):
+		if not a.playing:
+			continue
+		var tw := create_tween()
+		tw.tween_property(a, "volume_db", -60.0, 1.2)
+		tw.tween_callback(a.stop)

@@ -12,6 +12,7 @@ signal toggled_light
 
 var frozen := false
 var light_on := true
+var light_locked := false     ## фонарь не включается (спальня Веры)
 var flicker := 0.0
 var shake := 0.0
 var _bob := 0.0
@@ -35,7 +36,7 @@ func _unhandled_input(e: InputEvent) -> void:
 	elif e is InputEventKey and e.pressed and not e.echo:
 		match e.physical_keycode:
 			KEY_F:
-				if not frozen:
+				if not frozen and not light_locked:
 					light_on = not light_on
 					toggled_light.emit()
 			KEY_E:
