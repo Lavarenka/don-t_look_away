@@ -261,3 +261,21 @@ SET_03,High,Высокое
 SET_04,Ultra,Ультра
 A_STAND,E — put something here,E — поставить сюда
 INV_PUT,E — put here: %s,E — поставить: %s
+BR_OBJ2,Find a light,Найди свет
+BR_OBJ3,Look around Grandma's room,Осмотри комнату бабушки
+BR_CANDLE,E — take the candle,E — взять свечу
+BR_MATCHES,E — take the matches,E — взять спички
+BR_MB,E — open the music box,E — открыть шкатулку
+BR_MB_FIX,E — put the comb teeth back,E — вставить зубцы гребёнки
+BR_MB_MISS,The comb is broken — some teeth are missing.,Гребёнка обломана — не хватает зубцов.
+BR_SHAWL_PUT,E — lay the shawl here,E — положить шаль
+BR_FRAME,E — stand the photo up,E — поставить фото
+BR_DONE,Find what the small key opens,"Найди, что открывает маленький ключ"
+INV_CANDLE,Candle,Свеча
+INV_CANDLE_D,A burnt-down candle in a brass holder.,Оплывшая свеча в латунном подсвечнике.
+INV_TOOTH,Comb teeth,Зубцы гребёнки
+INV_TOOTH_D,A broken piece of a music box comb — three thin brass teeth.,Обломок гребёнки от шкатулки — три тонких латунных зубца.
+INV_SHAWL,Knitted shawl,Вязаная шаль
+INV_SHAWL_D,Grandma's. It still smells of her perfume.,Бабушкина. Ещё пахнет её духами.
+INV_SMALLKEY,Small key,Маленький ключ
+INV_SMALLKEY_D,"Was lying under the mirror. Warm, as if someone had just been holding it.",Лежал под зеркалом. Тёплый — будто его только что держали в руке.

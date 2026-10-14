@@ -116,6 +116,7 @@
 !/audio/intro/i_wind.ogg.import
 !/audio/knock.wav
 !/audio/knock.wav.import
+!/audio/match_strike.wav
 !/audio/mb_note0.wav
 !/audio/mb_note0.wav.import
 !/audio/mb_note1.wav
@@ -170,6 +171,8 @@
 !/audio/tinnitus.wav.import
 !/audio/tv_static.wav
 !/audio/tv_static.wav.import
+!/audio/vera_mb_broken.wav
+!/audio/vera_mb_full.wav
 !/audio/water_run.wav
 !/audio/water_run.wav.import
 !/audio/whisper.wav
@@ -568,6 +571,12 @@
 !/models/bedroom/door_vera_Surround_normal.png.import
 !/models/bedroom/door_vera_Surround_rough.png
 !/models/bedroom/door_vera_Surround_rough.png.import
+!/models/bedroom/vera_blanket.glb
+!/models/bedroom/vera_candle.glb
+!/models/bedroom/vera_frame.glb
+!/models/bedroom/vera_musicbox.glb
+!/models/bedroom/vera_shawl.glb
+!/models/bedroom/vera_tooth.glb
 !/models/carved_wooden_elephant/carved_wooden_elephant.bin
 !/models/carved_wooden_elephant/carved_wooden_elephant_2k.gltf
 !/models/carved_wooden_elephant/carved_wooden_elephant_2k.gltf.import
@@ -1235,10 +1244,12 @@
 !/scripts/trailer.gd.uid
 !/scripts/vera.gd
 !/scripts/vera.gd.uid
+!/scripts/vera_room.gd
 !/scripts/vera_showcase.gd
 !/scripts/vera_showcase.gd.uid
 !/scripts/vintage.gd
 !/scripts/vintage.gd.uid
+!/shaders/candle_flame.gdshader
 !/shaders/crt.gdshader
 !/shaders/crt.gdshader.uid
 !/shaders/dress.gdshader
@@ -1337,6 +1348,7 @@
 !/textures/pbr/wooden_floor_02_diff_2k.jpg.import
 !/textures/pbr/wooden_floor_02_nor_gl_2k.jpg
 !/textures/pbr/wooden_floor_02_nor_gl_2k.jpg.import
+!/textures/photo_vera_small.png
 !/textures/portrait_anya.png
 !/textures/portrait_anya.png.import
 !/textures/portrait_stepan.png

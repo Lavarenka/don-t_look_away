@@ -24,6 +24,12 @@ const ITEMS := {
 	"att_scarf": ["INV_SCARF", "INV_SCARF_D"],
 	"att_bow": ["INV_BOW", "INV_BOW_D"],
 	"att_shoes": ["INV_SHOES", "INV_SHOES_D"],
+	"candle": ["INV_CANDLE", "INV_CANDLE_D"],
+	"v_tooth1": ["INV_TOOTH", "INV_TOOTH_D"],
+	"v_tooth2": ["INV_TOOTH", "INV_TOOTH_D"],
+	"v_tooth3": ["INV_TOOTH", "INV_TOOTH_D"],
+	"shawl": ["INV_SHAWL", "INV_SHAWL_D"],
+	"smallkey": ["INV_SMALLKEY", "INV_SMALLKEY_D"],
 }
 const MAX_ITEMS := 8
 const PROPS := {

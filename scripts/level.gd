@@ -554,6 +554,8 @@ func _target_ok(id: String) -> bool:
 		return bath.target_ok(id)
 	if id.begins_with("d_"):
 		return doors.target_ok(id)
+	if id.begins_with("v_"):
+		return bedroom.vroom.target_ok(id)
 	match id:
 		"tv_off": return tv_on
 		"servant": return phase == "intro" or phase == "hall"
@@ -630,6 +632,7 @@ func _interact() -> void:
 			hallp.interact(t)
 			bath.interact(t)
 			doors.interact(t)
+			bedroom.vroom.interact(t)
 
 
 func _show_note(text: String) -> void:

@@ -17,13 +17,14 @@ const LAMPS := [
 	[Vector3(-15.68, Y2 + 1.3, -35.9), 0.5, 3.5, false],     # торшер в углу коридора
 ]
 
-const VERA_TEST := true     ## ТЕСТ: Вера стоит в спальне и меняет позы (scripts/vera_showcase.gd)
+const VERA_TEST := false    ## ТЕСТ: Вера стоит в спальне и меняет позы (scripts/vera_showcase.gd)
 
 var L: Node
 var root: Node3D
 var unlocked := false
 var lamps: Array[OmniLight3D] = []
 var sealed := false         ## игрок вошёл — дверь за ним захлопнулась насмерть
+var vroom: Node             ## глава в спальне: свеча, кровать, шкатулка, зеркало (vera_room.gd)
 
 
 func setup(level: Node) -> void:
@@ -43,6 +44,9 @@ func setup(level: Node) -> void:
 	_wallpaper()
 	L.doors.add("bed", ea, 0.0, ea.get_meta("open"), DOOR_C, func(): return unlocked)
 	L.doors.add("bed_in", ra, 0.0, ra.get_meta("open"), INNER_C, func(): return L.phase == "floor2")
+	vroom = preload("res://scripts/vera_room.gd").new()
+	add_child(vroom)
+	vroom.setup(L, self)
 	if VERA_TEST:
 		var vs := preload("res://scripts/vera_showcase.gd").new()
 		add_child(vs)
@@ -222,6 +226,7 @@ func _seal() -> void:
 		pl.flicker = 0.08
 		await get_tree().create_timer(0.16).timeout
 	pl.light_on = false
+	vroom.lights_out()
 
 
 ## Всё, что уже звучит (гул, дождь, тиканье, далёкие звуки), плавно затихает и останавливается;
