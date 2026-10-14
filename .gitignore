@@ -1261,6 +1261,7 @@
 !/scenes/intro.tscn
 !/scenes/main.tscn
 !/scenes/menu.tscn
+!/scenes/tools/render_menu_plate.tscn
 !/scripts/atmosphere.gd
 !/scripts/atmosphere.gd.uid
 !/scripts/attic.gd
@@ -1444,4 +1445,5 @@
 !/textures/vanity_drawer.jpg
 !/textures/vanity_drawer.jpg.import
 !/tools/git_used.py
+!/tools/render_menu_plate.gd
 /.godot/

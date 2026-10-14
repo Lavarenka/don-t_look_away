@@ -12,6 +12,8 @@ const HINTS := [
 var _buttons: VBoxContainer
 var _gap: Control
 const MENU_GAP := 150.0
+const SHADOW_K := 0.6                 ## насколько темна тень Ани на фоне
+var _shadow_rect: TextureRect
 const FONT_TEXT := preload("res://fonts/Lora-Italic-Variable.ttf")
 var _btn_font: FontVariation
 var _haze_mat: ShaderMaterial
@@ -85,7 +87,9 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	get_tree().paused = false
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	_plate = _cover(load("res://textures/menu_plate.jpg"))
+	# фон: перерисованный из уровня (tools/render_menu_plate.gd) — если есть, иначе старый
+	var plate_path := "res://textures/menu_plate.png" if ResourceLoader.exists("res://textures/menu_plate.png") else "res://textures/menu_plate.jpg"
+	_plate = _cover(load(plate_path))
 	add_child(_plate)
 	_build_live()
 	# дымка в луче фонаря: медленно плывёт, дышит вместе с фонарём
@@ -218,6 +222,7 @@ func _build_live() -> void:
 	_flash.spot_angle = 24.0
 	_flash.spot_angle_attenuation = 1.5
 	vp.add_child(_flash)
+	_shadow_catcher(vp)
 	var rim := OmniLight3D.new()                # холодный контровой свет из комнаты за ней — силуэт отделяется от темноты
 	rim.light_color = Color(0.55, 0.65, 0.9)
 	rim.light_energy = 0.9
@@ -254,6 +259,7 @@ func _build_live() -> void:
 	dust.position = Vector3(0, 1.4, 0.6)
 	dust.visibility_aabb = AABB(Vector3(-3, -3, -3), Vector3(6, 6, 6))
 	vp.add_child(dust)
+	add_child(_shadow_rect)
 	_live = _cover(vp.get_texture())
 	var sh := Shader.new()
 	sh.code = MASK_SHADER
@@ -266,7 +272,105 @@ func _build_live() -> void:
 	_girl.sk.add_child(_pose)
 	_girl.mat.set_shader_parameter("tint", GHOST_TINT)
 	_girl.set_blood(0.25)
+	_shadow_twin()
 	_set_pose(0, true)
+
+
+## Тень от Ани на фоне. В её же 3D-мире стоят невидимые пол и стены (слой CATCH_LAYER) и свой
+## «теневой» свет, который освещает только их, а тень отбрасывает только Аня. Отдельная камера снимает
+## эти поверхности: всё белое, кроме её тени, — и этот снимок умножается на фон (плату).
+const CATCH_LAYER := 1 << 15
+const SHADOW_TWIN := 1 << 16          ## невидимый двойник Ани (тот же меш на том же скелете) — только отбрасывает тень
+
+
+## Двойник для тени: свет «ловцов» не должен освещать саму Аню, поэтому тень даёт копия её меша,
+## привязанная к тому же скелету (двигается точно так же), видимая только как тень.
+func _shadow_twin() -> void:
+	for mi in _girl.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		if m.skin == null:
+			continue
+		var tw := MeshInstance3D.new()
+		tw.mesh = m.mesh
+		tw.skin = m.skin
+		m.get_parent().add_child(tw)
+		tw.transform = m.transform
+		tw.skeleton = tw.get_path_to(m.get_node(m.skeleton))
+		tw.layers = SHADOW_TWIN
+		tw.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+func _shadow_catcher(vp: SubViewport) -> void:
+	var white := ShaderMaterial.new()            # белый, свет без учёта наклона: темнеет только в тени
+	var wsh := Shader.new()
+	wsh.code = "shader_type spatial;\nrender_mode specular_disabled, cull_disabled;\nvoid fragment() { ALBEDO = vec3(1.0); }\nvoid light() { DIFFUSE_LIGHT += vec3(ATTENUATION); }\n"
+	white.shader = wsh
+	for b in [[Vector3(14, 0.02, 16), Vector3(0, -0.01, -3.5)],                     # пол коридора и комнаты за дверью
+			[Vector3(4.0, 3.0, 0.06), Vector3(-2.3, 1.5, -0.95)],                  # стена слева от проёма
+			[Vector3(4.0, 3.0, 0.06), Vector3(2.48, 1.5, -0.95)],                  # стена справа
+			[Vector3(0.8, 0.8, 0.06), Vector3(0.09, 2.5, -0.95)],                  # над проёмом
+			[Vector3(8.0, 3.0, 0.06), Vector3(0, 1.5, -5.6)]]:                     # дальняя стена комнаты
+		var mi := MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = b[0]
+		mi.mesh = bm
+		mi.position = b[1]
+		mi.material_override = white
+		mi.layers = CATCH_LAYER
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		vp.add_child(mi)
+	var sl := DirectionalLight3D.new()           # параллельный свет со стороны фонаря, чуть сверху-справа
+	sl.transform = FLASH_XF
+	sl.rotate_object_local(Vector3.UP, 0.12)
+	sl.rotate_object_local(Vector3.RIGHT, -0.1)
+	sl.light_energy = 4.0
+	sl.shadow_enabled = true
+	sl.shadow_blur = 2.0
+	sl.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	sl.directional_shadow_max_distance = 12.0
+	sl.light_cull_mask = CATCH_LAYER | SHADOW_TWIN    # освещает только «ловцов»; тень — от двойника Ани
+	sl.shadow_caster_mask = SHADOW_TWIN
+	sl.layers = CATCH_LAYER                         # камера тени видит этот свет, главная — нет
+	vp.add_child(sl)
+	_flash.light_cull_mask = ~(CATCH_LAYER | SHADOW_TWIN)
+	for c in vp.get_children():
+		if c is Camera3D:
+			(c as Camera3D).cull_mask &= ~(CATCH_LAYER | SHADOW_TWIN)      # сами «ловцы» в кадре не видны
+	var vp2 := SubViewport.new()
+	vp2.size = Vector2i(960, 540)
+	vp2.world_3d = vp.find_world_3d()           # у vp свой мир (own_world_3d) — берём именно его
+	vp2.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(vp2)
+	var c2 := Camera3D.new()
+	c2.fov = 68.0
+	c2.transform = CAM_XF
+	c2.cull_mask = CATCH_LAYER | SHADOW_TWIN       # двойник только отбрасывает тень (сам не рисуется)
+	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color.WHITE
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_DISABLED
+	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+	c2.environment = env
+	vp2.add_child(c2)
+	c2.current = true
+	var r := _cover(vp2.get_texture())
+	var sm := ShaderMaterial.new()
+	var sh := Shader.new()
+	sh.code = """
+shader_type canvas_item;
+render_mode blend_mul;
+uniform float k = 0.6;
+void fragment() {
+	float l = 0.0;                               // мягкий край тени: размытие 5×5
+	for (int x = -2; x <= 2; x++)
+		for (int y = -2; y <= 2; y++)
+			l += texture(TEXTURE, UV + vec2(float(x), float(y)) * TEXTURE_PIXEL_SIZE * 1.6).r;
+	l = clamp(l / 25.0, 0.0, 1.0);
+	COLOR = vec4(vec3(mix(1.0, l, k)), 1.0);
+}
+"""
+	sm.shader = sh
+	sm.set_shader_parameter("k", SHADOW_K)
+	r.material = sm
+	_shadow_rect = r
 
 
 ## Фонарик: почти всегда ровный, иногда коротко «моргает»,
@@ -292,6 +396,7 @@ func _flicker(delta: float) -> void:
 	var c := Color(_fl, _fl, _fl)
 	_plate.modulate = c
 	_haze_mat.set_shader_parameter("power", _fl)
+	(_shadow_rect.material as ShaderMaterial).set_shader_parameter("k", SHADOW_K * _fl)   # фонарь гаснет — и тень с ним
 
 
 ## Пока фонарик моргает, она успевает «перемениться»: то стоит в проёме,
