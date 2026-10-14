@@ -10,6 +10,12 @@ const HINTS := [
 ]
 
 var _buttons: VBoxContainer
+var _gap: Control
+const MENU_GAP := 150.0
+const FONT_TEXT := preload("res://fonts/Lora-Italic-Variable.ttf")
+var _btn_font: FontVariation
+var _haze_mat: ShaderMaterial
+var _sway_t := 0.0
 var _loading: VBoxContainer
 var _bar: ProgressBar
 var _hint: Label
@@ -30,8 +36,8 @@ const FLASH_E := 7.0
 const GHOST_TINT := Color(0.74, 0.74, 0.8)     ## призрак темнее, будто в тени
 ## Позы: [позиция, поворот, анимация ("" — живая idle), секунда анимации, повороты костей, прячется за стеной]
 var POSES: Array = [
-	# стоит в проёме
-	[Vector3(0.25, 0, -0.55), -0.18, "", 0.0, {}, false],
+	# стоит в глубине проёма (за порогом, косяки её частично закрывают)
+	[Vector3(0.12, 0, -1.4), -0.12, "", 0.0, {}, true],
 	# выглядывает из-за правого косяка и держится за него рукой
 	[Vector3(0.95, 0, -0.9), -0.35, "idle", 1.0, {"Spine": Vector3(0, 0, 0.18), "Spine1": Vector3(0, 0, 0.14), "Spine2": Vector3(0, 0, 0.1),
 		"Neck": Vector3(0, 0, 0.14), "Head": Vector3(0, 0, 0.3), "RightArm": Vector3(0.6, 0, -0.5), "RightForeArm": Vector3(0, 0, 1.5)}, true],
@@ -83,6 +89,14 @@ func _ready() -> void:
 	_plate = _cover(load("res://textures/menu_plate.jpg"))
 	add_child(_plate)
 	_build_live()
+	# дымка в луче фонаря: медленно плывёт, дышит вместе с фонарём
+	var haze := ColorRect.new()
+	haze.set_anchors_preset(Control.PRESET_FULL_RECT)
+	haze.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_haze_mat = ShaderMaterial.new()
+	_haze_mat.shader = load("res://shaders/menu_haze.gdshader")
+	haze.material = _haze_mat
+	add_child(haze)
 	var shade := ColorRect.new()
 	shade.color = Color(0, 0, 0, 0.45)
 	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -97,20 +111,26 @@ func _ready() -> void:
 	add_child(grain)
 
 	var box := VBoxContainer.new()
-	box.set_anchors_preset(Control.PRESET_CENTER_LEFT)
-	box.position = Vector2(90, -170)
-	box.add_theme_constant_override("separation", 26)
+	box.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	box.position = Vector2(90, 40)
+	box.add_theme_constant_override("separation", 18)
 	add_child(box)
 	var title := _label("MENU_05", 50, Color(0.9, 0.86, 0.78))
 	FLICKER.style(title)
 	box.add_child(title)
-	box.add_child(_label("MENU_06", 18, Color(0.55, 0.52, 0.47)))
+	var sub := _label("MENU_06", 19, Color(0.55, 0.52, 0.47))
+	sub.add_theme_font_override("font", FONT_TEXT)
+	box.add_child(sub)
+	_gap = Control.new()                # отступ: меню — в нижней части экрана, заголовок — наверху
+	box.add_child(_gap)
 
 	_buttons = VBoxContainer.new()
 	_buttons.add_theme_constant_override("separation", 10)
 	box.add_child(_buttons)
 	_page_main()
-	box.add_child(_label("MENU_10", 15, Color(0.5, 0.48, 0.44)))
+	var keys := _label("MENU_10", 16, Color(0.5, 0.48, 0.44))
+	keys.add_theme_font_override("font", FONT_TEXT)
+	box.add_child(keys)
 
 	_loading = VBoxContainer.new()
 	_loading.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
@@ -167,7 +187,7 @@ func _build_live() -> void:
 	vp.size = Vector2i(1920, 1080)
 	vp.transparent_bg = true
 	vp.own_world_3d = true
-	vp.msaa_3d = Viewport.MSAA_2X
+	vp.msaa_3d = Viewport.MSAA_4X
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(vp)
 	var env := Environment.new()
@@ -199,6 +219,12 @@ func _build_live() -> void:
 	_flash.spot_angle = 24.0
 	_flash.spot_angle_attenuation = 1.5
 	vp.add_child(_flash)
+	var rim := OmniLight3D.new()                # холодный контровой свет из комнаты за ней — силуэт отделяется от темноты
+	rim.light_color = Color(0.55, 0.65, 0.9)
+	rim.light_energy = 0.9
+	rim.omni_range = 2.6
+	rim.position = Vector3(0.1, 1.5, -2.6)
+	vp.add_child(rim)
 	_girl = Node3D.new()
 	_girl.set_script(load("res://scripts/spirit.gd"))
 	_girl.transform = GIRL_XF
@@ -266,6 +292,14 @@ func _flicker(delta: float) -> void:
 	_flash.light_energy = FLASH_E * _fl
 	var c := Color(_fl, _fl, _fl)
 	_plate.modulate = c
+	_haze_mat.set_shader_parameter("power", _fl)
+	# камера чуть «дышит» в руках — фон и призрак двигаются вместе
+	_sway_t += delta
+	var off := Vector2(sin(_sway_t * 0.37) * 5.0 + sin(_sway_t * 0.91) * 2.0, sin(_sway_t * 0.29 + 1.0) * 4.0 + sin(_sway_t * 0.73) * 1.5)
+	for r in [_plate, _live]:
+		(r as Control).scale = Vector2.ONE * 1.025
+		(r as Control).pivot_offset = (r as Control).size * 0.5
+		(r as Control).position = off
 
 
 ## Пока фонарик моргает, она успевает «перемениться»: то стоит в проёме,
@@ -297,7 +331,8 @@ func _set_pose(i: int, instant := false) -> void:
 
 
 func _clear() -> void:
-	_buttons.get_parent().position.y = -170.0
+	_buttons.get_parent().position.y = 40.0
+	_gap.custom_minimum_size.y = MENU_GAP
 	_fit_box.call_deferred()
 	for c in _buttons.get_children():
 		_buttons.remove_child(c)
@@ -310,6 +345,10 @@ func _fit_box() -> void:
 	var box := _buttons.get_parent() as Control
 	var vh := get_viewport_rect().size.y
 	var r := box.get_global_rect()
+	if r.end.y > vh - 40.0:                       # длинная страница — сначала убираем отступ
+		_gap.custom_minimum_size.y = maxf(8.0, MENU_GAP - (r.end.y - (vh - 40.0)))
+		await get_tree().process_frame
+		r = box.get_global_rect()
 	if r.end.y > vh - 16.0:
 		box.position.y -= r.end.y - (vh - 16.0)
 	r = box.get_global_rect()
@@ -417,8 +456,13 @@ func _button(t: String, cb: Callable) -> Button:
 	var b := Button.new()
 	b.text = tr(t)
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.custom_minimum_size = Vector2(320, 48)
-	b.add_theme_font_size_override("font_size", 26)
+	b.custom_minimum_size = Vector2(320, 50)
+	b.add_theme_font_size_override("font_size", 31)
+	if _btn_font == null:                       # шрифт как у названия и заставки, с разрядкой
+		_btn_font = FontVariation.new()
+		_btn_font.base_font = FLICKER.FONT
+		_btn_font.spacing_glyph = 3
+	b.add_theme_font_override("font", _btn_font)
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = Color(0, 0, 0, 0)
 	normal.content_margin_left = 6
