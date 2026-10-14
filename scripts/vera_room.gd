@@ -355,56 +355,108 @@ func _lamp(i: int) -> OmniLight3D:
 	return B.lamps[PATH[i]]
 
 
-## Свет ведёт вперёд: подошёл к горящему — загорается следующий, этот гаснет; в темноте сзади оживают звуки.
+## Свет ведёт по пути в обе стороны: горит светильник впереди — по ходу взгляда от того, до которого
+## ты дошёл последним. Дошёл до горящего — загорается следующий, этот гаснет; развернулся и пошёл
+## назад — загорается тот, что позади, а впереди гаснет. В погасшей темноте сразу кто-то есть.
+## Как только зажжена свеча — свет больше не водит (остаётся только ночник), звуки из темноты стихают.
+var at := -1                         ## до какого светильника пути дошёл последним (-1 — ещё у двери)
+var _want := 0
+var _want_t := 0.0
+
+
 func _update_path(delta: float) -> void:
 	if path_i < 0:
 		return
 	_lamp_t += delta
 	var cur := _lamp(path_i)
-	var last := path_i == PATH.size() - 1
-	# горящий светильник неровно моргает (ночник в конце — спокойнее)
+	var night: bool = PATH[path_i] == NIGHT_LAMP
+	# горящий светильник неровно моргает (ночник — спокойнее)
 	var e: float = _base[PATH[path_i]]
 	var f := 1.0
-	if not last:
+	if not night:
 		f = 0.0 if randf() < 0.06 else randf_range(0.65, 1.05)
 		if fmod(_lamp_t, 3.7) < 0.25:
 			f *= randf_range(0.0, 0.4)
 	cur.light_energy = e * f
-	if last:
+	if lit:
 		return
 	var p: Vector3 = L.player.global_position
-	var lp := cur.global_position
-	if Vector2(p.x - lp.x, p.z - lp.z).length() > 1.7:
+	# до какого светильника дошёл
+	for k in PATH.size():
+		var lp := _lamp(k).global_position
+		if Vector2(p.x - lp.x, p.z - lp.z).length() < 1.7:
+			at = k
+	if at == PATH.size() - 1:
+		_switch_to(at)                                   # у ночника — он и горит
 		return
-	path_i += 1
+	# куда смотрит: вперёд по пути (к следующему) или назад (к предыдущему)
+	var want := 0 if at < 0 else at + 1
+	if at >= 1:
+		var fwd: Vector3 = L.player.forward()
+		fwd.y = 0.0
+		var a := _lamp(at).global_position
+		var nx := _lamp(at + 1).global_position - a
+		var pv := _lamp(at - 1).global_position - a
+		nx.y = 0.0
+		pv.y = 0.0
+		var dn := fwd.normalized().dot(nx.normalized())
+		var dp := fwd.normalized().dot(pv.normalized())
+		want = at - 1 if dp > dn + 0.25 else (at + 1 if dn > dp + 0.25 else path_i)
+	if want != _want:
+		_want = want
+		_want_t = 0.0
+	_want_t += delta
+	if want != path_i and _want_t > 0.45:
+		_switch_to(want)
+
+
+## Переключить свет на светильник пути i: он загорается с треском, прежний через миг гаснет,
+## и в его темноте сразу кто-то есть.
+func _switch_to(i: int) -> void:
+	if i == path_i:
+		return
+	var old := _lamp(path_i)
+	path_i = i
 	_lamp_t = 0.0
-	var nxt := _lamp(path_i)
-	# следующий загорается с потрескиванием, этот через миг гаснет — и в его темноте сразу кто-то есть
+	var nxt := _lamp(i)
 	L._sfx3d("click", nxt.global_position, -8.0, 1.2, true)
-	var target: float = _base[PATH[path_i]]
+	var target: float = _base[PATH[i]]
 	var tw := create_tween()
 	nxt.light_energy = 0.0
 	for k in 3:
 		tw.tween_property(nxt, "light_energy", target * 0.8, 0.05)
 		tw.tween_property(nxt, "light_energy", 0.0, 0.07)
 	tw.tween_property(nxt, "light_energy", target, 0.3)
-	var old := cur
 	get_tree().create_timer(0.7).timeout.connect(func():
+		if _lamp(path_i) == old:
+			return                                      # уже снова горит (вернулся)
 		old.light_energy = 0.0
 		L._sfx3d("click", old.global_position, -10.0, 0.7, true)
 		get_tree().create_timer(1.2).timeout.connect(func():
+			if lit:
+				return
 			var s: Array = DARK_SFX.pick_random()
 			L._sfx3d(s[0], old.global_position + Vector3(randf_range(-0.8, 0.8), -0.6, randf_range(-0.8, 0.8)), s[1], s[2], true)))
+
+
+## Свеча зажжена: свет больше не водит — гаснет всё, кроме ночника.
+func _path_stop() -> void:
+	for i in PATH.size():
+		if PATH[i] != NIGHT_LAMP:
+			_lamp(i).light_energy = 0.0
+	path_i = PATH.size() - 1
 
 
 ## Где темно — там и звуки: точка подальше от горящего света, лучше за спиной у игрока.
 func _dark_sounds(delta: float) -> void:
 	if path_i < 0:
 		return
+	if lit:
+		return                                           # со свечой — тишина
 	_dark_t -= delta
 	if _dark_t > 0.0:
 		return
-	_dark_t = randf_range(2.5, 5.5) if not lit else randf_range(9.0, 18.0)
+	_dark_t = randf_range(2.5, 5.5)
 	var p: Vector3 = L.player.global_position
 	var lit_pos := _lamp(path_i).global_position
 	var back: Vector3 = -L.player.forward()
@@ -443,6 +495,7 @@ func _light_candle() -> void:
 	L.inv.remove("matches")
 	_make_held()
 	lit = true
+	_path_stop()
 	gutter = 0.6
 	await get_tree().create_timer(0.6).timeout
 	L.busy = false
