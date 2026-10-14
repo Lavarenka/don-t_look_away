@@ -15,7 +15,6 @@ const MENU_GAP := 150.0
 const FONT_TEXT := preload("res://fonts/Lora-Italic-Variable.ttf")
 var _btn_font: FontVariation
 var _haze_mat: ShaderMaterial
-var _sway_t := 0.0
 var _loading: VBoxContainer
 var _bar: ProgressBar
 var _hint: Label
@@ -293,13 +292,6 @@ func _flicker(delta: float) -> void:
 	var c := Color(_fl, _fl, _fl)
 	_plate.modulate = c
 	_haze_mat.set_shader_parameter("power", _fl)
-	# камера чуть «дышит» в руках — фон и призрак двигаются вместе
-	_sway_t += delta
-	var off := Vector2(sin(_sway_t * 0.37) * 5.0 + sin(_sway_t * 0.91) * 2.0, sin(_sway_t * 0.29 + 1.0) * 4.0 + sin(_sway_t * 0.73) * 1.5)
-	for r in [_plate, _live]:
-		(r as Control).scale = Vector2.ONE * 1.025
-		(r as Control).pivot_offset = (r as Control).size * 0.5
-		(r as Control).position = off
 
 
 ## Пока фонарик моргает, она успевает «перемениться»: то стоит в проёме,
@@ -331,7 +323,8 @@ func _set_pose(i: int, instant := false) -> void:
 
 
 func _clear() -> void:
-	_buttons.get_parent().position.y = 40.0
+	var box := _buttons.get_parent() as Control
+	box.position.y = 40.0
 	_gap.custom_minimum_size.y = MENU_GAP
 	_fit_box.call_deferred()
 	for c in _buttons.get_children():
@@ -343,6 +336,8 @@ func _clear() -> void:
 func _fit_box() -> void:
 	await get_tree().process_frame
 	var box := _buttons.get_parent() as Control
+	box.reset_size()                     # контейнер сам не уменьшается после длинной страницы — иначе меню «уезжало» вверх
+	await get_tree().process_frame
 	var vh := get_viewport_rect().size.y
 	var r := box.get_global_rect()
 	if r.end.y > vh - 40.0:                       # длинная страница — сначала убираем отступ
