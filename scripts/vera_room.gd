@@ -35,6 +35,10 @@ var lit := false                     ## свеча горит
 var candle: Node3D                   ## свеча на тумбочке
 var matches: Node3D
 var held: Node3D                     ## свеча в руке
+const HELD_POS := Vector3(0.26, -0.3, -0.5)
+const HELD_FWD := Vector3(0.14, -0.2, -0.82)   ## Q / ПКМ — вытянул свечу вперёд (вместо осколка, он сломался)
+var push_hold := false
+var _push := 0.0
 var flame_light: OmniLight3D
 var flame: MeshInstance3D
 var gutter := 0.0                    ## > 0 — пламя почти гаснет
@@ -509,7 +513,7 @@ func _light_candle() -> void:
 func _make_held() -> void:
 	held = _glb("res://models/bedroom/vera_candle.glb")
 	L.player.cam.add_child(held)
-	held.position = Vector3(0.26, -0.3, -0.5)
+	held.position = HELD_POS
 	held.rotation = Vector3(0.15, 0.4, 0)
 	held.scale = Vector3.ONE * 0.75
 	for v in held.find_children("*", "GeometryInstance3D", true, false):
@@ -541,11 +545,32 @@ func _update_flame(delta: float) -> void:
 		return
 	_ft += delta
 	gutter = maxf(gutter - delta, 0.0)
+	# вытянуть свечу вперёд (держишь Q / ПКМ)
+	if push_hold and (L.player.frozen or not held.visible):
+		push_hold = false
+	_push = move_toward(_push, 1.0 if push_hold else 0.0, delta * 4.0)
+	var e := _push * _push * (3.0 - 2.0 * _push)
+	held.position = HELD_POS.lerp(HELD_FWD, e)
+	held.rotation.y = lerpf(0.4, 0.1, e)
 	var f := 0.82 + 0.1 * sin(_ft * 11.0) * sin(_ft * 7.3 + 1.0) + randf() * 0.08
 	var g := 1.0 - smoothstep(0.0, 0.35, gutter) * 0.85
 	flame_light.light_energy = 1.5 * f * g
 	flame.scale = Vector3(1.0, (0.85 + 0.2 * f) * maxf(g, 0.2), 1.0)
 	flame.visible = g > 0.1
+
+
+## Q / правая кнопка — пока держишь, свеча вытянута вперёд (когда осколка уже нет).
+func _unhandled_input(e: InputEvent) -> void:
+	if held == null or not started or L.hallp.has_shard:
+		return
+	var pressed := -1
+	if e is InputEventKey and e.physical_keycode == KEY_Q and not e.echo:
+		pressed = 1 if e.pressed else 0
+	elif e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_RIGHT:
+		pressed = 1 if e.pressed else 0
+	if pressed < 0:
+		return
+	push_hold = pressed == 1 and not L.player.frozen
 
 
 ## Пламя на миг почти гаснет (испуг, сквозняк).

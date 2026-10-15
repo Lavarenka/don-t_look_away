@@ -443,10 +443,25 @@ func _unhandled_input(e: InputEvent) -> void:
 		pressed = 1 if e.pressed else 0
 	if pressed < 0:
 		return
+	# в спальне Веры (дверь захлопнулась) осколок ломается в руках и пропадает
+	if L.hush and pressed == 1 and not L.player.frozen:
+		get_viewport().set_input_as_handled()
+		_break_shard()
+		return
 	var want: bool = pressed == 1 and not L.player.frozen and L.phase != "end"
 	if want and not holding:
 		L._sfx("glass", -16.0, 1.6)
 	holding = want
+
+
+func _break_shard() -> void:
+	has_shard = false
+	holding = false
+	L.inv.remove("shard")
+	L._sfx("glass", -2.0, 0.65, true)
+	get_tree().create_timer(0.07).timeout.connect(func(): L._sfx("clink", -6.0, 1.7, true))
+	get_tree().create_timer(0.16).timeout.connect(func(): L._sfx("clink", -10.0, 2.1, true))
+	L.player.shake = 0.15
 
 
 func _process(delta: float) -> void:

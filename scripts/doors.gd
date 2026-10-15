@@ -49,14 +49,14 @@ func interact(tid: String) -> void:
 		var p: Vector3 = L.player.global_position
 		var c: Vector3 = d.center
 		if Vector2(p.x - c.x, p.z - c.z).length() < 0.55:
-			L._sfx3d("creak", c, -10.0, 1.4)
+			L._sfx3d("creak", c, -10.0, 1.4, true)
 			return
 	_busy[id] = true
 	if to == d.open:
-		L._sfx3d("creak", d.center, -6.0, randf_range(0.95, 1.2))     # открывается — скрип петель
+		L._sfx3d("creak", d.center, -6.0, randf_range(0.95, 1.2), true)     # открывается — скрип петель
 	else:
-		L._sfx3d("creak", d.center, -12.0, randf_range(1.3, 1.6))
-		get_tree().create_timer(0.45).timeout.connect(func(): L._sfx3d("door", d.center, -8.0, randf_range(1.0, 1.15)))   # закрылась — хлопок
+		L._sfx3d("creak", d.center, -10.0, randf_range(1.3, 1.6), true)
+		get_tree().create_timer(0.45).timeout.connect(func(): L._sfx3d("door", d.center, -8.0, randf_range(1.0, 1.15), true))   # закрылась — хлопок
 	var tw := create_tween()
 	var sec := 0.75 if to == d.open else 0.55
 	tw.tween_property(d.pivot, "rotation:y", to, sec).set_trans(Tween.TRANS_SINE)
