@@ -444,6 +444,9 @@ func _unhandled_input(e: InputEvent) -> void:
 	if pressed < 0:
 		return
 	# в спальне Веры (дверь захлопнулась) осколок ломается в руках и пропадает
+	if _breaking:
+		get_viewport().set_input_as_handled()
+		return
 	if L.hush and pressed == 1 and not L.player.frozen:
 		get_viewport().set_input_as_handled()
 		_break_shard()
@@ -454,14 +457,90 @@ func _unhandled_input(e: InputEvent) -> void:
 	holding = want
 
 
+var _breaking := false
+var _frag_t := 0.0             ## > 0 — осколки ещё летят (стекло продолжает рисоваться)
+
+
+## Достал осколок — по нему бежит трещина, и он рассыпается в руках: куски падают вниз.
 func _break_shard() -> void:
-	has_shard = false
-	holding = false
-	L.inv.remove("shard")
-	L._sfx("glass", -2.0, 0.65, true)
-	get_tree().create_timer(0.07).timeout.connect(func(): L._sfx("clink", -6.0, 1.7, true))
-	get_tree().create_timer(0.16).timeout.connect(func(): L._sfx("clink", -10.0, 2.1, true))
+	_breaking = true
+	_shard_used = true
+	holding = true
+	L._sfx("glass", -16.0, 1.6, true)
+	var wait := 0.0
+	while _raise < 1.0 and wait < 1.0:
+		holding = true
+		wait += get_process_delta_time()
+		await get_tree().process_frame
+	_raise = 1.0
+	await get_tree().create_timer(0.35).timeout
+	# трещина: из точки удара к краям
+	var hit: Vector2 = _poly.polygon[0].lerp(_poly.polygon[5], 0.45) + Vector2(randf_range(-8, 8), 0)
+	var crack := Line2D.new()
+	crack.width = 1.6
+	crack.default_color = Color(0.9, 0.95, 1.0, 0.85)
+	_poly.get_parent().add_child(crack)
+	var pts: PackedVector2Array = _poly.polygon
+	for k in [1, 4, 7, 9]:
+		var a := hit
+		var b: Vector2 = pts[k]
+		crack.add_point(hit)
+		for s in 4:
+			var t := (s + 1) / 4.0
+			crack.add_point(a.lerp(b, t) + Vector2(randf_range(-6, 6), randf_range(-6, 6)) * (1.0 - t))
+		crack.add_point(hit)
+	L._sfx("clink", -8.0, 2.2, true)
+	await get_tree().create_timer(0.35).timeout
+	# рассыпался: куски-клинья от точки удара к каждой грани
+	L._sfx("glass", -1.0, 0.7, true)
+	get_tree().create_timer(0.06).timeout.connect(func(): L._sfx("clink", -6.0, 1.7, true))
+	get_tree().create_timer(0.18).timeout.connect(func(): L._sfx("clink", -9.0, 2.1, true))
+	get_tree().create_timer(0.45).timeout.connect(func(): L._sfx("clink", -14.0, 1.4, true))
 	L.player.shake = 0.15
+	crack.queue_free()
+	var sz: Vector2 = get_viewport().get_visible_rect().size
+	_frag_t = 1.0
+	for i in pts.size():
+		var a: Vector2 = pts[i]
+		var b: Vector2 = pts[(i + 1) % pts.size()]
+		var tri := [hit, a, b]
+		var mid := (a + b) * 0.5
+		if randf() < 0.6:                     # часть клиньев ещё раз пополам
+			var m2: Vector2 = hit.lerp(mid, randf_range(0.35, 0.6))
+			for piece in [[hit, a, m2], [m2, a, b], [hit, m2, b]]:
+				_fragment(piece, sz)
+		else:
+			_fragment(tri, sz)
+	holding = false
+	_raise = 0.0
+	has_shard = false
+	L.inv.remove("shard")
+	await get_tree().create_timer(1.0).timeout
+	_frag_t = 0.0
+	_breaking = false
+
+
+func _fragment(tri: Array, sz: Vector2) -> void:
+	var c: Vector2 = (tri[0] + tri[1] + tri[2]) / 3.0
+	var f := Polygon2D.new()
+	f.texture = _poly.texture
+	f.color = _poly.color
+	f.polygon = PackedVector2Array([tri[0] - c, tri[1] - c, tri[2] - c])
+	f.uv = PackedVector2Array([tri[0] * _uv_k, tri[1] * _uv_k, tri[2] * _uv_k])
+	f.position = c
+	_poly.get_parent().add_child(f)
+	var e := Line2D.new()
+	e.width = 1.5
+	e.default_color = Color(0.75, 0.85, 0.95, 0.6)
+	e.closed = true
+	e.points = f.polygon
+	f.add_child(e)
+	var dur := randf_range(0.55, 0.85)
+	var tw := f.create_tween().set_parallel()
+	tw.tween_property(f, "position", c + Vector2(randf_range(-0.12, 0.12) * sz.y + (c.x - sz.x * 0.5) * 0.3, sz.y * randf_range(0.8, 1.1)), dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_property(f, "rotation", randf_range(-2.5, 2.5), dur)
+	tw.tween_property(f, "modulate:a", 0.0, dur * 0.4).set_delay(dur * 0.6)
+	tw.chain().tween_callback(f.queue_free)
 
 
 func _process(delta: float) -> void:
@@ -472,7 +551,7 @@ func _process(delta: float) -> void:
 	_poly.visible = on
 	_edge.visible = on
 	_shine.visible = on
-	_view.render_target_update_mode = SubViewport.UPDATE_ALWAYS if on else SubViewport.UPDATE_DISABLED
+	_view.render_target_update_mode = SubViewport.UPDATE_ALWAYS if on or _frag_t > 0.0 else SubViewport.UPDATE_DISABLED
 	if on:
 		var sz: Vector2 = get_viewport().get_visible_rect().size
 		var e := 1.0 - pow(1.0 - _raise, 3.0)

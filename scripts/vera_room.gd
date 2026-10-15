@@ -36,7 +36,7 @@ var candle: Node3D                   ## свеча на тумбочке
 var matches: Node3D
 var held: Node3D                     ## свеча в руке
 const HELD_POS := Vector3(0.26, -0.3, -0.5)
-const HELD_FWD := Vector3(0.14, -0.2, -0.82)   ## Q / ПКМ — вытянул свечу вперёд (вместо осколка, он сломался)
+const HELD_FWD := Vector3(0.2, -0.25, -0.66)   ## Q / ПКМ — вытянул свечу вперёд (вместо осколка, он сломался)
 var push_hold := false
 var _push := 0.0
 var flame_light: OmniLight3D
@@ -551,7 +551,7 @@ func _update_flame(delta: float) -> void:
 	_push = move_toward(_push, 1.0 if push_hold else 0.0, delta * 4.0)
 	var e := _push * _push * (3.0 - 2.0 * _push)
 	held.position = HELD_POS.lerp(HELD_FWD, e)
-	held.rotation.y = lerpf(0.4, 0.1, e)
+	held.rotation.y = lerpf(0.4, 0.25, e)
 	var f := 0.82 + 0.1 * sin(_ft * 11.0) * sin(_ft * 7.3 + 1.0) + randf() * 0.08
 	var g := 1.0 - smoothstep(0.0, 0.35, gutter) * 0.85
 	flame_light.light_energy = 1.5 * f * g
