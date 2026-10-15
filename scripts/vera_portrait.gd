@@ -194,9 +194,9 @@ func _behind() -> void:
 	var from: Vector3 = p.global_position + Vector3(0, 1.0, 0)
 	var q := PhysicsRayQueryParameters3D.create(from, from + back * (BEHIND + 0.4))
 	q.exclude = [p.get_rid()]
-	var hit := p.get_world_3d().direct_space_state.intersect_ray(q)
+	var hit: Dictionary = p.get_world_3d().direct_space_state.intersect_ray(q)
 	if not hit.is_empty():
-		dist = clampf(from.distance_to(hit.position) - 0.4, 0.9, BEHIND)
+		dist = clampf(from.distance_to(hit["position"]) - 0.4, 0.9, BEHIND)
 	var at: Vector3 = Vector3(p.global_position.x, -3.4, p.global_position.z) + back * dist
 	vera.global_position = at
 	var d: Vector3 = p.global_position - at
