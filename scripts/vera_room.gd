@@ -58,6 +58,7 @@ var frame_fixed := false
 var shawl_fixed := false
 var mirror_done := false
 var vera_m: Node3D                   ## Вера — только в отражении
+var portrait: Node                   ## овальный портрет в торце коридора (vera_portrait.gd)
 var key_node: Node3D
 var vp: SubViewport
 var mcam: Camera3D
@@ -73,6 +74,9 @@ func setup(level: Node, bedroom: Node) -> void:
 	await get_tree().physics_frame
 	_place_props()
 	_make_mirror()
+	portrait = preload("res://scripts/vera_portrait.gd").new()
+	add_child(portrait)
+	portrait.setup(L, self)
 
 
 # ---------------------------------------------------------------- расстановка
