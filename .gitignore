@@ -1321,6 +1321,7 @@
 !/scripts/vera.gd
 !/scripts/vera.gd.uid
 !/scripts/vera_portrait.gd
+!/scripts/vera_portrait.gd.uid
 !/scripts/vera_room.gd
 !/scripts/vera_room.gd.uid
 !/scripts/vera_showcase.gd
@@ -1348,6 +1349,7 @@
 !/shaders/murky_water.gdshader
 !/shaders/murky_water.gdshader.uid
 !/shaders/portrait.gdshader
+!/shaders/portrait.gdshader.uid
 !/shaders/spirit.gdshader
 !/shaders/spirit.gdshader.uid
 !/shaders/spirit_eye.gdshader

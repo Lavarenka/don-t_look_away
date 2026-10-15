@@ -347,7 +347,7 @@ func lights_out() -> void:
 	await get_tree().create_timer(0.8).timeout
 	# всё гаснет разом с хлопком, первый светильник остаётся и моргает
 	for i in B.lamps.size():
-		if i != PATH[0]:
+		if i != PATH[0] and i != NIGHT_LAMP:            # ночник у кровати горит всегда
 			(B.lamps[i] as OmniLight3D).light_energy = 0.0
 	L._sfx3d("click", L.player.global_position + Vector3(0, 2.0, 0), -2.0, 0.6, true)
 	path_i = 0
@@ -363,6 +363,7 @@ func _lamp(i: int) -> OmniLight3D:
 ## погашены. Пошёл дальше — загорается следующий, позади гаснет; вернулся назад — так же назад.
 ## В погасшей темноте сразу кто-то есть. Как только зажжена свеча — свет больше не водит (остаётся
 ## только ночник); звуки из темноты — всегда.
+const LEAD := 1.8                    ## на сколько вперёд по ходу «смотрит» свет
 var _want := 0
 var _want_t := 0.0
 
@@ -383,8 +384,13 @@ func _update_path(delta: float) -> void:
 	cur.light_energy = e * f
 	if lit:
 		return
-	# ближайший к игроку светильник пути (по полу, без учёта взгляда)
+	# ближайший светильник пути — к точке чуть впереди по ходу движения (не взгляда):
+	# идёшь к светильнику — он загорается заранее, а не когда упёрся в него
 	var p: Vector3 = L.player.global_position
+	var v: Vector3 = L.player.velocity
+	v.y = 0.0
+	if v.length() > 0.3:
+		p += v.normalized() * LEAD
 	var best := path_i
 	var best_d := INF
 	var cur_d := INF
@@ -397,12 +403,12 @@ func _update_path(delta: float) -> void:
 			best_d = d
 			best = k
 	# переключаем, только если другой заметно ближе и игрок задержался — без дребезга на границе
-	var want := best if best_d < cur_d - 0.6 else path_i
+	var want := best if best_d < cur_d - 0.3 else path_i
 	if want != _want:
 		_want = want
 		_want_t = 0.0
 	_want_t += delta
-	if want != path_i and _want_t > 0.3:
+	if want != path_i and _want_t > 0.2:
 		_switch_to(want)
 
 
@@ -415,16 +421,19 @@ func _switch_to(i: int) -> void:
 	path_i = i
 	_lamp_t = 0.0
 	var nxt := _lamp(i)
-	L._sfx3d("click", nxt.global_position, -8.0, 1.2, true)
 	var target: float = _base[PATH[i]]
-	var tw := create_tween()
-	nxt.light_energy = 0.0
-	for k in 3:
-		tw.tween_property(nxt, "light_energy", target * 0.8, 0.05)
-		tw.tween_property(nxt, "light_energy", 0.0, 0.07)
-	tw.tween_property(nxt, "light_energy", target, 0.3)
+	if PATH[i] == NIGHT_LAMP:
+		nxt.light_energy = target                       # ночник и так горит — без треска
+	else:
+		L._sfx3d("click", nxt.global_position, -8.0, 1.2, true)
+		var tw := create_tween()
+		nxt.light_energy = 0.0
+		for k in 3:
+			tw.tween_property(nxt, "light_energy", target * 0.8, 0.05)
+			tw.tween_property(nxt, "light_energy", 0.0, 0.07)
+		tw.tween_property(nxt, "light_energy", target, 0.3)
 	get_tree().create_timer(0.7).timeout.connect(func():
-		if _lamp(path_i) == old:
+		if _lamp(path_i) == old or old == B.lamps[NIGHT_LAMP]:   # вернулся / ночник не гаснет
 			return                                      # уже снова горит (вернулся)
 		old.light_energy = 0.0
 		L._sfx3d("click", old.global_position, -10.0, 0.7, true)

@@ -8,6 +8,7 @@ extends Node
 
 const C := Vector3(-15.16, -3.4 + 1.665, -27.585)   ## центр овала (между холстом и кромкой рамы)
 const SIZE := Vector2(0.70, 0.97)                    ## проём рамы (край прячется под раму)
+const BEHIND := 1.8                                 ## на каком расстоянии за спиной встаёт
 const NEAR := 1.35                                   ## «вплотную» — по полу от портрета
 const POSES := ["stare", "tilt", "close", "reach", "away", "mouth"]
 
@@ -188,10 +189,15 @@ func _behind() -> void:
 	var back: Vector3 = -p.forward()
 	back.y = 0.0
 	back = back.normalized()
-	var at: Vector3 = Vector3(p.global_position.x, -3.4, p.global_position.z) + back * 0.8
-	# не в стену: коридор у портрета — x -16.0..-14.3; дальше — вглубь
-	at.x = clampf(at.x, -15.9, -14.35) if at.z > -28.6 else clampf(at.x, -16.0, -5.9)
-	at.z = clampf(at.z, -36.0, -27.95)
+	# за спиной, на расстоянии ~1.8 м; если сзади стена/мебель — чуть ближе, но не вплотную
+	var dist := BEHIND
+	var from: Vector3 = p.global_position + Vector3(0, 1.0, 0)
+	var q := PhysicsRayQueryParameters3D.create(from, from + back * (BEHIND + 0.4))
+	q.exclude = [p.get_rid()]
+	var hit := p.get_world_3d().direct_space_state.intersect_ray(q)
+	if not hit.is_empty():
+		dist = clampf(from.distance_to(hit.position) - 0.4, 0.9, BEHIND)
+	var at: Vector3 = Vector3(p.global_position.x, -3.4, p.global_position.z) + back * dist
 	vera.global_position = at
 	var d: Vector3 = p.global_position - at
 	vera.rotation.y = atan2(d.x, d.z)
