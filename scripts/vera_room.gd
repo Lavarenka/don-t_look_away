@@ -538,8 +538,8 @@ func _start_peek() -> void:
 	for mi in peek.find_children("*", "MeshInstance3D", true, false):
 		var m := (mi as MeshInstance3D).material_override as ShaderMaterial
 		if m:
-			m.set_shader_parameter("tint", Color(0.42, 0.4, 0.4))
-			m.set_shader_parameter("rim", 0.025)
+			m.set_shader_parameter("tint", Color(0.3, 0.29, 0.29))   # тёмный силуэт
+			m.set_shader_parameter("rim", 0.0)                       # без ореола по краю
 
 
 ## Пока она есть: медленно поворачивается к игроку. Перешёл за свечу (в её сторону), подошёл,
