@@ -355,11 +355,10 @@ func _lamp(i: int) -> OmniLight3D:
 	return B.lamps[PATH[i]]
 
 
-## Свет ведёт по пути в обе стороны: горит светильник впереди — по ходу взгляда от того, до которого
-## ты дошёл последним. Дошёл до горящего — загорается следующий, этот гаснет; развернулся и пошёл
-## назад — загорается тот, что позади, а впереди гаснет. В погасшей темноте сразу кто-то есть.
-## Как только зажжена свеча — свет больше не водит (остаётся только ночник); звуки из темноты — всегда.
-var at := -1                         ## до какого светильника пути дошёл последним (-1 — ещё у двери)
+## Свет идёт за игроком: горит тот светильник пути, у которого он сейчас стоит (ближайший), остальные
+## погашены. Пошёл дальше — загорается следующий, позади гаснет; вернулся назад — так же назад.
+## В погасшей темноте сразу кто-то есть. Как только зажжена свеча — свет больше не водит (остаётся
+## только ночник); звуки из темноты — всегда.
 var _want := 0
 var _want_t := 0.0
 
@@ -380,33 +379,26 @@ func _update_path(delta: float) -> void:
 	cur.light_energy = e * f
 	if lit:
 		return
+	# ближайший к игроку светильник пути (по полу, без учёта взгляда)
 	var p: Vector3 = L.player.global_position
-	# до какого светильника дошёл
+	var best := path_i
+	var best_d := INF
+	var cur_d := INF
 	for k in PATH.size():
 		var lp := _lamp(k).global_position
-		if Vector2(p.x - lp.x, p.z - lp.z).length() < 1.7:
-			at = k
-	if at == PATH.size() - 1:
-		_switch_to(at)                                   # у ночника — он и горит
-		return
-	# куда смотрит: вперёд по пути (к следующему) или назад (к предыдущему)
-	var want := 0 if at < 0 else at + 1
-	if at >= 1:
-		var fwd: Vector3 = L.player.forward()
-		fwd.y = 0.0
-		var a := _lamp(at).global_position
-		var nx := _lamp(at + 1).global_position - a
-		var pv := _lamp(at - 1).global_position - a
-		nx.y = 0.0
-		pv.y = 0.0
-		var dn := fwd.normalized().dot(nx.normalized())
-		var dp := fwd.normalized().dot(pv.normalized())
-		want = at - 1 if dp > dn + 0.25 else (at + 1 if dn > dp + 0.25 else path_i)
+		var d := Vector2(p.x - lp.x, p.z - lp.z).length()
+		if k == path_i:
+			cur_d = d
+		if d < best_d:
+			best_d = d
+			best = k
+	# переключаем, только если другой заметно ближе и игрок задержался — без дребезга на границе
+	var want := best if best_d < cur_d - 0.6 else path_i
 	if want != _want:
 		_want = want
 		_want_t = 0.0
 	_want_t += delta
-	if want != path_i and _want_t > 0.45:
+	if want != path_i and _want_t > 0.3:
 		_switch_to(want)
 
 

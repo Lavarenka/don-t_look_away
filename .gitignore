@@ -1410,6 +1410,8 @@
 !/textures/linen_rough.jpg.import
 !/textures/menu_plate.jpg
 !/textures/menu_plate.jpg.import
+!/textures/menu_plate.png
+!/textures/menu_plate.png.import
 !/textures/pbr/rustic_stone_wall_02_arm_2k.jpg
 !/textures/pbr/rustic_stone_wall_02_arm_2k.jpg.import
 !/textures/pbr/rustic_stone_wall_02_diff_2k.jpg
@@ -1446,4 +1448,5 @@
 !/textures/vanity_drawer.jpg.import
 !/tools/git_used.py
 !/tools/render_menu_plate.gd
+!/tools/render_menu_plate.gd.uid
 /.godot/
