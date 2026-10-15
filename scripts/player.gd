@@ -76,6 +76,7 @@ func _process(delta: float) -> void:
 	if flicker > 0.0:
 		flicker -= delta
 	flash.light_energy = flash_energy * randf_range(0.95, 1.0) if is_light_lit() else 0.0
+	flash.visible = is_light_lit()      # выключен — совсем убрать (иначе в тумане остаётся пятно света)
 	cam.position = Vector3(0, sin(_bob) * 0.03, 0)
 	if shake > 0.0:
 		cam.h_offset = randf_range(-1, 1) * shake * 0.05

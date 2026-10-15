@@ -17,7 +17,8 @@ const HELD_LAYER := 1 << 12          ## свеча в руке — в зерка
 const NIGHT_LAMP := 5                ## индекс ночника у кровати в bedroom.LAMPS — он не гаснет
 const BED_C := Vector3(-9.04, Y2 + 0.70, -32.03)        ## верх матраса, центр
 const BED_FOOT := Vector3(-9.04, 0.0, -30.6)            ## изножье (высота — лучом)
-const CANDLE_XZ := Vector2(-11.45, -33.3)
+const CANDLE_XZ := Vector2(-11.2, -30.0)                ## свеча горит на полу посреди комнаты
+const PEEK_XZ := Vector2(-7.0, -29.35)                  ## там в темноте стоит Вера и тянет руку
 const MATCH_XZ := Vector2(-10.85, -33.02)
 const BOX_XZ := Vector2(-10.5, -28.03)                  ## шкатулка на комоде у южной стены
 const FRAME_XZ := Vector2(-6.25, -32.95)                ## фото на комоде со стеклянными дверцами
@@ -109,17 +110,40 @@ func _target(id: String, pos: Vector3, hint: String, th := 0.4, dist := 2.2) -> 
 
 func _place_props() -> void:
 	var room: Node3D = L
-	# свеча и спички на тумбочке у ночника
+	# свеча уже горит — стоит на полу посреди комнаты (спички не нужны)
 	candle = _glb("res://models/bedroom/vera_candle.glb")
 	room.add_child(candle)
-	candle.global_position = Vector3(CANDLE_XZ.x, _top(CANDLE_XZ.x, CANDLE_XZ.y), CANDLE_XZ.y)
+	candle.global_position = Vector3(CANDLE_XZ.x, _top(CANDLE_XZ.x, CANDLE_XZ.y, 0.4), CANDLE_XZ.y)
 	candle.rotation.y = 0.6
-	_target("v_candle", candle.global_position + Vector3(0, 0.1, 0), "BR_CANDLE")
-	matches = _glb("res://models/props/matchbox.glb")
+	floor_flame = MeshInstance3D.new()
+	var fq := QuadMesh.new()
+	fq.size = Vector2(0.03, 0.066)
+	floor_flame.mesh = fq
+	var ffm := ShaderMaterial.new()
+	ffm.shader = preload("res://shaders/candle_flame.gdshader")
+	floor_flame.material_override = ffm
+	floor_flame.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	candle.add_child(floor_flame)
+	floor_flame.position = Vector3(0, 0.19, 0)
+	floor_light = OmniLight3D.new()
+	floor_light.light_color = Color(1.0, 0.68, 0.38)
+	floor_light.omni_range = 4.0
+	floor_light.omni_attenuation = 1.6
+	floor_light.shadow_enabled = true
+	floor_light.shadow_bias = 0.05
+	floor_light.visible = false                         # загорается, когда дверь захлопнулась
+	floor_flame.visible = false
+	candle.add_child(floor_light)
+	floor_light.position = Vector3(0, 0.24, 0)
+	_target("v_candle", candle.global_position + Vector3(0, 0.12, 0), "BR_CANDLE", 0.45, 2.4)
+	matches = Node3D.new()                              # спичек больше нет (в коде остаётся пустышка)
 	room.add_child(matches)
-	matches.global_position = Vector3(MATCH_XZ.x, _top(MATCH_XZ.x, MATCH_XZ.y) + 0.005, MATCH_XZ.y)
-	matches.rotation.y = -0.4
-	_target("v_matches", matches.global_position + Vector3(0, 0.03, 0), "BR_MATCHES")
+	matches.visible = false
+	# Вера: еле видна в темноте за свечой, выглядывает и тянет руку
+	peek = preload("res://scripts/vera.gd").new()
+	room.add_child(peek)
+	peek.global_position = Vector3(PEEK_XZ.x, Y2, PEEK_XZ.y)
+	peek.visible = false
 	# одеяло, под которым кто-то лежит
 	var bl := _glb("res://models/bedroom/vera_blanket.glb")
 	room.add_child(bl)
@@ -356,6 +380,7 @@ func lights_out() -> void:
 	L._sfx3d("click", L.player.global_position + Vector3(0, 2.0, 0), -2.0, 0.6, true)
 	path_i = 0
 	_dark_t = 2.5
+	_start_peek()
 	L._set_objective("BR_OBJ2")
 
 
@@ -494,6 +519,71 @@ func _dark_sounds(delta: float) -> void:
 			get_tree().create_timer(0.7 * (k + 1)).timeout.connect(func(): L._sfx3d("step%d" % (randi() % 4), q, -5.0, 0.7, true))
 
 
+var floor_flame: MeshInstance3D
+var floor_light: OmniLight3D
+var peek: Node3D
+var peek_gone := false
+
+
+## Дверь захлопнулась — свеча на полу горит, а за ней в темноте стоит Вера.
+func _start_peek() -> void:
+	floor_flame.visible = true
+	floor_light.visible = true
+	floor_light.light_energy = 1.1
+	peek.visible = true
+	peek.play("idle", 0.35, 0.0)
+	peek.pose.target = {"LeftForeArm": Vector3(0, 0, 1.0), "LeftHand": Vector3(0, 0, 0.2),
+		"Spine": Vector3(0, 0, -0.3), "Spine1": Vector3(0, 0, -0.15), "Head": Vector3(0, 0, 0.35)}
+	peek.pose.snap()
+	for mi in peek.find_children("*", "MeshInstance3D", true, false):
+		var m := (mi as MeshInstance3D).material_override as ShaderMaterial
+		if m:
+			m.set_shader_parameter("tint", Color(0.42, 0.4, 0.4))
+			m.set_shader_parameter("rim", 0.025)
+
+
+## Пока она есть: медленно поворачивается к игроку. Перешёл за свечу (в её сторону), подошёл,
+## или взял свечу — исчезает, мигнув.
+func _update_peek(delta: float) -> void:
+	if peek_gone or not peek.visible:
+		return
+	var pp: Vector3 = L.player.global_position
+	var d := pp - peek.global_position
+	peek.rotation.y = lerp_angle(peek.rotation.y, atan2(d.x, d.z), minf(1.0, delta * 1.2))
+	var c := Vector3(CANDLE_XZ.x, 0, CANDLE_XZ.y)
+	var dir := Vector3(PEEK_XZ.x, 0, PEEK_XZ.y) - c
+	dir = dir.normalized()
+	var past := Vector3(pp.x - c.x, 0, pp.z - c.z).dot(dir) > 0.1
+	if past or Vector2(d.x, d.z).length() < 3.0 or lit:
+		_peek_vanish()
+
+
+func _peek_vanish() -> void:
+	peek_gone = true
+	L._sfx3d("whoosh", peek.global_position + Vector3(0, 1.4, 0), -12.0, 0.6, true)
+	gutter_out(0.5)
+	for k in 5:
+		peek.visible = k % 2 == 1
+		await get_tree().create_timer(randf_range(0.05, 0.12)).timeout
+	peek.visible = false
+	peek.queue_free()
+
+
+## Взял горящую свечу с пола — она в руке.
+func _take_candle() -> void:
+	L.busy = true
+	L._sfx("pickup", -6.0, 1.0, true)
+	candle.visible = false
+	floor_light.visible = false
+	_make_held()
+	lit = true
+	_path_stop()
+	gutter = 0.4
+	await get_tree().create_timer(0.4).timeout
+	L.busy = false
+	L._set_objective("BR_OBJ3")
+
+
 func _light_candle() -> void:
 	L.busy = true
 	L._sfx("match_strike", -4.0, 1.0, true)
@@ -600,11 +690,7 @@ func interact(id: String) -> void:
 		return
 	match id:
 		"v_candle":
-			if L.inv.add("candle", candle):
-				candle.visible = false
-				L._sfx("pickup", -6.0, 1.0, true)
-				if L.inv.has("matches"):
-					_light_candle()
+			_take_candle()
 		"v_matches":
 			if L.inv.add("matches", matches):
 				matches.visible = false
@@ -691,6 +777,7 @@ func _process(delta: float) -> void:
 	if not started:
 		return
 	_update_flame(delta)
+	_update_peek(delta)
 	_update_path(delta)
 	_dark_sounds(delta)
 	# подсказка у шкатулки: со всеми зубцами — «вставить»

@@ -44,6 +44,7 @@ func setup(level: Node) -> void:
 	_wallpaper()
 	L.doors.add("bed", ea, 0.0, ea.get_meta("open"), DOOR_C, func(): return unlocked)
 	L.doors.add("bed_in", ra, 0.0, ra.get_meta("open"), INNER_C, func(): return L.phase == "floor2")
+	ra.rotation.y = ra.get_meta("open")                 # дверь в саму спальню уже открыта
 	vroom = preload("res://scripts/vera_room.gd").new()
 	add_child(vroom)
 	vroom.setup(L, self)
