@@ -203,6 +203,7 @@ func _behind() -> void:
 	vera.rotation.y = atan2(d.x, d.z)
 	vera.freeze("idle", 0.3)
 	vera.set_speed(0.25)
+	_no_glow()
 	vera.visible = true
 	_pose("empty")
 	# едва слышно — дыхание прямо за спиной
@@ -213,11 +214,21 @@ func _scream() -> void:
 	stage = 3
 	var p = L.player
 	vera.set_speed(1.0)
-	vera.scream(0.5)
+	vera.scream(1.3)
+	_no_glow()                                       # без ореола: просто стоит в темноте при свече
 	L._sfx("scream", -2.0, 0.85, true)
 	L._sfx3d("whoosh", vera.global_position + Vector3(0, 1.4, 0), -4.0, 0.7, true)
 	p.shake = 0.5
 	R.gutter_out(0.9)
-	await get_tree().create_timer(0.55).timeout
+	await get_tree().create_timer(1.55).timeout
 	vera.visible = false
 	vera.set_mouth(0.0)
+
+
+## Убрать холодный ореол по краю (и «нагнетание», которое его усиливает) со всех частей модели.
+func _no_glow() -> void:
+	for mi in vera.find_children("*", "MeshInstance3D", true, false):
+		var m := (mi as MeshInstance3D).material_override as ShaderMaterial
+		if m:
+			m.set_shader_parameter("rim", 0.0)
+			m.set_shader_parameter("dread", 0.0)
