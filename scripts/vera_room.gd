@@ -18,7 +18,7 @@ const NIGHT_LAMP := 5                ## индекс ночника у кров�
 const BED_C := Vector3(-9.04, Y2 + 0.70, -32.03)        ## верх матраса, центр
 const BED_FOOT := Vector3(-9.04, 0.0, -30.6)            ## изножье (высота — лучом)
 const CANDLE_XZ := Vector2(-11.2, -30.0)                ## свеча горит на полу посреди комнаты
-const PEEK_XZ := Vector2(-7.0, -29.35)                  ## там в темноте стоит Вера и тянет руку
+const PEEK_XZ := Vector2(-8.7, -29.55)                  ## там в темноте стоит Вера и тянет руку
 const MATCH_XZ := Vector2(-10.85, -33.02)
 const BOX_XZ := Vector2(-10.5, -28.03)                  ## шкатулка на комоде у южной стены
 const FRAME_XZ := Vector2(-6.25, -32.95)                ## фото на комоде со стеклянными дверцами
@@ -554,7 +554,7 @@ func _update_peek(delta: float) -> void:
 	var dir := Vector3(PEEK_XZ.x, 0, PEEK_XZ.y) - c
 	dir = dir.normalized()
 	var past := Vector3(pp.x - c.x, 0, pp.z - c.z).dot(dir) > 0.1
-	if past or Vector2(d.x, d.z).length() < 3.0 or lit:
+	if past or Vector2(d.x, d.z).length() < 2.0 or lit:
 		_peek_vanish()
 
 
