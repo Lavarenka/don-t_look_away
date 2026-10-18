@@ -440,10 +440,7 @@ func _say(t: String, sec := 3.5) -> void:
 
 # ---------------- звук ----------------
 func _setup_audio() -> void:
-	var rev := AudioEffectReverb.new()
-	rev.room_size = 0.7
-	rev.wet = 0.25
-	AudioServer.add_bus_effect(0, rev)
+	SETTINGS.master_fx(true)                     # одна реверберация + лимитер (не копятся при перезагрузке)
 	# нагнетающий фон: тихий тревожный гул (звуки — Sonniss GDC 2026, см. CREDITS.txt)
 	drone = AudioStreamPlayer.new()
 	drone.stream = _loop_stream("dread")

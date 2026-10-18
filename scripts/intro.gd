@@ -293,15 +293,7 @@ func _rain() -> void:
 # ---------------- звук ----------------
 func _audio() -> void:
 	# лимитер на общем выходе: громкие удары не «хрипят»
-	var has_lim := false
-	for i in AudioServer.get_bus_effect_count(0):
-		if AudioServer.get_bus_effect(0, i) is AudioEffectHardLimiter:
-			has_lim = true
-	if not has_lim:
-		var lim := AudioEffectHardLimiter.new()
-		lim.ceiling_db = -0.5
-		lim.pre_gain_db = 0.0
-		AudioServer.add_bus_effect(0, lim)
+	SETTINGS.master_fx(false)
 	# звуки — из бесплатного набора Sonniss GDC 2026 (см. CREDITS.txt), сведены скриптом gen_intro_audio.py
 	_loop("storm", -6.0)
 	_loop("wind", -12.0)

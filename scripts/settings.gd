@@ -20,6 +20,25 @@ static func set_quality(q: int) -> void:
 	cf.save(PATH)
 
 
+## Эффекты на общем выходе звука. Раньше уровень при каждой загрузке (меню → игра → меню → игра,
+## перезапуск главы) добавлял ещё одну реверберацию — они копились и звук превращался в хрип
+## до перезапуска игры. Теперь: ровно одна реверберация (если нужна) и лимитер последним.
+static func master_fx(reverb: bool) -> void:
+	for i in range(AudioServer.get_bus_effect_count(0) - 1, -1, -1):
+		var e := AudioServer.get_bus_effect(0, i)
+		if e is AudioEffectReverb or e is AudioEffectHardLimiter:
+			AudioServer.remove_bus_effect(0, i)
+	if reverb:
+		var rev := AudioEffectReverb.new()
+		rev.room_size = 0.7
+		rev.wet = 0.25
+		AudioServer.add_bus_effect(0, rev)
+	var lim := AudioEffectHardLimiter.new()          # громкие наложения не клиппуют
+	lim.ceiling_db = -0.5
+	lim.pre_gain_db = 0.0
+	AudioServer.add_bus_effect(0, lim)
+
+
 static var _lut: ImageTexture3D
 
 ## Таблица цвета 32³ (LUT) — считается один раз. Вход: цвет после тонмаппинга, выход — «киношный».
