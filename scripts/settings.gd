@@ -20,6 +20,42 @@ static func set_quality(q: int) -> void:
 	cf.save(PATH)
 
 
+static var _lut: ImageTexture3D
+
+## Таблица цвета 32³ (LUT) — считается один раз. Вход: цвет после тонмаппинга, выход — «киношный».
+static func film_lut() -> ImageTexture3D:
+	if _lut:
+		return _lut
+	const N := 32
+	var slices: Array[Image] = []
+	for bi in N:
+		var img := Image.create(N, N, false, Image.FORMAT_RGB8)
+		for gi in N:
+			for ri in N:
+				img.set_pixel(ri, gi, film_grade(Color(ri / (N - 1.0), gi / (N - 1.0), bi / (N - 1.0))))
+		slices.append(img)
+	_lut = ImageTexture3D.new()
+	_lut.create(Image.FORMAT_RGB8, N, N, N, false, slices)
+	return _lut
+
+
+static func film_grade(c: Color) -> Color:
+	var v := Vector3(c.r, c.g, c.b)
+	# мягкая S-кривая (контраст в средних тонах, не давит чёрное и белое)
+	var s := v * v * (Vector3(3, 3, 3) - 2.0 * v)
+	v = v.lerp(s, 0.2)
+	var l := v.dot(Vector3(0.2126, 0.7152, 0.0722))
+	# чуть приглушить цвет
+	v = Vector3(l, l, l).lerp(v, 0.88)
+	# раздельное тонирование: тени — в холодный сине-зелёный, света — в тёплый янтарь
+	var sh := pow(1.0 - l, 2.0) * 0.32
+	var hi := pow(l, 2.0) * 0.22
+	v = v * (Vector3.ONE.lerp(Vector3(0.9, 1.0, 1.1), sh)) * (Vector3.ONE.lerp(Vector3(1.08, 1.0, 0.86), hi))
+	# чёрное чуть приподнято — «плёнка», а не провал
+	v = v * 0.985 + Vector3(0.012, 0.014, 0.018)
+	return Color(clampf(v.x, 0, 1), clampf(v.y, 0, 1), clampf(v.z, 0, 1))
+
+
 ## Применить к окружению уровня и к шейдеру «камеры».
 static func apply(env: Environment, post: ShaderMaterial, q: int) -> void:
 	if env:
@@ -29,8 +65,15 @@ static func apply(env: Environment, post: ShaderMaterial, q: int) -> void:
 		env.sdfgi_cascades = 4 if q >= 3 else 2
 		env.sdfgi_min_cell_size = 0.1
 		env.sdfgi_energy = 0.9
-		env.ssil_enabled = q >= 2
-		env.ssil_intensity = 1.2
+		# отражённый свет от стен и пола (SSIL) — с «среднего»; на «высоком» ещё и SDFGI
+		env.ssil_enabled = q >= 1
+		env.ssil_intensity = 1.5
+		env.ssil_radius = 3.0
+		env.ssil_sharpness = 0.98
+		env.ssil_normal_rejection = 1.0
+		# единый «киношный» цвет на всю игру (LUT): холодные тени, тёплые света, мягкая S-кривая
+		env.adjustment_enabled = true
+		env.adjustment_color_correction = film_lut()
 		env.ssao_enabled = q >= 1
 		env.volumetric_fog_enabled = q >= 1
 		env.glow_enabled = true

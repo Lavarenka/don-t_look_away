@@ -1272,6 +1272,7 @@
 !/scripts/bedroom.gd.uid
 !/scripts/creature.gd
 !/scripts/creature.gd.uid
+!/scripts/decals.gd
 !/scripts/distant.gd
 !/scripts/distant.gd.uid
 !/scripts/door_kit.gd
@@ -1368,6 +1369,14 @@
 !/textures/decal_on_zdes.png.import
 !/textures/decal_on_zdes_en.png
 !/textures/decal_on_zdes_en.png.import
+!/textures/decals/drip_1.png
+!/textures/decals/drip_2.png
+!/textures/decals/drip_3.png
+!/textures/decals/mould_1.png
+!/textures/decals/mould_2.png
+!/textures/decals/stain_1.png
+!/textures/decals/stain_2.png
+!/textures/decals/stain_3.png
 !/textures/drawings/num_1.png
 !/textures/drawings/num_1.png.import
 !/textures/drawings/num_2.png

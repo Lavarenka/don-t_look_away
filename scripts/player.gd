@@ -25,6 +25,7 @@ var _step_acc := 0.0
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	flash.light_volumetric_fog_energy = 4.0     # луч фонаря виден в воздухе — столб света с пылью
 
 
 func _unhandled_input(e: InputEvent) -> void:
