@@ -15,6 +15,10 @@ const PIECES := [
 	{"node": "Attic/Crate7", "glb": "attic_nightstand_b", "k": 2, "push": true},
 ]
 const PUSH_DIST := 0.5
+## Механика мебели пока выключена (E ничего не открывает) — включим отдельно там, где понадобится:
+## тогда MECHANICS = true или точечно — список ENABLED (номера из PIECES, 100 — сундук).
+const MECHANICS := false
+const ENABLED: Array[int] = []
 
 var L: Node
 var parts := {}          ## id → {node, kind, base, open, piece, target}
@@ -40,7 +44,7 @@ func setup(level: Node) -> void:
 			"col_base": col.position if col else Vector3.ZERO, "half": half, "target": {}}
 		pieces[i] = pc
 		_add_parts(i, model)
-		if p.push:
+		if p.push and _on(i):
 			var t := {"id": "fn_push%d" % i, "pos": holder.global_position + Vector3(0, half, 0), "th": 0.35, "dist": 2.0}
 			L.targets.append(t)
 			L.extra_hints[t.id] = "FN_PUSH"
@@ -56,6 +60,42 @@ func setup(level: Node) -> void:
 		tr.add_child(tm)
 		pieces[100] = {"root": tr, "col": null, "model": tm, "pushed": false, "base": tr.position, "col_base": Vector3.ZERO, "half": 0.27, "target": {}}
 		_add_parts(100, tm, "LVL_42")
+	# холл, у первого портрета: вместо коробки (CSG) — низкий шкафчик; столкновение — простая коробка
+	var junk := L.get_node_or_null("Junk1") as Node3D
+	if junk:
+		var xf := junk.global_transform
+		junk.queue_free()
+		var body := StaticBody3D.new()
+		L.add_child(body)
+		body.global_transform = xf
+		var cs := CollisionShape3D.new()
+		var bs := BoxShape3D.new()
+		bs.size = Vector3(0.6, 0.62, 0.6)
+		cs.shape = bs
+		body.add_child(cs)
+		var hc: Node3D = load("res://models/props/hall_cabinet.glb").instantiate()
+		body.add_child(hc)
+		hc.position = Vector3(0, -0.3, 0)
+		hc.rotation.y = PI / 2.0                      # лицом от стены, в холл
+	# сундук с платьем (Trunk1): родная текстура дерева почти белая — затемнить до старого дерева
+	var t1 := L.get_node_or_null("Attic/Trunk1/Model") as Node3D
+	if t1:
+		for mi in t1.find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			for si in m.mesh.get_surface_count():
+				var mat := m.get_active_material(si) as BaseMaterial3D
+				if mat and str(mat.resource_name).contains("Wood"):
+					var dm := mat.duplicate() as BaseMaterial3D
+					dm.albedo_color = Color(0.36, 0.25, 0.17)
+					m.set_surface_override_material(si, dm)
+	# люк на чердак: доски, поперечины снизу, кованые петли и кольцо (вместо плоской доски с полосками)
+	var hatch := L.get_node_or_null("Attic/Hatch") as Node3D
+	if hatch:
+		for n in ["Lid", "Strap0", "Strap1", "Strap2", "Ring"]:
+			var c := hatch.get_node_or_null(n) as Node3D
+			if c:
+				c.visible = false
+		hatch.add_child(load("res://models/attic/attic_hatch.glb").instantiate())
 	# полочки под портретами в холле
 	for i in 3:
 		var sh := L.get_node_or_null("Portrait%d/Shelf" % (i + 1)) as Node3D
@@ -69,7 +109,13 @@ func setup(level: Node) -> void:
 
 
 ## Подвижные части модели: DrawerN, DoorN, Lid (ручки/петли — их дети, двигаются с ними).
+func _on(pi: int) -> bool:
+	return MECHANICS or pi in ENABLED
+
+
 func _add_parts(pi: int, model: Node3D, open_hint := "LVL_68") -> void:
+	if not _on(pi):
+		return
 	for n in model.find_children("*", "Node3D", true, false):
 		var nm := str(n.name)
 		var kind := ""
