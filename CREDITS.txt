@@ -67,3 +67,4 @@
 Не использовано: young_marceline_horror.glb — фан-модель персонажа из чужого мультфильма,
 такие нельзя ставить в свою игру.
 - Призрак бабушки Веры «The Haggard Witch» — Azura_SQ, Sketchfab, CC BY 4.0 (сгенерирована в Meshy; упрощена, скелет, веса и челюсть — свои, анимации перенесены с Ани).
+- Почерк в письме Веры (текстура textures/letter) — шрифт Marck Script, Denis Masharov, SIL Open Font License 1.1 (буквы запечены в картинку).

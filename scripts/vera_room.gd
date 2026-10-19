@@ -63,6 +63,7 @@ var frame_fixed := false
 var shawl_fixed := false
 var mirror_done := false
 var vera_m: Node3D                   ## Вера — только в отражении
+var letter: Node                     ## катсцена «Письмо Веры» (vera_letter.gd)
 var portrait: Node                   ## овальный портрет в торце коридора (vera_portrait.gd)
 var key_node: Node3D
 var vp: SubViewport
@@ -79,6 +80,9 @@ func setup(level: Node, bedroom: Node) -> void:
 	await get_tree().physics_frame
 	_place_props()
 	_make_mirror()
+	letter = preload("res://scripts/vera_letter.gd").new()
+	add_child(letter)
+	letter.setup(L, self)
 	portrait = preload("res://scripts/vera_portrait.gd").new()
 	add_child(portrait)
 	portrait.setup(L, self)
@@ -724,7 +728,7 @@ func interact(id: String) -> void:
 			key_node.visible = false
 			L.inv.add("smallkey", key_node)
 			L._sfx("pickup", -6.0, 1.0, true)
-			L._set_objective("BR_DONE")
+			letter.play()                                   # под ключом — письмо Веры (катсцена)
 	if id.begins_with("v_tooth"):
 		var t: Node3D = teeth[int(id.right(1)) - 1]
 		if L.inv.add(id, t):
@@ -845,3 +849,4 @@ func _check_mirror_done() -> void:
 	vera_m.visible = false
 	L._sfx3d("click", glass.global_position + Vector3(0.2, -0.7, -0.3), -6.0, 1.2, true)
 	key_node.visible = true
+	letter.note_small.visible = true

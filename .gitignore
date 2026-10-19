@@ -1572,6 +1572,7 @@
 !/scripts/trailer.gd.uid
 !/scripts/vera.gd
 !/scripts/vera.gd.uid
+!/scripts/vera_letter.gd
 !/scripts/vera_portrait.gd
 !/scripts/vera_portrait.gd.uid
 !/scripts/vera_room.gd
@@ -1674,6 +1675,8 @@
 !/textures/fog_digits.png.import
 !/textures/fog_figure.png
 !/textures/fog_figure.png.import
+!/textures/letter/letter_en.png
+!/textures/letter/letter_ru.png
 !/textures/linen_diff.jpg
 !/textures/linen_diff.jpg.import
 !/textures/linen_nor.jpg
