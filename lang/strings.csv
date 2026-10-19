@@ -279,3 +279,5 @@ INV_SHAWL,Knitted shawl,Вязаная шаль
 INV_SHAWL_D,Grandma's. It still smells of her perfume.,Бабушкина. Ещё пахнет её духами.
 INV_SMALLKEY,Small key,Маленький ключ
 INV_SMALLKEY_D,"Was lying under the mirror. Warm, as if someone had just been holding it.",Лежал под зеркалом. Тёплый — будто его только что держали в руке.
+FN_PUSH,E — push aside,E — отодвинуть
+FN_PUSH_BACK,E — push back,E — придвинуть обратно

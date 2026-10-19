@@ -56,6 +56,7 @@ var haunts: Node
 var nursery: Node
 var attic: Node
 var floor2: Node
+var furn: Node             ## мебель с механикой (furniture.gd)
 var hallp: Node            ## загадки зала и коридора, осколок зеркала
 var inv: Node              ## инвентарь (Tab)
 var bath: Node             ## ванная второго этажа
@@ -258,6 +259,9 @@ func _ready() -> void:
 	var atmo := preload("res://scripts/atmosphere.gd").new()     # туман по полу, пыль, облака на луне, мелкие события
 	add_child(atmo)
 	atmo.setup(self)
+	furn = preload("res://scripts/furniture.gd").new()          # мебель чердака и полочки холла (ящики, дверцы, крышки)
+	add_child(furn)
+	furn.setup(self)
 	var dec := preload("res://scripts/decals.gd").new()          # подтёки, пятна, плесень по дому
 	add_child(dec)
 	dec.setup(self)
@@ -546,6 +550,8 @@ func _target_ok(id: String) -> bool:
 		return nursery.target_ok(id)
 	if id.begins_with("a_"):
 		return attic.target_ok(id)
+	if id.begins_with("fn_"):
+		return furn.target_ok(id)
 	if id.begins_with("f_"):
 		return floor2.target_ok(id)
 	if id.begins_with("h_"):
@@ -633,6 +639,7 @@ func _interact() -> void:
 			bath.interact(t)
 			doors.interact(t)
 			bedroom.vroom.interact(t)
+			furn.interact(t)
 
 
 func _show_note(text: String) -> void:

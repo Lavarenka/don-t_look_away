@@ -252,6 +252,14 @@
 !/models/Rockingchair_01/textures/Rockingchair_01_diff_2k.jpg.import
 !/models/Rockingchair_01/textures/Rockingchair_01_nor_gl_2k.jpg
 !/models/Rockingchair_01/textures/Rockingchair_01_nor_gl_2k.jpg.import
+!/models/attic/attic_commode_a.glb
+!/models/attic/attic_commode_b.glb
+!/models/attic/attic_crate_a.glb
+!/models/attic/attic_crate_b.glb
+!/models/attic/attic_nightstand_a.glb
+!/models/attic/attic_nightstand_b.glb
+!/models/attic/attic_smallbox.glb
+!/models/attic/attic_trunk.glb
 !/models/attic/bchair/bchair.bin
 !/models/attic/bchair/bchair.gltf
 !/models/attic/bchair/bchair.gltf.import
@@ -894,6 +902,7 @@
 !/models/player/remy_alpha_0.png.import
 !/models/player/remy_alpha_1.png
 !/models/player/remy_alpha_1.png.import
+!/models/props/hall_shelf.glb
 !/models/props/hook.glb
 !/models/props/hook.glb.import
 !/models/props/hook_Hook_color.png
@@ -1286,6 +1295,7 @@
 !/scripts/floor2.gd.uid
 !/scripts/fps_counter.gd
 !/scripts/fps_counter.gd.uid
+!/scripts/furniture.gd
 !/scripts/hall_puzzle.gd
 !/scripts/hall_puzzle.gd.uid
 !/scripts/haunts.gd
