@@ -29,11 +29,28 @@ func _vdur(key: String, min_sec: float) -> float:
 	return d
 
 
+func _snd(st: AudioStream, db: float, pitch: float) -> AudioStreamPlayer:
+	var p := AudioStreamPlayer.new()
+	p.stream = st
+	p.volume_db = db
+	p.pitch_scale = pitch
+	add_child(p)
+	p.play()
+	return p
+
+
 func play(level: Node) -> void:
 	L = level
 	var path := "res://video/memory_1986.ogv"
 	if not ResourceLoader.exists(path):
 		return
+	# игра на паузе: её звуки (дождь, гул дома, шаги, призраки) замирают, пока идёт воспоминание;
+	# сам ролик, его звуки, голос и субтитры работают при паузе
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	var tree := get_tree()
+	var was_paused := tree.paused
+	tree.set_meta("no_pause", true)                 # Esc не открывает меню посреди ролика
+	tree.paused = true
 	var layer := CanvasLayer.new()
 	layer.layer = 6
 	add_child(layer)
@@ -43,45 +60,59 @@ func play(level: Node) -> void:
 	vp.set_anchors_preset(Control.PRESET_FULL_RECT)
 	vp.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(vp)
-	# субтитры игры (слой HUD) лежат под видео — копия строки поверх ролика, текст берём у оригинала
+	# субтитры: строка как в игре (тот же стиль), поверх ролика, с тёмной обводкой
 	var sub: Label = null
 	if L.get("msg_label"):
 		sub = (L.msg_label as Label).duplicate() as Label
-		layer.add_child(sub)
-		# ролик светлый — тёмная обводка, чтобы текст читался
-		sub.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-		sub.add_theme_constant_override("outline_size", 6)
+	else:
+		sub = Label.new()
+		sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		sub.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+		sub.position = Vector2(-400, -120)
+		sub.size = Vector2(800, 80)
+	layer.add_child(sub)
+	sub.text = ""
+	sub.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	sub.add_theme_constant_override("outline_size", 6)
+	var sub_left := 0.0
 	var music: AudioStreamPlayer = null
+	var players: Array[AudioStreamPlayer] = []
 	vp.play()
 	var t0 := Time.get_ticks_msec()
+	var last := 0.0
 	var ci := 0
 	while vp.is_playing():
 		var t := (Time.get_ticks_msec() - t0) / 1000.0
+		var dt := t - last
+		last = t
 		while ci < MEM_CUES.size() and t >= float(MEM_CUES[ci][0]):
 			var c: Array = MEM_CUES[ci]
 			match c[1]:
 				"sfx":
 					if c[2] == "vera_mb_full":
-						music = AudioStreamPlayer.new()
-						music.stream = load("res://audio/vera_mb_full.wav")
-						music.volume_db = c[3]
-						music.pitch_scale = c[4]
-						add_child(music)
-						music.play()
-					else:
-						L._sfx(c[2], c[3], c[4], true)
+						music = _snd(load("res://audio/vera_mb_full.wav"), c[3], c[4])
+					elif L.has_method("_stream"):
+						players.append(_snd(L._stream(c[2]), c[3], c[4]))
 				"say":
-					L._say(c[2], _vdur(c[2], c[3]))
+					sub.text = tr(c[2])
+					sub.modulate.a = 1.0
+					sub_left = _vdur(c[2], c[3])
+					var vs: AudioStream = preload("res://scripts/settings.gd").voice(c[2])
+					if vs:
+						players.append(_snd(vs, 0.0, 1.0))
 				"stopmusic":
 					if music:
 						music.stop()
 			ci += 1
-		if sub:
-			sub.text = L.msg_label.text
-			sub.modulate = L.msg_label.modulate
-			sub.visible = L.msg_label.is_visible_in_tree()
-		await get_tree().process_frame
+		if sub_left > 0.0:
+			sub_left -= dt
+			sub.modulate.a = clampf(sub_left, 0.0, 1.0)
+		await tree.process_frame
+	for p in players:
+		if is_instance_valid(p):
+			p.queue_free()
 	if music:
 		music.queue_free()
-	L._say("", 0.1)
 	layer.queue_free()
+	tree.paused = was_paused
+	tree.remove_meta("no_pause")

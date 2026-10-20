@@ -50,6 +50,8 @@ func _btn(parent: Control, text: String, cb: Callable) -> void:
 
 func _unhandled_input(e: InputEvent) -> void:
 	if e is InputEventKey and e.pressed and not e.echo and e.physical_keycode == KEY_ESCAPE:
+		if get_tree().has_meta("no_pause"):         # идёт ролик-воспоминание
+			return
 		if box.visible:
 			resume()
 		else:
