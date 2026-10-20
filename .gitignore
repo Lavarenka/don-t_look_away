@@ -1606,6 +1606,7 @@
 !/scripts/level.gd.uid
 !/scripts/mannequin.gd
 !/scripts/mannequin.gd.uid
+!/scripts/memory_video.gd
 !/scripts/menu.gd
 !/scripts/menu.gd.uid
 !/scripts/menu_pose.gd

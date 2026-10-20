@@ -620,6 +620,16 @@ func _finale_count() -> void:
 	await get_tree().create_timer(0.9).timeout
 	girl.visible = false
 	L.fade.color.a = 1.0
+	L._say("", 0.1)
+	if L.drone:
+		L.drone.stop()
+	# Миша проваливается в забытьё — и вспоминает 1986-й (ролик), потом очнётся на чердаке
+	await get_tree().create_timer(1.6).timeout
+	var mem := preload("res://scripts/memory_video.gd").new()
+	add_child(mem)
+	await mem.play(L)
+	mem.queue_free()
+	await get_tree().create_timer(0.6).timeout
 	# она забрала тебя к себе — 4-й уровень, чердак
 	L.attic.enter()
 
