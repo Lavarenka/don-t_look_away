@@ -30,8 +30,7 @@ func _ready() -> void:
 	p.frozen = true
 	L.busy = true
 	L.hud.visible = false
-	if OS.get_environment("TRAILER_Q") != "":     # для пробной записи на слабой машине
-		preload("res://scripts/settings.gd").set_quality(int(OS.get_environment("TRAILER_Q")))
+	_max_quality()
 	out_dir = OS.get_environment("TRAILER_OUT")
 	_build_shots()
 	for a in OS.get_cmdline_user_args():          # shot=N — записать только один план (проверка)
@@ -39,6 +38,38 @@ func _ready() -> void:
 			var n := int(a.substr(5))
 			shots = [shots[n]]
 	_next()
+
+
+## Трейлер пишется кадр за кадром (--fixed-fps), скорость ПК не важна — поэтому всё на максимум,
+## выше «ультра» в игре: суперсэмплинг (кадр считается в 1.5× и сжимается — без «лесенок»),
+## плотный объёмный туман с фильтром, тени и затенение на высшем качестве.
+## TRAILER_Q=0..3 — пробная запись на слабой машине (обычное качество игры), TRAILER_SS — свой суперсэмплинг.
+func _max_quality() -> void:
+	var S := preload("res://scripts/settings.gd")
+	var env: Environment = L.get_node("WorldEnvironment").environment
+	var q := 3
+	if OS.get_environment("TRAILER_Q") != "":
+		q = int(OS.get_environment("TRAILER_Q"))
+	S.apply(env, L.grain_mat, q)
+	if q < 3:
+		return
+	var root := get_tree().root
+	var ss := 1.5
+	if OS.get_environment("TRAILER_SS") != "":
+		ss = float(OS.get_environment("TRAILER_SS"))
+	root.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
+	root.scaling_3d_scale = ss
+	root.msaa_3d = Viewport.MSAA_8X
+	root.use_taa = true
+	root.use_debanding = true
+	RenderingServer.environment_set_volumetric_fog_volume_size(192, 192)
+	RenderingServer.environment_set_volumetric_fog_filter_active(true)
+	RenderingServer.environment_set_sdfgi_ray_count(RenderingServer.ENV_SDFGI_RAY_COUNT_128)
+	RenderingServer.environment_set_sdfgi_frames_to_converge(RenderingServer.ENV_SDFGI_CONVERGE_IN_30_FRAMES)
+	env.sdfgi_cascades = 6
+	env.ssao_intensity = 2.4
+	RenderingServer.positional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_ULTRA)
+	RenderingServer.directional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_ULTRA)
 
 
 func _say_hidden() -> void:
@@ -99,17 +130,129 @@ func _build_shots() -> void:
 		["bath", func(): _chapter(6),
 			[Vector3(-0.9, Y + 1.7, -39.6), Vector3(0.3, Y + 0.45, -40.95)], [Vector3(-0.5, Y + 1.55, -40.2), Vector3(0.3, Y + 0.4, -40.95)], 4.0, true, []],
 		# 7. спальня бабушки: дверь медленно открывается сама
-		["bed_door", func(): _chapter(6); L.bedroom.unlocked = true,
+		["bed_door", func(): _chapter(6); L.bedroom.unlocked = true; L.doors.doors["bed_in"].pivot.rotation.y = 0.0,
 			[Vector3(-16.2, Y + 1.6, -31.2), Vector3(-14.1, Y + 1.1, -28.43)], [Vector3(-15.9, Y + 1.6, -30.4), Vector3(-14.1, Y + 1.1, -28.43)], 5.0, true,
 			[[1.2, func(): _creep_open()]]],
+		# 7а. комната Веры: свет гаснет, на полу горит свеча, из темноты за ней Вера тянет руку — и исчезает
+		["vera_candle", func(): _vera_dark(),
+			[Vector3(-13.75, Y + 1.6, -28.75), Vector3(-10.0, Y + 0.75, -29.9)], [Vector3(-12.95, Y + 1.5, -29.15), Vector3(-9.6, Y + 0.95, -29.7)], 5.2, false,
+			[[1.2, func(): L._sfx3d("breath_dark", Vector3(PEEK.x, Y + 1.5, PEEK.y), -8.0, 0.9, true)],
+			 [4.1, func(): _vroom()._peek_vanish()]]],
+		# 7б. портрет в торце коридора: фото молодой Веры — моргнул свет — в раме старуха, потом она открывает рот
+		["portrait", func(): _portrait_setup(),
+			[Vector3(-15.16, Y + 1.6, -30.3), Vector3(-15.16, Y + 1.62, -27.585)], [Vector3(-15.16, Y + 1.65, -29.0), Vector3(-15.16, Y + 1.66, -27.585)], 6.0, false,
+			[[1.8, func(): _portrait_old("stare")], [4.2, func(): _portrait_old("mouth")]]],
+		# 7в. обернулся — она стоит за спиной; крик
+		["portrait_behind", func(): _behind_setup(),
+			[Vector3(-15.16, Y + 1.6, -28.35), Vector3(-15.16, Y + 1.5, -30.4)], [Vector3(-15.16, Y + 1.58, -28.6), Vector3(-15.16, Y + 1.52, -30.4)], 3.4, false,
+			[[2.0, func(): _behind_scream()]]],
 		# 8. кровать с балдахином
-		["bed", func(): _chapter(6),
+		["bed", func(): _chapter(6); _drop_held(),
 			[Vector3(-12.6, Y + 1.6, -28.6), Vector3(-9.0, Y + 0.9, -32.5)], [Vector3(-12.0, Y + 1.6, -29.4), Vector3(-9.3, Y + 0.9, -32.8)], 4.5, true, []],
 		# 9. она прямо перед тобой
 		["scare", func(): _chapter(6); _clear_ghost(),
 			[Vector3(-10.2, Y + 1.6, -30.0), Vector3(-7.0, Y + 1.2, -31.0)], [Vector3(-10.2, Y + 1.6, -30.0), Vector3(-7.4, Y + 1.25, -31.0)], 2.6, true,
 			[[1.0, func(): L.player.flicker = 0.25], [1.25, func(): _ghost(Vector3(-9.4, Y, -30.25), Vector3(-10.2, Y, -30.0), "reach", 0.9); L._sfx("sting", 0.0, 0.9); L._sfx("scream", -4.0, 1.1); L.player.shake = 0.8]]],
 	]
+
+
+const PEEK := Vector2(-9.4, -29.6)
+
+
+func _drop_held() -> void:
+	var R: Node = _vroom()
+	if R.held:
+		R.held.queue_free()
+		R.held = null
+
+
+func _vroom() -> Node:
+	return L.bedroom.vroom
+
+
+## Комната Веры расставляется через пару кадров после загрузки — дождаться (важно при записи одного плана).
+func _room_ready() -> void:
+	while _vroom().portrait == null:
+		await get_tree().process_frame
+
+
+## Свет в спальне погас (как в игре, когда захлопнулась дверь), свеча на полу, Вера в темноте.
+func _vera_dark() -> void:
+	_chapter(6)
+	_clear_ghost()
+	await _room_ready()
+	var R: Node = _vroom()
+	if not R.started:
+		R.lights_out()
+	await get_tree().create_timer(0.85).timeout
+	R.floor_light.light_energy = 1.5                   # в трейлере чуть ярче, чтобы её было видно
+
+
+## Свеча уже в руке, Вера из темноты исчезла; портрет — ещё фотография.
+func _candle_in_hand() -> void:
+	var R: Node = _vroom()
+	if not R.started:
+		R.started = true
+	if is_instance_valid(R.peek) and R.peek.visible:
+		R.peek.visible = false
+		R.peek_gone = true
+	if R.held == null:
+		R.candle.visible = false
+		R.floor_light.visible = false
+		R._make_held()
+		R.lit = true
+		R._path_stop()
+	L.player.light_on = false
+
+
+func _portrait_setup() -> void:
+	_chapter(6)
+	await _room_ready()
+	_candle_in_hand()
+	var P: Node = _vroom().portrait
+	P.stage = 0
+	P.mat.set_shader_parameter("img", preload("res://textures/portrait_vera.png"))
+	P.mat.set_shader_parameter("sepia", 0.3)
+
+
+func _portrait_old(pose: String) -> void:
+	var P: Node = _vroom().portrait
+	P._blink()
+	await get_tree().create_timer(0.1).timeout
+	P.stage = 1
+	P.mat.set_shader_parameter("img", P.vp.get_texture())
+	P.mat.set_shader_parameter("sepia", 0.85)
+	P._pose(pose)
+
+
+func _behind_setup() -> void:
+	_chapter(6)
+	await _room_ready()
+	_candle_in_hand()
+	var P: Node = _vroom().portrait
+	var v: Node3D = P.vera
+	v.global_position = Vector3(-15.16, Y2, -30.15)
+	v.rotation.y = 0.0                                  # лицом к камере (на +Z)
+	v.freeze("idle", 0.3)
+	v.set_speed(0.25)
+	P._no_glow()
+	v.visible = true
+	L._sfx3d("breath_dark", v.global_position + Vector3(0, 1.5, 0), -10.0, 0.9, true)
+
+
+func _behind_scream() -> void:
+	var P: Node = _vroom().portrait
+	var v: Node3D = P.vera
+	v.set_speed(1.0)
+	v.scream(1.3)
+	P._no_glow()
+	L._sfx("scream", -2.0, 0.85, true)
+	L._sfx3d("whoosh", v.global_position + Vector3(0, 1.4, 0), -4.0, 0.7, true)
+	L._sfx("sting", -4.0, 1.0, true)
+	L.player.shake = 0.6
+	_vroom().gutter_out(0.9)
+	await get_tree().create_timer(1.5).timeout
+	v.visible = false
 
 
 var _chap := 0
@@ -171,6 +314,8 @@ func _process(delta: float) -> void:
 			shot_t = 0.0
 			log_lines.append("%s %.3f" % [s[0], t])
 		return
+	if out_dir != "" and OS.get_environment("TRAILER_SNAP") != "" and int(shot_t * 30.0) % 30 == 0:
+		L.get_viewport().get_texture().get_image().save_png(out_dir.path_join("%02d_%s_%02d.png" % [cur, s[0], int(shot_t)]))
 	var k := clampf(shot_t / dur, 0.0, 1.0)
 	var e := k * k * (3.0 - 2.0 * k) * 0.35 + k * 0.65      # почти равномерно, мягкий старт и финиш
 	_cam(cam_from[0].lerp(cam_to[0], e), cam_from[1].lerp(cam_to[1], e))

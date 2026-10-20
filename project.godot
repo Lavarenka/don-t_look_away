@@ -30,3 +30,7 @@ locale/translations=PackedStringArray("res://lang/strings.en.translation", "res:
 [rendering]
 
 anti_aliasing/quality/msaa_3d=1
+
+[editor]
+
+movie_writer/mjpeg_quality=0.97
