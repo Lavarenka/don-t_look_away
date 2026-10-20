@@ -1607,6 +1607,7 @@
 !/scripts/mannequin.gd
 !/scripts/mannequin.gd.uid
 !/scripts/memory_video.gd
+!/scripts/memory_video.gd.uid
 !/scripts/menu.gd
 !/scripts/menu.gd.uid
 !/scripts/menu_pose.gd
@@ -1785,4 +1786,5 @@
 !/tools/render_menu_plate.gd
 !/tools/render_menu_plate.gd.uid
 !/video/memory_1986.ogv
+!/video/memory_1986.ogv.uid
 /.godot/

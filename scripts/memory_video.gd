@@ -43,6 +43,14 @@ func play(level: Node) -> void:
 	vp.set_anchors_preset(Control.PRESET_FULL_RECT)
 	vp.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(vp)
+	# субтитры игры (слой HUD) лежат под видео — копия строки поверх ролика, текст берём у оригинала
+	var sub: Label = null
+	if L.get("msg_label"):
+		sub = (L.msg_label as Label).duplicate() as Label
+		layer.add_child(sub)
+		# ролик светлый — тёмная обводка, чтобы текст читался
+		sub.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+		sub.add_theme_constant_override("outline_size", 6)
 	var music: AudioStreamPlayer = null
 	vp.play()
 	var t0 := Time.get_ticks_msec()
@@ -68,6 +76,10 @@ func play(level: Node) -> void:
 					if music:
 						music.stop()
 			ci += 1
+		if sub:
+			sub.text = L.msg_label.text
+			sub.modulate = L.msg_label.modulate
+			sub.visible = L.msg_label.is_visible_in_tree()
 		await get_tree().process_frame
 	if music:
 		music.queue_free()
