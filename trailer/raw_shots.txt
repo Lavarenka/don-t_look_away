@@ -1,0 +1,12 @@
+hall 0.825 5.458
+tv 6.292 10.825
+corridor 11.658 16.192
+girl_far 17.025 22.058
+attic 22.892 27.425
+bath 28.258 32.292
+bed_door 33.125 38.158
+vera_candle 38.992 44.225
+portrait 45.058 51.092
+portrait_behind 51.925 55.358
+bed 56.192 60.725
+scare 61.558 64.158

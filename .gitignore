@@ -1785,6 +1785,7 @@
 !/tools/git_used.py
 !/tools/render_menu_plate.gd
 !/tools/render_menu_plate.gd.uid
+!/trailer/raw_shots.txt
 !/video/memory_1986.ogv
 !/video/memory_1986.ogv.uid
 /.godot/

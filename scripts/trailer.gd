@@ -186,6 +186,19 @@ func _vera_dark() -> void:
 		R.lights_out()
 	await get_tree().create_timer(0.85).timeout
 	R.floor_light.light_energy = 1.5                   # в трейлере чуть ярче, чтобы её было видно
+	# в игре она почти чёрный силуэт; в трейлере — светлее и с тусклым отсветом свечи, иначе её не видно
+	if is_instance_valid(R.peek):
+		for mi in R.peek.find_children("*", "MeshInstance3D", true, false):
+			var m := (mi as MeshInstance3D).material_override as ShaderMaterial
+			if m:
+				m.set_shader_parameter("tint", Color(0.72, 0.68, 0.64))
+		var gl := OmniLight3D.new()
+		gl.light_color = Color(1.0, 0.7, 0.45)
+		gl.light_energy = 0.9
+		gl.omni_range = 1.6
+		gl.shadow_enabled = false
+		R.peek.add_child(gl)
+		gl.position = Vector3(0, 1.3, 0.7)                # спереди-снизу, со стороны свечи
 
 
 ## Свеча уже в руке, Вера из темноты исчезла; портрет — ещё фотография.
@@ -304,6 +317,9 @@ func _process(delta: float) -> void:
 	shot_t += delta
 	L.hud.visible = false
 	L.busy = true
+	var fc := get_tree().root.get_node_or_null("FpsCounter")      # счётчик кадров (F3) — не в кадр
+	if fc:
+		fc.visible = false
 	if cur < 0 or cur >= shots.size():
 		return
 	var s: Array = shots[cur]
