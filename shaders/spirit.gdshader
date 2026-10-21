@@ -2,6 +2,7 @@ shader_type spatial;
 // Призрак: рукава провисают под своим весом, волосы и подол медленно колышутся.
 // Маски запечены в COLOR (tools_bake_spirit.gd): r/g — рукава, b — волосы, a — подол.
 uniform sampler2D albedo_tex : source_color, filter_linear_mipmap;
+uniform bool flip_v = true;        // старая модель: развёртка перевёрнута по V
 uniform vec4 tint : source_color = vec4(1.0);
 uniform float arm_up_l = 0.0;      // 0 — рука опущена, 1 — поднята горизонтально (из скрипта)
 uniform float arm_up_r = 0.0;
@@ -108,7 +109,8 @@ float vnoise(vec2 p) {
 }
 
 void fragment() {
-	vec4 c = texture(albedo_tex, vec2(UV.x, 1.0 - UV.y)) * tint;
+	vec4 c = texture(albedo_tex, flip_v ? vec2(UV.x, 1.0 - UV.y) : UV) * tint;
+	float hair_alpha = smoothstep(0.15, 0.6, c.a);      // вдали (мип-уровни) пряди не тают
 	vec3 col = c.rgb;
 	float lum = dot(col, vec3(0.3, 0.59, 0.11));
 	float mx = max(col.r, max(col.g, col.b));
@@ -143,7 +145,7 @@ void fragment() {
 	float sl0 = dot(col, vec3(0.3, 0.59, 0.11));
 	col = mix(col, vec3(sl0) * vec3(0.86, 0.9, 1.0) * 1.1, skin * 0.5 * face_fx);
 	// ---- лицо (в осях головы): только кожа спереди головы
-	float facem = smoothstep(0.02, 0.05, v_hp.z) * (1.0 - masks.b) * face_fx;
+	float facem = smoothstep(0.02, 0.05, v_hp.z) * (1.0 - masks.b) * face_fx * smoothstep(mouth_at.y - 0.1, mouth_at.y - 0.06, v_hp.y);   // только голова, не грудь
 	float eyem = 0.0;
 	if (facem > 0.0) {
 		vec3 sk = col;
@@ -155,8 +157,9 @@ void fragment() {
 		sk = mix(sk, sk * vec3(0.45, 0.42, 0.75), vn * 0.75);
 		// трещины: тонкая сетка на лбу и щеках
 		float cr = crack(v_hp.xy * 95.0 + vec2(3.7, 1.3));
-		float crm = (1.0 - smoothstep(0.02, 0.06, cr)) * smoothstep(0.3, 0.6, vnoise(v_hp.xy * 30.0));
-		sk = mix(sk, sk * 0.35, crm * 0.8);
+		float crm = (1.0 - smoothstep(0.02, 0.06, cr)) * smoothstep(0.35, 0.65, vnoise(v_hp.xy * 30.0));
+		crm *= smoothstep(0.05, 0.08, v_hp.z) * (1.0 - smoothstep(eye_at.y + 0.05, eye_at.y + 0.08, v_hp.y));   // только лицо, не макушка
+		sk = mix(sk, sk * 0.45, crm * 0.6);
 		// синие губы
 		vec2 lm = vec2(v_hp.x / 0.022, (v_hp.y - mouth_at.y) / 0.008);
 		float lips = (1.0 - smoothstep(0.7, 1.0, length(lm))) * smoothstep(0.06, 0.085, v_hp.z);
@@ -216,5 +219,15 @@ void fragment() {
 	if (debug >= 4) ALBEDO = mix(ALBEDO, vec3(1.0, 0.0, 0.0), v_jaw);
 	if (debug == 1) ALBEDO = masks.rgb + vec3(masks.a, masks.a, 0.0);
 	if (debug == 2) ALBEDO = vec3(hair, skin, red);
+	if (debug == 6) ALBEDO = vec3(facem, clamp(v_hp.z * 10.0, 0.0, 1.0), clamp(v_hp.x * 20.0 + 0.5, 0.0, 1.0));
 	if (debug == 3 && hair > 0.5) discard;
+#ifdef HAIR
+	// карточки прядей: вырез по альфе (в «призрачном» режиме — поверх его прозрачности)
+#ifdef GHOSTLY
+	ALPHA *= hair_alpha;
+#else
+	ALPHA = hair_alpha;
+	ALPHA_SCISSOR_THRESHOLD = 0.5;
+#endif
+#endif
 }
