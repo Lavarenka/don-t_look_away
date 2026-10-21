@@ -832,6 +832,7 @@
 !/models/bedroom/door_vera_Surround_normal.png.import
 !/models/bedroom/door_vera_Surround_rough.png
 !/models/bedroom/door_vera_Surround_rough.png.import
+!/models/bedroom/vera_armchair.glb
 !/models/bedroom/vera_blanket.glb
 !/models/bedroom/vera_blanket.glb.import
 !/models/bedroom/vera_candle.glb
@@ -848,6 +849,7 @@
 !/models/bedroom/vera_candle_Wax_normal.png.import
 !/models/bedroom/vera_candle_Wax_rough.png
 !/models/bedroom/vera_candle_Wax_rough.png.import
+!/models/bedroom/vera_doll.glb
 !/models/bedroom/vera_frame.glb
 !/models/bedroom/vera_frame.glb.import
 !/models/bedroom/vera_frame_Frame_color.png
@@ -904,6 +906,7 @@
 !/models/bedroom/vera_tooth_Tooth_normal.png.import
 !/models/bedroom/vera_tooth_Tooth_rough.png
 !/models/bedroom/vera_tooth_Tooth_rough.png.import
+!/models/bedroom/vera_wardrobe.glb
 !/models/carved_wooden_elephant/carved_wooden_elephant.bin
 !/models/carved_wooden_elephant/carved_wooden_elephant_2k.gltf
 !/models/carved_wooden_elephant/carved_wooden_elephant_2k.gltf.import
@@ -1650,6 +1653,7 @@
 !/shaders/fog.gdshader.uid
 !/shaders/glass.gdshader
 !/shaders/glass.gdshader.uid
+!/shaders/glass_eye.gdshader
 !/shaders/grain.gdshader
 !/shaders/grain.gdshader.uid
 !/shaders/hair.gdshader

@@ -290,6 +290,15 @@ VL_06,«Misha will come. Misha will be next.»,«Приедет Миша. Миш
 VL_07,"«And then, at last... I will be free.»",«И тогда я наконец... свободна.»
 VL_08,Misha: ...Grandma?,Миша: ...Бабушка?
 VL_09,"Vera (whispering): Don't look away, Mishenka.","Вера (шёпотом): Не отворачивайся, Мишенька."
-VL_NOTE,"Grandma Vera's letter, found under the key:\n\nMy dear Anya,\nforgive me, if they forgive where you are.\nThe house asked for one of us — and I gave it you. Instead of me.\nFor forty years I have heard you calling me from behind the wall.\nNow it is hungry again.\nMisha will come. Misha will be next.\nAnd then, at last, I will be free.\n\n— Your grandma Vera","Письмо бабушки Веры, лежало под ключом:\n\nАнечка, родная моя.\nПрости меня, если там прощают.\nДом просил одного из нас — и я отдала ему тебя. Вместо себя.\nСорок лет я слышу, как ты зовёшь меня из-за стены.\nТеперь он снова голоден.\nПриедет Миша. Миша будет следующим.\nИ тогда я наконец свободна.\n\n— Твоя бабушка Вера"
+VL_NOTE,"Grandma Vera's letter, found in the wardrobe:\n\nMy dear Anya,\nforgive me, if they forgive where you are.\nThe house asked for one of us — and I gave it you. Instead of me.\nFor forty years I have heard you calling me from behind the wall.\nNow it is hungry again.\nMisha will come. Misha will be next.\nAnd then, at last, I will be free.\n\n— Your grandma Vera","Письмо бабушки Веры, лежало в шкафу:\n\nАнечка, родная моя.\nПрости меня, если там прощают.\nДом просил одного из нас — и я отдала ему тебя. Вместо себя.\nСорок лет я слышу, как ты зовёшь меня из-за стены.\nТеперь он снова голоден.\nПриедет Миша. Миша будет следующим.\nИ тогда я наконец свободна.\n\n— Твоя бабушка Вера"
 MEM_01,"Vera: Look away, Mishenka. Don't look.","Вера: Отвернись, Мишенька. Не смотри."
 MEM_02,Anya: Misha?,Аня: Миша?
+BR_DOLL,E — look at the doll,E — осмотреть куклу
+BR_DOLL_EYE,E — put the glass eye in,E — вставить стеклянный глаз
+BR_DOLL_MISS,One of her eyes is missing.,У куклы нет одного глаза.
+BR_WARD,E — open the wardrobe,E — открыть шкаф
+BR_WARD_LOCK,It won't open.,Не открывается.
+BR_LETTER,E — take the letter,E — взять письмо
+INV_DOLLEYE,Glass eye,Стеклянный глаз
+INV_DOLLEYE_D,Blue and cold. It rolled out of the music box.,"Голубой, холодный. Выкатился из шкатулки."
+INV_N_VERA,Vera's letter,Письмо Веры

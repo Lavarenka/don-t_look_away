@@ -30,6 +30,7 @@ const ITEMS := {
 	"v_tooth3": ["INV_TOOTH", "INV_TOOTH_D"],
 	"shawl": ["INV_SHAWL", "INV_SHAWL_D"],
 	"smallkey": ["INV_SMALLKEY", "INV_SMALLKEY_D"],
+	"dolleye": ["INV_DOLLEYE", "INV_DOLLEYE_D"],
 }
 const MAX_ITEMS := 8
 const PROPS := {
@@ -43,7 +44,7 @@ const PROPS := {
 const POSE := {"key": Vector3(PI / 2, 0, 0.35), "bedkey": Vector3(PI / 2, 0, 0.35), "attic_key": Vector3(PI / 2, 0, 0.35), "hook": Vector3(PI / 2, 0, 0.55), "matches": Vector3(1.05, -0.5, 0), "mb_key": Vector3(0, 0, 0.4), "shard": Vector3(PI / 2 - 0.25, 0, 0.5)}
 ## текст записки → её заголовок в инвентаре
 const NOTE_TITLES := {"LVL_01": "INV_N_GRANDMA", "LVL_02": "INV_N_CABINET", "NUR_11": "INV_N_ANYA",
-	"LVL_13": "INV_N_PHOTO75", "LVL_14": "INV_N_PHOTO76", "LVL_15": "INV_N_PHOTO77", "LVL_52": "INV_N_PHOTO79"}
+	"LVL_13": "INV_N_PHOTO75", "LVL_14": "INV_N_PHOTO76", "LVL_15": "INV_N_PHOTO77", "LVL_52": "INV_N_PHOTO79", "VL_NOTE": "INV_N_VERA"}
 ## записки-фотографии: сам снимок показывается под текстом
 const NOTE_IMAGES := {"LVL_52": "res://textures/attic_photo.png"}
 

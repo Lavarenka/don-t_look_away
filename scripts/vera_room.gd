@@ -6,8 +6,11 @@ extends Node
 ## 2. Скример «кровать»: под одеялом кто-то лежит; подходишь со свечой и смотришь — одеяло опадает, пусто.
 ## 3. Шкатулка с балериной: мелодия обрывается — у гребёнки не хватает трёх зубцов. Зубцы разбросаны по
 ##    комнате. Открыл без всех зубцов — ошибка: мелодия ломается, свеча гаснет, шёпот за спиной.
-## 4. Зеркало над комодом: в отражении комната другая — шкатулка открыта, шаль на изножье, фото стоит.
-##    Сделай так же наяву — в зеркале за спиной встанет Вера, а под зеркалом появится маленький ключ.
+## 4. Шкатулка доиграла — из её основания выдвигается потайной ящичек: стеклянный глаз.
+## 5. В углу в кресле — фарфоровая кукла Веры без правого глаза. Вставил глаз — кукла медленно поворачивает
+##    голову к платяному шкафу, и дверца шкафа со скрипом приоткрывается (до этого шкаф заперт).
+## 6. В шкафу — письмо Веры. Прочитал, закрыл — кукла уже сидит на полу у тебя за спиной. Посмотрел на неё —
+##    мигнула и пропала; она снова в кресле и теперь всё время поворачивает голову за тобой.
 ## Все звуки здесь — с force = true (в спальне звуки дома выключены, см. level.hush).
 
 const Y2 := -3.4
@@ -24,6 +27,9 @@ const BOX_XZ := Vector2(-10.5, -28.03)                  ## шкатулка на
 const FRAME_XZ := Vector2(-6.25, -32.95)                ## фото на комоде со стеклянными дверцами
 const SHAWL_XZ := Vector2(-13.56, -30.62)               ## шаль на комоде под зеркалом
 const KEY_XZ := Vector2(-13.55, -31.45)
+const DOLL_XZ := Vector2(-7.0, -28.55)                  ## кресло с куклой — северо-восточный угол
+const WARD_XZ := Vector2(-5.9, -31.5)                   ## платяной шкаф у восточной стены, лицом в комнату (на запад)
+const DOLL_SCALE := 0.75
 const TEETH := [Vector3(-6.75, 1.0, -32.85), Vector3(-9.5, 1.0, -33.2), Vector3(-13.42, 0.7, -29.85)]   ## y — откуда пускать луч
 const GLASS_C := Vector3(-13.762, Y2 + 1.7, -31.165)    ## стекло зеркала над комодом (смотрит на +X)
 const GLASS_W := 0.76
@@ -66,6 +72,21 @@ var vera_m: Node3D                   ## Вера — только в отраж�
 var letter: Node                     ## катсцена «Письмо Веры» (vera_letter.gd)
 var portrait: Node                   ## овальный портрет в торце коридора (vera_portrait.gd)
 var key_node: Node3D
+# кукла, шкаф, глаз
+var chair: Node3D
+var doll: Node3D                     ## кукла в кресле
+var doll_head: Node3D
+var doll_eye: Node3D                 ## правый глаз куклы (пока не вставлен — скрыт)
+var floor_doll: Node3D               ## та же кукла — на полу за спиной (скример)
+var ward: Node3D
+var ward_doors: Array[Node3D] = []
+var ward_unlocked := false
+var ward_open := false
+var secret: Node3D                   ## потайной ящичек шкатулки
+var eye_item: MeshInstance3D         ## стеклянный глаз в ящичке
+var letter_node: MeshInstance3D
+var doll_state := "chair"            ## chair → armed (прочитал письмо) → floor → back (следит за тобой)
+var _doll_t := 0.0
 var vp: SubViewport
 var mcam: Camera3D
 var glass: MeshInstance3D
@@ -80,9 +101,6 @@ func setup(level: Node, bedroom: Node) -> void:
 	await get_tree().physics_frame
 	_place_props()
 	_make_mirror()
-	letter = preload("res://scripts/vera_letter.gd").new()
-	add_child(letter)
-	letter.setup(L, self)
 	portrait = preload("res://scripts/vera_portrait.gd").new()
 	add_child(portrait)
 	portrait.setup(L, self)
@@ -161,11 +179,6 @@ func _place_props() -> void:
 	box.global_position = Vector3(BOX_XZ.x, _top(BOX_XZ.x, BOX_XZ.y), BOX_XZ.y)
 	box.rotation.y = PI
 	box_lid = box.find_child("Lid", true, false)
-	box_twin_lid = box_lid.duplicate() as Node3D
-	box_lid.get_parent().add_child(box_twin_lid)
-	box_twin_lid.rotation.x = -1.75                     # в зеркале шкатулка открыта
-	_set_layers(box_lid, REAL_LAYER)
-	_set_layers(box_twin_lid, MIRROR_LAYER)
 	var bal: Node3D = box.find_child("Ballerina", true, false)
 	ballerina_pivot = Node3D.new()
 	bal.get_parent().add_child(ballerina_pivot)
@@ -188,61 +201,133 @@ func _place_props() -> void:
 		t.add_child(gl)
 		teeth.append(t)
 		_target("v_tooth%d" % (i + 1), t.global_position + Vector3(0, 0.03, 0), "LVL_44", 0.35, 1.8)
-	# шаль кучкой на комоде под зеркалом; в зеркале она перекинута через изножье кровати
+	# шаль кучкой на комоде под зеркалом и фото Веры на комоде — просто обстановка
 	var sh := _glb("res://models/bedroom/vera_shawl.glb")
 	room.add_child(sh)
 	shawl_pile = sh.find_child("Pile", true, false)
-	shawl_drape = sh.find_child("Draped", true, false)
-	var wool := _wool_mat()
-	for n in [shawl_pile, shawl_drape]:
-		(n as MeshInstance3D).material_override = wool
+	(shawl_pile as MeshInstance3D).material_override = _wool_mat()
 	shawl_pile.reparent(room)
 	shawl_pile.global_position = Vector3(SHAWL_XZ.x, _top(SHAWL_XZ.x, SHAWL_XZ.y), SHAWL_XZ.y)
 	shawl_pile.rotation.y = 0.3
-	_set_layers(shawl_pile, REAL_LAYER)
-	var foot_y := _foot_top()
-	shawl_drape.reparent(room)
-	shawl_drape.global_position = Vector3(BED_FOOT.x + 0.15, foot_y, BED_FOOT.z)
-	shawl_drape.rotation.y = 0.0
-	shawl_twin = shawl_drape.duplicate() as Node3D
-	room.add_child(shawl_twin)
-	shawl_twin.global_transform = shawl_drape.global_transform
-	_set_layers(shawl_twin, MIRROR_LAYER)
-	shawl_drape.visible = false
 	sh.queue_free()
-	_target("v_shawl", shawl_pile.global_position + Vector3(0, 0.08, 0), "LVL_44")
-	_target("v_shawlput", Vector3(BED_FOOT.x, foot_y + 0.1, BED_FOOT.z), "BR_SHAWL_PUT", 0.45, 2.0)
-	# фото Веры: наяву лежит лицом вниз, в зеркале — стоит
 	frame = _glb("res://models/bedroom/vera_frame.glb")
 	room.add_child(frame)
-	var fy := _top(FRAME_XZ.x, FRAME_XZ.y)
 	var ph := frame.find_child("Photo", true, false) as MeshInstance3D
 	var pm := StandardMaterial3D.new()
 	pm.albedo_texture = load("res://textures/photo_vera_small.png")
 	pm.roughness = 0.6
 	ph.material_override = pm
-	frame_twin = frame.duplicate() as Node3D
-	room.add_child(frame_twin)
-	frame_twin.global_position = Vector3(FRAME_XZ.x, fy, FRAME_XZ.y)
-	frame_twin.rotation.y = -0.25
-	_set_layers(frame_twin, MIRROR_LAYER)
-	frame.global_position = Vector3(FRAME_XZ.x, fy + 0.007, FRAME_XZ.y - 0.03)
-	frame.rotation = Vector3(PI / 2, -0.25, 0)
-	_set_layers(frame, REAL_LAYER)
-	_target("v_frame", Vector3(FRAME_XZ.x, fy + 0.05, FRAME_XZ.y), "BR_FRAME")
-	# Вера в зеркале (появится в конце) — грузим заранее, чтобы не подвисало
-	vera_m = preload("res://scripts/vera.gd").new()
-	room.add_child(vera_m)
-	vera_m.visible = false
-	vera_m.set_layer(MIRROR_LAYER)
-	# маленький ключ — награда
-	key_node = _glb("res://models/props/key_vera.glb")
-	room.add_child(key_node)
-	key_node.global_position = Vector3(KEY_XZ.x, _top(KEY_XZ.x, KEY_XZ.y) + 0.004, KEY_XZ.y)
-	key_node.rotation.y = 1.2
-	key_node.scale = Vector3.ONE * 0.7
-	key_node.visible = false
-	_target("v_key", key_node.global_position + Vector3(0, 0.03, 0), "LVL_44")
+	frame.global_position = Vector3(FRAME_XZ.x, _top(FRAME_XZ.x, FRAME_XZ.y), FRAME_XZ.y)
+	frame.rotation.y = -0.25
+	_place_doll()
+	_place_wardrobe()
+	_place_secret()
+
+
+## Кресло в углу, на нём фарфоровая кукла (без правого глаза), лицом в комнату.
+func _place_doll() -> void:
+	chair = _glb("res://models/bedroom/vera_armchair.glb")
+	L.add_child(chair)
+	var fl := _top(DOLL_XZ.x, DOLL_XZ.y, 0.3)
+	chair.global_position = Vector3(DOLL_XZ.x, fl, DOLL_XZ.y)
+	chair.rotation.y = -PI / 2                          # лицом к двери — кукла смотрит на входящего
+	_box_body(chair, Vector3(0.66, 0.95, 0.62), Vector3(0, 0.475, 0))
+	doll = _make_doll()
+	chair.add_child(doll)
+	doll.position = Vector3(0, 0.45, -0.1)
+	doll_head = doll.find_child("Head", true, false)
+	doll_eye = doll.find_child("EyeR", true, false)
+	doll_eye.visible = false
+	_target("v_doll", doll_head.global_position + Vector3(0, 0.04, 0), "BR_DOLL", 0.45, 2.0)
+	floor_doll = _make_doll()
+	L.add_child(floor_doll)
+	floor_doll.visible = false
+
+
+func _make_doll() -> Node3D:
+	var d := _glb("res://models/bedroom/vera_doll.glb")
+	d.scale = Vector3.ONE * DOLL_SCALE
+	return d
+
+
+## Платяной шкаф у восточной стены, дверцы — в комнату (на запад). Заперт, пока кукла не «посмотрит».
+func _place_wardrobe() -> void:
+	ward = _glb("res://models/bedroom/vera_wardrobe.glb")
+	L.add_child(ward)
+	ward.global_position = Vector3(WARD_XZ.x, _top(WARD_XZ.x, WARD_XZ.y, 0.3), WARD_XZ.y)
+	ward.rotation.y = -PI / 2
+	_box_body(ward, Vector3(1.14, 2.0, 0.6), Vector3(0, 1.0, 0))
+	for n in ["Door0", "Door1"]:
+		var dn := ward.find_child(n, true, false) as Node3D
+		if dn:
+			ward_doors.append(dn)
+	_target("v_ward", ward.global_position + Vector3(-0.35, 1.1, 0), "BR_WARD", 0.5, 2.2)
+	# письмо Веры — на дне шкафа
+	letter_node = MeshInstance3D.new()
+	var q := QuadMesh.new()
+	q.size = Vector2(0.15, 0.21)
+	letter_node.mesh = q
+	var lm := StandardMaterial3D.new()
+	var ru := TranslationServer.get_locale().begins_with("ru")
+	lm.albedo_texture = load("res://textures/letter/letter_%s.png" % ("ru" if ru else "en"))
+	lm.roughness = 0.9
+	lm.cull_mode = BaseMaterial3D.CULL_DISABLED
+	letter_node.material_override = lm
+	ward.add_child(letter_node)
+	letter_node.position = Vector3(0.08, 0.145, 0.02)
+	letter_node.rotation = Vector3(-PI / 2, 0.4, 0)
+	letter_node.visible = false
+
+
+## Невидимая коробка-столкновение для мебели (в локальных осях узла n).
+func _box_body(n: Node3D, size: Vector3, center: Vector3) -> void:
+	var body := StaticBody3D.new()
+	n.add_child(body)
+	var cs := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	bs.size = size
+	cs.shape = bs
+	cs.position = center
+	body.add_child(cs)
+
+
+## Потайной ящичек в основании шкатулки — внутри неё, пока шкатулка не доиграет до конца.
+func _place_secret() -> void:
+	var bb := AABB()
+	var first := true
+	for mi in box.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		var a: AABB = m.global_transform * m.get_aabb()
+		bb = a if first else bb.merge(a)
+		first = false
+	secret = Node3D.new()
+	box.add_child(secret)
+	var lw := box.global_basis.inverse() * bb.size          # габариты шкатулки в её осях
+	lw = lw.abs()
+	var dr := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(lw.x * 0.62, lw.y * 0.16, lw.z * 0.7)
+	dr.mesh = bm
+	var wm := StandardMaterial3D.new()
+	wm.albedo_color = Color(0.28, 0.15, 0.08)
+	wm.roughness = 0.55
+	dr.material_override = wm
+	secret.add_child(dr)
+	secret.global_position = Vector3(bb.get_center().x, bb.position.y + lw.y * 0.09, bb.get_center().z)
+	secret.set_meta("h", lw.y * 0.16)
+	secret.set_meta("d", lw.z)
+	eye_item = MeshInstance3D.new()
+	var sm := SphereMesh.new()
+	sm.radius = 0.011
+	sm.height = 0.022
+	eye_item.mesh = sm
+	var em := ShaderMaterial.new()
+	em.shader = preload("res://shaders/glass_eye.gdshader")
+	eye_item.material_override = em
+	secret.add_child(eye_item)
+	eye_item.position = Vector3(0, lw.y * 0.08 + 0.011, 0)
+	eye_item.rotation = Vector3(-0.9, 0.3, 0)
+	eye_item.visible = false
 
 
 ## Верх изножья кровати — самая высокая точка в полосе у ног.
@@ -684,10 +769,10 @@ func target_ok(id: String) -> bool:
 		"v_candle": return candle.visible
 		"v_matches": return matches.visible
 		"v_box": return not box_done and not box_busy
-		"v_shawl": return shawl_pile.visible
-		"v_shawlput": return L.inv.has("shawl")
-		"v_frame": return not frame_fixed
-		"v_key": return key_node.visible
+		"v_eye": return eye_item.visible
+		"v_doll": return doll_state == "chair" and not doll_eye.visible
+		"v_ward": return not ward_open
+		"v_letter": return letter_node.visible
 	if id.begins_with("v_tooth"):
 		return teeth[int(id.right(1)) - 1].visible
 	return false
@@ -707,28 +792,27 @@ func interact(id: String) -> void:
 					_light_candle()
 		"v_box":
 			_open_box()
-		"v_shawl":
-			if L.inv.add("shawl", shawl_pile):
-				shawl_pile.visible = false
-				L._sfx("sheet_rustle", -8.0, 1.2, true)
-		"v_shawlput":
-			L.inv.remove("shawl")
-			shawl_drape.visible = true
-			_set_layers(shawl_drape, 1)
-			shawl_twin.queue_free()
-			shawl_fixed = true
-			L._sfx3d("sheet_rustle", shawl_drape.global_position, -6.0, 0.9, true)
-		"v_frame":
-			frame_fixed = true
-			frame.global_transform = frame_twin.global_transform
-			_set_layers(frame, 1)
-			frame_twin.queue_free()
-			L._sfx3d("clink", frame.global_position, -10.0, 1.3, true)
-		"v_key":
-			key_node.visible = false
-			L.inv.add("smallkey", key_node)
-			L._sfx("pickup", -6.0, 1.0, true)
-			letter.play()                                   # под ключом — письмо Веры (катсцена)
+		"v_eye":
+			if L.inv.add("dolleye", eye_item):
+				eye_item.visible = false
+				L._sfx("pickup", -8.0, 1.4, true)
+		"v_doll":
+			if L.inv.has("dolleye"):
+				_insert_eye()
+			else:
+				L._say("BR_DOLL_MISS", 2.6)
+				_doll_twitch()
+		"v_ward":
+			if ward_unlocked:
+				_open_wardrobe()
+			else:
+				L._sfx3d("click", ward.global_position + Vector3(0, 1.1, 0), -6.0, 0.8, true)
+				L._sfx3d("thump", ward.global_position + Vector3(0, 1.1, 0), -12.0, 1.3, true)
+				L._say("BR_WARD_LOCK", 2.0)
+		"v_letter":
+			letter_node.visible = false
+			L._show_note("VL_NOTE")
+			doll_state = "armed"
 	if id.begins_with("v_tooth"):
 		var t: Node3D = teeth[int(id.right(1)) - 1]
 		if L.inv.add(id, t):
@@ -761,9 +845,8 @@ func _open_box() -> void:
 		tw.tween_property(ballerina_pivot, "rotation:y", TAU * 9.0, 21.0)
 		await get_tree().create_timer(21.0).timeout
 		box_done = true
-		_set_layers(box_lid, 1)                     # теперь и наяву открыта — как в зеркале
-		box_twin_lid.queue_free()
 		box_busy = false
+		_open_secret()
 		return
 	# ошибка: мелодия ломается на пустом зубце, свеча гаснет, шёпот за спиной
 	L._sfx3d("vera_mb_broken", box.global_position, -2.0, 1.0, true)
@@ -799,7 +882,8 @@ func _process(delta: float) -> void:
 	else:
 		vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	_check_bed(delta)
-	_check_mirror_done()
+	_update_doll(delta)
+	L.extra_hints["v_doll"] = "BR_DOLL_EYE" if L.inv.has("dolleye") else "BR_DOLL"
 
 
 ## Под одеялом кто-то лежит. Подошёл со свечой и смотришь — одеяло опадает: пусто.
@@ -826,27 +910,120 @@ func _check_bed(delta: float) -> void:
 	L._sfx3d("thump", BED_C, -6.0, 0.5, true)
 
 
-## Всё как в отражении: в зеркале за спиной встаёт Вера; потом под зеркалом — маленький ключ.
-func _check_mirror_done() -> void:
-	if mirror_done or not (box_done and shawl_fixed and frame_fixed) or L.busy:
-		return
+# ---------------------------------------------------------------- шкатулка → глаз → кукла → шкаф
+## Шкатулка доиграла: щелчок, из основания выдвигается потайной ящичек, в нём стеклянный глаз.
+func _open_secret() -> void:
+	await get_tree().create_timer(0.6).timeout
+	L._sfx3d("click", box.global_position, -4.0, 1.6, true)
+	eye_item.visible = true
+	var fw: Vector3 = box.global_basis.z.normalized()
+	var to: Vector3 = secret.global_position + fw * float(secret.get_meta("d")) * 0.55
+	L._sfx3d("drawer", box.global_position, -8.0, 1.6, true)
+	var tw := create_tween()
+	tw.tween_property(secret, "global_position", to, 0.5).set_trans(Tween.TRANS_SINE)
+	await tw.finished
+	_target("v_eye", eye_item.global_position + Vector3(0, 0.02, 0), "LVL_44", 0.35, 1.8)
+
+
+## Без глаза: кукла чуть дёргает головой (на миг — и обратно).
+func _doll_twitch() -> void:
+	var y0 := doll_head.rotation.y
+	var tw := create_tween()
+	tw.tween_property(doll_head, "rotation:y", y0 + 0.12, 0.06)
+	tw.tween_property(doll_head, "rotation:y", y0, 0.5).set_trans(Tween.TRANS_SINE)
+	L._sfx3d("creak", doll_head.global_position, -16.0, 1.9, true)
+
+
+## Угол головы куклы (в осях кресла), чтобы она смотрела на точку p.
+func _head_yaw_to(p: Vector3) -> float:
+	var d: Vector3 = p - doll_head.global_position
+	var yaw := wrapf(atan2(d.x, d.z) - chair.global_rotation.y, -PI, PI)
+	return clampf(yaw, -1.7, 1.7)
+
+
+## Вставил глаз: кукла медленно поворачивает голову к шкафу — и дверца шкафа приоткрывается сама.
+func _insert_eye() -> void:
+	L.busy = true
+	L.inv.remove("dolleye")
+	doll_eye.visible = true
+	L._sfx3d("click", doll_head.global_position, -8.0, 1.8, true)
+	await get_tree().create_timer(1.0).timeout
+	L.busy = false
+	L._sfx3d("creak", doll_head.global_position, -6.0, 1.7, true)           # фарфор скрежещет о фарфор
+	gutter_out(0.6)
+	var tw := create_tween()
+	tw.tween_property(doll_head, "rotation:y", _head_yaw_to(ward.global_position + Vector3(0, 1.0, 0)), 2.8) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tw.finished
+	await get_tree().create_timer(0.9).timeout
+	ward_unlocked = true
+	if ward_doors.size() > 1:
+		L._sfx3d("creak", ward.global_position + Vector3(0, 1.1, 0), -4.0, 0.75, true)
+		create_tween().tween_property(ward_doors[1], "rotation:y", 0.35, 2.2).set_trans(Tween.TRANS_SINE)
+
+
+func _open_wardrobe() -> void:
+	ward_open = true
+	L._sfx3d("creak", ward.global_position + Vector3(0, 1.1, 0), -4.0, 0.9, true)
+	if ward_doors.size() > 1:
+		create_tween().tween_property(ward_doors[0], "rotation:y", -1.9, 1.1).set_trans(Tween.TRANS_SINE)
+		create_tween().tween_property(ward_doors[1], "rotation:y", 1.9, 1.0).set_trans(Tween.TRANS_SINE)
+	await get_tree().create_timer(0.9).timeout
+	letter_node.visible = true
+	_target("v_letter", letter_node.global_position + Vector3(0, 0.03, 0), "BR_LETTER", 0.4, 2.2)
+
+
+## Кукла после письма: на полу за спиной → посмотрел — пропала → снова в кресле и следит за тобой.
+func _update_doll(delta: float) -> void:
 	var p = L.player
-	var to: Vector3 = glass.global_position - p.cam.global_position
-	if to.length() > 3.8 or p.forward().angle_to(to) > 0.4:
-		return
-	mirror_done = true
-	var back: Vector3 = -p.forward()
-	back.y = 0.0
-	back = back.normalized()
-	vera_m.global_position = Vector3(p.global_position.x, Y2, p.global_position.z) + back * 0.75
-	var d: Vector3 = p.global_position - vera_m.global_position
-	vera_m.rotation.y = atan2(d.x, d.z)
-	vera_m.play("idle")
-	vera_m.visible = true
-	L._sfx3d("whisper", p.cam.global_position + back * 0.5, -6.0, 0.75, true)
-	await get_tree().create_timer(1.6).timeout
-	gutter_out(0.7)
-	vera_m.visible = false
-	L._sfx3d("click", glass.global_position + Vector3(0.2, -0.7, -0.3), -6.0, 1.2, true)
-	key_node.visible = true
-	letter.note_small.visible = true
+	match doll_state:
+		"armed":
+			if L.busy or L.note_panel.visible:
+				return
+			_doll_t += delta
+			if _doll_t < 0.8:
+				return
+			var back: Vector3 = -p.forward()
+			back.y = 0.0
+			back = back.normalized()
+			var from: Vector3 = p.global_position + Vector3(0, 0.5, 0)
+			var dist := 1.0
+			var q := PhysicsRayQueryParameters3D.create(from, from + back * 1.4)
+			q.exclude = [p.get_rid()]
+			var hit: Dictionary = p.get_world_3d().direct_space_state.intersect_ray(q)
+			if not hit.is_empty():
+				dist = clampf(from.distance_to(hit["position"]) - 0.35, 0.6, 1.0)
+			var at: Vector3 = Vector3(p.global_position.x, Y2, p.global_position.z) + back * dist
+			floor_doll.global_position = Vector3(at.x, _top(at.x, at.z, 0.3), at.z)
+			var d: Vector3 = p.global_position - at
+			floor_doll.rotation.y = atan2(d.x, d.z)
+			var fh := floor_doll.find_child("Head", true, false) as Node3D
+			if fh:
+				fh.rotation = Vector3(-0.25, 0.0, 0.35)              # смотрит снизу вверх, голова набок
+			floor_doll.visible = true
+			doll.visible = false
+			L._sfx3d("giggle", at + Vector3(0, 0.4, 0), -14.0, 0.85, true)
+			L._sfx("heartbeat", -10.0, 1.0, true)
+			doll_state = "floor"
+			_doll_t = 0.0
+		"floor":
+			var to: Vector3 = floor_doll.global_position + Vector3(0, 0.25, 0) - p.cam.global_position
+			if to.length() < 4.5 and p.forward().angle_to(to) < 0.5:
+				_doll_t += delta
+			if _doll_t > 0.6:
+				doll_state = "vanish"
+				_doll_vanish()
+		"back":
+			var y := _head_yaw_to(p.cam.global_position)
+			doll_head.rotation.y = lerp_angle(doll_head.rotation.y, y, minf(1.0, delta * 0.8))
+
+
+func _doll_vanish() -> void:
+	L._sfx3d("whoosh", floor_doll.global_position + Vector3(0, 0.3, 0), -10.0, 1.3, true)
+	gutter_out(0.5)
+	for k in 5:
+		floor_doll.visible = k % 2 == 1
+		await get_tree().create_timer(randf_range(0.05, 0.11)).timeout
+	floor_doll.visible = false
+	doll.visible = true
+	doll_state = "back"
