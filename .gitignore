@@ -1469,6 +1469,12 @@
 !/models/spirit/spirit_mesh.res
 !/models/spirit/tripo_image_2d99349c_0.jpg
 !/models/spirit/tripo_image_2d99349c_0.jpg.import
+!/models/spirit2/anim_idle.res
+!/models/spirit2/anim_reach.res
+!/models/spirit2/anim_run.res
+!/models/spirit2/anim_walk.res
+!/models/spirit2/anim_zidle.res
+!/models/spirit2/anya_ghost.glb
 !/models/steel_frame_shelves_01/steel_frame_shelves_01.bin
 !/models/steel_frame_shelves_01/steel_frame_shelves_01_1k.gltf
 !/models/steel_frame_shelves_01/steel_frame_shelves_01_1k.gltf.import

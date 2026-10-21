@@ -80,7 +80,7 @@ func _load_old() -> void:
 ## Новая модель: тело (кожа, рубашка, глаза — одна текстура) и волосы-карточки, свои анимации
 ## (перенесены со старой: tools/retarget_ghost.gd). Глаза и рот — из anya_ghost.json.
 func _load_new() -> void:
-	model = load(NEW_DIR + "anya_ghost.glb").instantiate()
+	model = load("res://models/spirit2/anya_ghost.glb").instantiate()
 	add_child(model)
 	var info := NEW_INFO
 	model.scale = Vector3.ONE * (HEIGHT / float(info.height))
@@ -89,7 +89,7 @@ func _load_new() -> void:
 	model.add_child(ap)
 	var lib := AnimationLibrary.new()
 	for n in ANIMS:
-		lib.add_animation(n, load(NEW_DIR + "anim_%s.res" % n))
+		lib.add_animation(n, load("res://models/spirit2/anim_%s.res" % n))
 	ap.add_animation_library("g", lib)
 	# Blender (x, y, z) → Godot (x, z, -y); всё от кости головы, в метрах модели
 	var bg := func(a: Array) -> Vector3: return Vector3(a[0], a[2], -a[1])
