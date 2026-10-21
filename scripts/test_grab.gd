@@ -3,7 +3,7 @@ extends Node
 ## лицо на весь экран, кричит и трясётся, руками держит тебя за голову. Выключить: level.TEST_GRAB = false.
 const SPIRIT = preload("res://scripts/spirit.gd")
 const TRIGGER_Z := 3.0          ## прошёл прихожую до этой отметки — срабатывает (один раз)
-const DIST := 0.1               ## лицо (глаза) — в 10 см от камеры: на весь экран
+const DIST := 0.24              ## лицо (глаза) — в 24 см от камеры: крупно, но всё лицо в кадре
 const HOLD := 1.9               ## сколько держит
 
 var L: Node
@@ -73,7 +73,7 @@ func _scare() -> void:
 	_hoff = g.global_transform.affine_inverse() * (g.sk.global_transform * g.sk.get_bone_global_pose(hb).origin)
 	for mi in g.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF   # тень волос во весь кадр — лишняя нагрузка
-	g._p("near_cut", 0.075)                       # пряди прямо у объектива не рисуем — лицо видно, видеокарте легче
+	g._p("near_cut", DIST - 0.035)                       # пряди прямо у объектива не рисуем — лицо видно, видеокарте легче
 	grab = preload("res://scripts/grab_pose.gd").new()
 	g.sk.add_child(grab)
 	var face := OmniLight3D.new()
@@ -126,8 +126,8 @@ func _hold_frame() -> void:
 	var want: Vector3 = cam.global_position + fwd * (DIST + 0.1) + Vector3(0, -0.1, 0) + jit
 	g.global_position = want - g.global_basis * _hoff
 	if grab:
-		var c: Vector3 = cam.global_position + fwd * 0.12 + Vector3(0, -0.07, 0)
-		grab.targets = {"Left": c + right * 0.15, "Right": c - right * 0.15}
+		var c: Vector3 = cam.global_position + fwd * 0.03 + Vector3(0, 0.05, 0)
+		grab.targets = {"Left": c + right * 0.13, "Right": c - right * 0.13}   # ладони — у висков, за краем кадра
 
 
 ## Что бы ни случилось — через несколько секунд игрок снова может двигаться.
