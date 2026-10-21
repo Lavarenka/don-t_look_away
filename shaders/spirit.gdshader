@@ -36,6 +36,7 @@ varying vec3 v_hp;
 varying vec3 v_obj;
 varying float v_zone;       // 1 — где у старой модели открытая кожа: голова, кисти/предплечья, ступни          // точка модели в покое (для шумов, если развёртка — мелкий атлас)
 uniform bool obj_noise = false;
+uniform float near_cut = 0.0;     // ближе этого (м) к камере — не рисовать (скример вплотную: пряди перед объективом)
 uniform float realism = 0.0;      // «не пластик» (старая модель): микрорельеф, пряди, ворс ткани, матовость; 0 — как было
 uniform bool skin_mask = false;   // новая модель: кожа — по маске в цвете вершин (r), а не угадывается по цвету           // точка в осях кости головы (м), до движения челюсти
 
@@ -132,6 +133,10 @@ float n3(vec3 p) { return (vnoise(p.xy) + vnoise(p.zy + 17.3) + vnoise(p.xz + 31
 void fragment() {
 	vec4 c = texture(albedo_tex, flip_v ? vec2(UV.x, 1.0 - UV.y) : UV) * tint;
 	float hair_alpha = smoothstep(0.15, 0.6, c.a);      // вдали (мип-уровни) пряди не тают
+	if (near_cut > 0.0 && length(VERTEX) < near_cut) discard;
+#ifdef HAIR
+	if (hair_alpha < 0.03) discard;                   // пустое место карточки — сразу, без тяжёлого расчёта
+#endif
 	vec3 col = c.rgb;
 	float lum = dot(col, vec3(0.3, 0.59, 0.11));
 	float mx = max(col.r, max(col.g, col.b));
