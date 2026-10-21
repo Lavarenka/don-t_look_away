@@ -967,8 +967,9 @@ func _under_water(delta: float) -> void:
 	tw.chain().tween_method(func(v: float): wm.set_shader_parameter("shape_a", v), 0.85, 0.0, 1.0)
 
 
-## Уходишь из ванной с ключом: дверь в тамбур захлопывается, а когда её откроешь —
-## за ней стоит она, вплотную, и прыгает в лицо.
+## Уходишь из ванной с ключом: дверь в тамбур захлопывается, а когда её откроешь — за ней стоит она.
+## Дрожит, дышит — и бросается: сбивает с ног, нависает над тобой (фонарь стробит, она всё ниже),
+## бросается в лицо — темнота. Приходишь в себя на полу, поднимаешься — в проёме пусто.
 func _update_exit_scare() -> void:
 	match exit_scare:
 		1:
@@ -991,20 +992,126 @@ func _update_exit_scare() -> void:
 
 
 func _exit_ghost() -> void:
+	var p = L.player
+	L.busy = true
+	p.frozen = true
 	var g: Node3D = SPIRIT.new()
 	L.add_child(g)
 	g.set_layer(1 | MIRROR_LAYER)
-	g.global_position = Vector3(INNER_C.x - 0.1, Y2, INNER_C.z + 0.45)
-	var to: Vector3 = L.player.global_position - g.global_position
-	g.rotation.y = atan2(to.x, to.z)
+	var at := Vector3(INNER_C.x - 0.1, Y2, INNER_C.z + 0.45)
+	g.global_position = at
+	var dir: Vector3 = p.global_position - at                 # от неё к игроку
+	dir.y = 0.0
+	dir = dir.normalized()
+	g.rotation.y = atan2(dir.x, dir.z)
 	g.play_from("zidle", 2.2, 0.35)
 	g.set_blood(1.0)
-	L._sfx("heartbeat", 0.0, 1.2)
-	await get_tree().create_timer(0.75).timeout
-	await L.hallp.ghost_lunge(g, Callable(), true)
+	g.set_eyes(1.0)
+	g.set_shiver(0.7)
+	var face := OmniLight3D.new()                              # мертвенный свет — видно лицо в темноте
+	face.light_color = Color(0.7, 0.8, 1.0)
+	face.light_energy = 0.0
+	face.omni_range = 1.8
+	face.position = Vector3(0, 1.4, 0.5)
+	g.add_child(face)
+	# 1. стоит в проёме, голова дёргается; дыхание вплотную
+	L._sfx("heartbeat", 0.0, 1.2, true)
+	L._sfx3d("breath_dark", at + Vector3(0, 1.5, 0), -4.0, 0.8, true)
+	create_tween().tween_property(face, "light_energy", 0.45, 0.7)
+	await get_tree().create_timer(0.9).timeout
+	# 2. бросок
+	g.play_from("reach", 1.2, 1.6)
+	g.scream(2.2)
+	face.light_energy = 1.8
+	L._sfx("scream", 2.0, 1.15, true)
+	L._sfx("sting", 0.0, 1.0, true)
+	var hit := Vector3(p.global_position.x, Y2, p.global_position.z) - dir * 0.45
+	var tw := create_tween()
+	tw.tween_property(g, "global_position", hit, 0.15).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	await tw.finished
+	# 3. удар: сбивает с ног — падаешь навзничь, камера у самого пола смотрит вверх
+	L._sfx("thump", 4.0, 0.7, true)
+	L._sfx("bang", -2.0, 0.6, true)
+	p.shake = 1.4
+	L.red_flash.color.a = 0.45
+	var h0: float = p.head.position.y
+	var dest: Vector3 = p.global_position + dir * _free_dist(p, dir, 0.7)
+	var fall := create_tween().set_parallel()
+	fall.tween_property(p, "global_position", dest, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	fall.tween_property(p.head, "position:y", 0.28, 0.42).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	fall.tween_property(p.head, "rotation:x", 1.0, 0.42)
+	fall.tween_property(p.head, "rotation:z", 0.12, 0.42)
+	fall.tween_property(p, "rotation:y", atan2(dir.x, dir.z), 0.3)          # лицом к ней
+	# 4. она нависает над тобой: склоняется, тянет руки вниз, волосы свисают
+	var floor_p := Vector3(dest.x, Y2, dest.z)
+	g.play_from("zidle", 2.2, 0.3)
+	_loom(g, p, floor_p, dir, 1.0, 0.5, 0.0)
+	create_tween().tween_property(L.red_flash, "color:a", 0.15, 0.6)
+	await get_tree().create_timer(0.45).timeout
+	L._sfx("tinnitus", -6.0, 1.0, true)
+	L._sfx("whisper_harsh", -2.0, 0.7, true)
+	# фонарь стробит — с каждой вспышкой она ниже и ближе
+	for k in 3:
+		p.flicker = 0.13
+		await get_tree().create_timer(0.13).timeout
+		_loom(g, p, floor_p, dir, 0.95 - 0.05 * k, 0.6 + 0.1 * k, 0.12)
+		p.shake = 0.9
+		L.red_flash.color.a = 0.3
+		create_tween().tween_property(L.red_flash, "color:a", 0.1, 0.3)
+		await get_tree().create_timer(0.3).timeout
+	# 5. бросается в лицо — темнота
+	g.scream(0.3)
+	L._sfx("scream", 3.0, 0.8, true)
+	var tw2 := create_tween().set_parallel()
+	tw2.tween_property(g, "global_position", floor_p - dir * 0.55, 0.12).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	tw2.tween_property(g, "rotation:x", 1.05, 0.12).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	await tw2.finished
+	L.fade.color.a = 1.0
+	L.red_flash.color.a = 0.0
 	g.queue_free()
-	await get_tree().create_timer(1.2).timeout
+	await get_tree().create_timer(1.6).timeout
+	# 6. приходишь в себя на полу и поднимаешься — в проёме никого
+	create_tween().tween_property(L.fade, "color:a", 0.0, 1.8)
+	L._sfx("breath_dark", -8.0, 1.1, true)
+	await get_tree().create_timer(1.4).timeout
+	var up := create_tween().set_parallel()
+	up.tween_property(p.head, "position:y", h0, 1.3).set_trans(Tween.TRANS_SINE)
+	up.tween_property(p.head, "rotation:x", 0.0, 1.3).set_trans(Tween.TRANS_SINE)
+	up.tween_property(p.head, "rotation:z", 0.0, 1.1).set_trans(Tween.TRANS_SINE)
+	await up.finished
+	p.frozen = false
+	L.busy = false
 	_candle(true)
+
+
+## Она стоит в dist от лежащего игрока и наклоняется над ним на угол lean (вперёд, от ступней);
+## взгляд игрока — прямо на её лицо.
+func _loom(g: Node3D, p: Node3D, floor_p: Vector3, dir: Vector3, dist: float, lean: float, sec: float) -> void:
+	var pos := floor_p - dir * dist
+	var head := pos + Vector3(0, 1.5 * cos(lean), 0) + dir * 1.5 * sin(lean)
+	var cam_p := floor_p + Vector3(0, 0.28, 0)
+	var dh := Vector2(head.x - cam_p.x, head.z - cam_p.z).length()
+	var pitch := clampf(atan2(head.y - cam_p.y, maxf(dh, 0.05)), 0.6, 1.45)
+	if sec <= 0.0:
+		g.global_position = pos
+		g.rotation.x = lean
+		p.head.rotation.x = pitch
+		return
+	var tw := create_tween().set_parallel()
+	tw.tween_property(g, "global_position", pos, sec)
+	tw.tween_property(g, "rotation:x", lean, sec)
+	tw.tween_property(p.head, "rotation:x", pitch, sec)
+
+
+## На сколько можно отлететь назад (луч по направлению толчка, не в стену).
+func _free_dist(p: Node3D, d: Vector3, want: float) -> float:
+	var from: Vector3 = p.global_position + Vector3(0, 0.6, 0)
+	var q := PhysicsRayQueryParameters3D.create(from, from + d * (want + 0.35))
+	q.exclude = [p.get_rid()]
+	var h: Dictionary = p.get_world_3d().direct_space_state.intersect_ray(q)
+	if h.is_empty():
+		return want
+	return clampf(from.distance_to(h["position"]) - 0.35, 0.0, want)
 
 
 func _mirror_ghost() -> void:
