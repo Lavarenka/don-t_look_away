@@ -168,8 +168,24 @@ func _build_room() -> void:
 	night2.position = Vector3(1.235, Y2 + 1.55, -41.06)
 	night2.rotation.y = -PI / 2
 	L.add_child(night2)
-	# стекло окна не берёт отражение из пробы ванной (на высоком качестве в нём «висела» чужая комната)
-	var glass := room.find_child("Wall_Window_001_Door and windows_0", true, false) as GeometryInstance3D
+	nm.cull_mode = BaseMaterial3D.CULL_DISABLED
+	# два окна в западной стене смотрят прямо в стены комнаты Веры — за ними тоже только ночь
+	for wz in [-40.27, -37.70]:
+		var nw := MeshInstance3D.new()
+		var nwq := QuadMesh.new()
+		nwq.size = Vector2(1.45, 1.6)
+		nw.mesh = nwq
+		nw.material_override = nm
+		nw.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		nw.position = Vector3(-4.12, Y2 + 1.55, wz)
+		nw.rotation.y = PI / 2
+		L.add_child(nw)
+	# стекло окон не берёт отражение из пробы ванной (на высоком качестве в нём «висела» чужая комната)
+	for gname in ["Wall_Window_001_Door and windows_0", "Wall_Window_002_Door and windows_0", "Wall_Window_003_Door and windows_0"]:
+		_matte_glass(room.find_child(gname, true, false) as GeometryInstance3D)
+
+
+func _matte_glass(glass: GeometryInstance3D) -> void:
 	if glass:
 		glass.layers |= NO_PROBE_LAYER
 		# и вообще ничего не отражает: у пака стекло «металлическое», и на высоком качестве
