@@ -32,12 +32,16 @@ varying float v_mx;          // 1 — середина рта, 0 — у краё
 uniform vec3 eye_at = vec3(0.017, 0.098, 0.1);   // центр глаза от кости головы (м), x — в стороны
 uniform float eye_r = 0.0068;                     // радиус глаза (м)
 uniform float face_fx = 1.0;                      // 0 — старое лицо, 1 — новое
-varying vec3 v_hp;           // точка в осях кости головы (м), до движения челюсти
+varying vec3 v_hp;
+varying vec3 v_obj;          // точка модели в покое (для шумов, если развёртка — мелкий атлас)
+uniform bool obj_noise = false;
+uniform bool skin_mask = false;   // новая модель: кожа — по маске в цвете вершин (r), а не угадывается по цвету           // точка в осях кости головы (м), до движения челюсти
 
 void vertex() {
 	masks = COLOR;
 	v_jaw = 0.0;
 	v_mx = 0.0;
+	v_obj = VERTEX;
 	v_hp = (head_inv * vec4(VERTEX, 1.0)).xyz * head_k;
 	// впавшие глазницы: кожа вокруг глаз уходит внутрь черепа
 	if (face_fx > 0.0 && v_hp.z > 0.02 && COLOR.b < 0.5) {
@@ -121,14 +125,20 @@ void fragment() {
 	float red = smoothstep(0.45, 0.7, sat) * step(col.g * 1.6, col.r) * (1.0 - hair);
 	float skin = smoothstep(0.18, 0.32, sat) * (1.0 - smoothstep(0.5, 0.65, sat)) * smoothstep(0.1, 0.22, lum)
 		* step(col.b, col.g * 1.05) * (1.0 - red) * (1.0 - hair);
+	if (skin_mask) {
+		hair = masks.b;
+		red = smoothstep(0.55, 0.75, sat) * step(col.g * 1.8, col.r) * (1.0 - hair);
+		skin = masks.r * (1.0 - red) * (1.0 - hair);
+	}
 	float cloth = clamp(1.0 - hair - red - skin, 0.0, 1.0);
 	// кожа мёртвая: серо-синяя, с пятнами (трупные пятна, вены)
-	float liv = vnoise(UV * 23.0) * 0.6 + vnoise(UV * 71.0) * 0.4;
+	vec2 nuv = obj_noise ? vec2(v_obj.x + v_obj.z * 0.7, v_obj.y) * 0.65 + 0.5 : UV;   // шумы — по телу, не по атласу
+	float liv = vnoise(nuv * 23.0) * 0.6 + vnoise(nuv * 71.0) * 0.4;
 	vec3 dead = mix(vec3(lum), vec3(0.62, 0.68, 0.74) * lum * 1.25, 0.55);
 	dead = mix(dead, dead * vec3(0.55, 0.5, 0.65), smoothstep(0.55, 0.8, liv) * 0.7);
 	col = mix(col, dead, skin * pallor);
 	// ткань — грязная, отсыревшая, местами темнее
-	float damp = smoothstep(0.45, 0.75, vnoise(UV * 13.0 + 3.1));
+	float damp = smoothstep(0.45, 0.75, vnoise(nuv * 13.0 + 3.1));
 	col = mix(col, col * vec3(0.72, 0.7, 0.66), cloth * damp * 0.6);
 	col *= mix(1.0, 0.75, hair);                           // волосы — мокрые, почти чёрные
 	// пряди: слипшиеся, неровные по тону (не пластик)
@@ -146,6 +156,7 @@ void fragment() {
 	col = mix(col, vec3(sl0) * vec3(0.86, 0.9, 1.0) * 1.1, skin * 0.5 * face_fx);
 	// ---- лицо (в осях головы): только кожа спереди головы
 	float facem = smoothstep(0.02, 0.05, v_hp.z) * (1.0 - masks.b) * face_fx * smoothstep(mouth_at.y - 0.1, mouth_at.y - 0.06, v_hp.y);   // только голова, не грудь
+	if (skin_mask) facem *= masks.r;                      // только кожа (не воротник рубашки)
 	float eyem = 0.0;
 	if (facem > 0.0) {
 		vec3 sk = col;
@@ -184,8 +195,8 @@ void fragment() {
 	SPECULAR = mix(SPECULAR, 0.3, hair * (1.0 - facem) * face_fx);     // мокрые, но не пластиковые
 	if (blood > 0.0) {
 		// пятна + вертикальные потёки (растянутый шум), чем больше blood — тем шире
-		float n = vnoise(UV * vec2(9.0, 9.0)) * 0.6 + vnoise(UV * vec2(31.0, 31.0)) * 0.4;
-		float drip = vnoise(vec2(UV.x * 70.0, UV.y * 4.0));
+		float n = vnoise(nuv * vec2(9.0, 9.0)) * 0.6 + vnoise(nuv * vec2(31.0, 31.0)) * 0.4;
+		float drip = vnoise(vec2(nuv.x * 70.0, nuv.y * 4.0));
 		float m = smoothstep(0.78 - 0.45 * blood, 0.86 - 0.4 * blood, max(n, drip * 0.95));
 		m *= blood;
 		m *= 1.0 - hair;                                   // по чёрным волосам кровь не видна — не красим их
@@ -227,7 +238,7 @@ void fragment() {
 	ALPHA *= hair_alpha;
 #else
 	ALPHA = hair_alpha;
-	ALPHA_SCISSOR_THRESHOLD = 0.5;
+	ALPHA_HASH_SCALE = 1.0;          // рассыпчатый край прядей (без «рваных чёрточек»), сглаживается TAA
 #endif
 #endif
 }

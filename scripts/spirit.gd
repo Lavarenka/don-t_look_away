@@ -13,7 +13,7 @@ const EYE_OFS := Vector3(0.017, 0.098, 0.1)   ## глаза от кости го
 const NEW_MODEL := true
 const NEW_DIR := "res://models/spirit2/"
 ## Из make_ghost.py (anya_ghost.json), координаты Blender: глаза, рот, кость головы; рост до макушки.
-const NEW_INFO := {"eye_l": [0.027798, -0.099824, 1.376712], "mouth": [-0.000946, -0.138525, 1.341566], "head": [-0.001234, -0.014884, 1.300064], "height": 1.488265}
+const NEW_INFO := {"eye_l": [0.025338, -0.100612, 1.389180], "mouth": [-0.000000, -0.142592, 1.350613], "head": [-0.001301, -0.014884, 1.307164], "height": 1.508432}
 var eye_ofs := EYE_OFS
 var hair_mat: ShaderMaterial       ## волосы новой модели (тот же шейдер, с альфой карточек)
 var _r0 := Basis.IDENTITY          ## поза покоя головы — оси «лица» для шейдера
@@ -106,6 +106,9 @@ func _load_new() -> void:
 		if src and src.albedo_texture:
 			sm.set_shader_parameter("albedo_tex", src.albedo_texture)
 		sm.set_shader_parameter("flip_v", false)
+		sm.set_shader_parameter("obj_noise", true)
+		sm.set_shader_parameter("skin_mask", true)
+		sm.set_shader_parameter("sag", 0.0)
 		sm.set_shader_parameter("eye_at", eye_ofs)
 		sm.set_shader_parameter("eye_r", 0.0105 * model.scale.x)
 		sm.set_shader_parameter("mouth_at", m * model.scale.x)
