@@ -1,5 +1,5 @@
 shader_type spatial;
-// Глаз призрака сквозь волосы: жёлто-белая точка с багровым ореолом, чуть «прищуренная»,
+// Блик мутного глаза сквозь волосы: холодная бледная точка с еле заметным ореолом, чуть «прищуренная»,
 // неровно мерцает. Всегда повёрнута к камере; волосы перед лицом её закрывают (depth test).
 render_mode unshaded, blend_add, depth_draw_never, cull_disabled, shadows_disabled, fog_disabled;
 uniform float power = 0.45;
@@ -17,6 +17,6 @@ void fragment() {
 	float halo = smoothstep(1.0, 0.05, r);
 	halo *= halo;
 	float fl = 0.8 + 0.2 * sin(TIME * 11.0 + seed) * sin(TIME * 4.7 + seed * 2.3);
-	vec3 c = vec3(1.0, 0.93, 0.7) * core * 2.2 + vec3(0.7, 0.04, 0.02) * halo;
+	vec3 c = vec3(0.8, 0.85, 0.95) * core * 0.6 + vec3(0.18, 0.22, 0.3) * halo * 0.35;
 	ALBEDO = c * power * fl;
 }

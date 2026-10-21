@@ -27,11 +27,23 @@ uniform vec3 mouth_col : source_color = vec3(0.13, 0.01, 0.008);   // цвет �
 uniform float mouth_deep = 1.0;    // 0 — вся полость mouth_col, 1 — в глубине чернеет
 varying float v_jaw;
 varying float v_mx;          // 1 — середина рта, 0 — у краёв лица
+// лицо утопленницы: мутные белые глаза во впавших тёмных глазницах, трещины, вены, синие губы, зубы
+uniform vec3 eye_at = vec3(0.017, 0.098, 0.1);   // центр глаза от кости головы (м), x — в стороны
+uniform float eye_r = 0.0068;                     // радиус глаза (м)
+uniform float face_fx = 1.0;                      // 0 — старое лицо, 1 — новое
+varying vec3 v_hp;           // точка в осях кости головы (м), до движения челюсти
 
 void vertex() {
 	masks = COLOR;
 	v_jaw = 0.0;
 	v_mx = 0.0;
+	v_hp = (head_inv * vec4(VERTEX, 1.0)).xyz * head_k;
+	// впавшие глазницы: кожа вокруг глаз уходит внутрь черепа
+	if (face_fx > 0.0 && v_hp.z > 0.02 && COLOR.b < 0.5) {
+		float ds = length(vec2(abs(v_hp.x) - eye_at.x, (v_hp.y - eye_at.y) * 1.25));
+		float sink = 1.0 - smoothstep(eye_r * 0.6, eye_r * 2.8, ds);
+		VERTEX -= head_rot * vec3(0.0, 0.0, 0.006 * sink * face_fx) / head_k;
+	}
 	if (mouth + grimace > 0.001) {
 		vec3 hp = (head_inv * vec4(VERTEX, 1.0)).xyz * head_k;
 		vec3 m = hp - mouth_at;
@@ -77,6 +89,19 @@ void vertex() {
 }
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+vec2 hash2(vec2 p) { return fract(sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) * 43758.5453); }
+// расстояние до ближайшей «трещины» (граница ячеек Вороного)
+float crack(vec2 p) {
+	vec2 i = floor(p); vec2 f = fract(p);
+	float d1 = 8.0; float d2 = 8.0;
+	for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++) {
+		vec2 g = vec2(float(x), float(y));
+		vec2 o = hash2(i + g);
+		float d = length(g + o - f);
+		if (d < d1) { d2 = d1; d1 = d; } else if (d < d2) { d2 = d; }
+	}
+	return d2 - d1;
+}
 float vnoise(vec2 p) {
 	vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
 	return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
@@ -104,14 +129,56 @@ void fragment() {
 	float damp = smoothstep(0.45, 0.75, vnoise(UV * 13.0 + 3.1));
 	col = mix(col, col * vec3(0.72, 0.7, 0.66), cloth * damp * 0.6);
 	col *= mix(1.0, 0.75, hair);                           // волосы — мокрые, почти чёрные
+	// пряди: слипшиеся, неровные по тону (не пластик)
+	float strand = vnoise(vec2(UV.x * 420.0, UV.y * 6.0)) * 0.6 + vnoise(vec2(UV.x * 90.0, UV.y * 3.0)) * 0.4;
+	float hm = max(hair, masks.b);
+	col = mix(col, col * mix(0.16, 0.42, strand), hm * face_fx);
 	col = mix(col, col * vec3(0.7, 0.45, 0.42), red * 0.5); // старая кровь темнее
 	float rough = 0.85;
-	rough = mix(rough, 0.48, hair);
+	rough = mix(rough, mix(0.48, mix(0.7, 0.42, strand), face_fx), max(hair, masks.b));
 	rough = mix(rough, 0.25, red);
 	rough = mix(rough, 0.6, skin);
 	rough = mix(rough, 0.55, cloth * damp);
+	// вся кожа (шея, руки) — такая же серая, как лицо, без шва на подбородке
+	float sl0 = dot(col, vec3(0.3, 0.59, 0.11));
+	col = mix(col, vec3(sl0) * vec3(0.86, 0.9, 1.0) * 1.1, skin * 0.5 * face_fx);
+	// ---- лицо (в осях головы): только кожа спереди головы
+	float facem = smoothstep(0.02, 0.05, v_hp.z) * (1.0 - masks.b) * face_fx;
+	float eyem = 0.0;
+	if (facem > 0.0) {
+		vec3 sk = col;
+		float sl = dot(sk, vec3(0.3, 0.59, 0.11));
+		sk = mix(sk, vec3(sl) * vec3(0.86, 0.9, 1.0) * 1.1, 0.5);      // лицо серее, мертвее
+		// вены: тонкий «гребешковый» шум, сине-фиолетовые
+		float vn = 1.0 - abs(vnoise(v_hp.xy * 160.0 + 2.0) * 2.0 - 1.0);
+		vn = smoothstep(0.86, 0.97, vn) * (0.5 + 0.5 * vnoise(v_hp.xy * 40.0));
+		sk = mix(sk, sk * vec3(0.45, 0.42, 0.75), vn * 0.75);
+		// трещины: тонкая сетка на лбу и щеках
+		float cr = crack(v_hp.xy * 95.0 + vec2(3.7, 1.3));
+		float crm = (1.0 - smoothstep(0.02, 0.06, cr)) * smoothstep(0.3, 0.6, vnoise(v_hp.xy * 30.0));
+		sk = mix(sk, sk * 0.35, crm * 0.8);
+		// синие губы
+		vec2 lm = vec2(v_hp.x / 0.022, (v_hp.y - mouth_at.y) / 0.008);
+		float lips = (1.0 - smoothstep(0.7, 1.0, length(lm))) * smoothstep(0.06, 0.085, v_hp.z);
+		sk = mix(sk, vec3(0.3, 0.3, 0.4) * (dot(sk, vec3(0.33)) * 1.4 + 0.05), lips * 0.75);
+		// впавшие тёмные глазницы
+		float ds = length(vec2(abs(v_hp.x) - eye_at.x, (v_hp.y - eye_at.y) * 1.25));
+		float sock = 1.0 - smoothstep(eye_r * 1.0, eye_r * 3.2, ds);
+		sk = mix(sk, sk * vec3(0.16, 0.12, 0.18), sock * 0.95);
+		// мутный белый глаз: белёсое бельмо, едва заметная серая радужка, точка зрачка
+		float de = length(vec2(abs(v_hp.x) - eye_at.x, (v_hp.y - eye_at.y) * 1.7));      // миндалина: веки полуприкрыты
+		eyem = 1.0 - smoothstep(eye_r * 0.8, eye_r, de);
+		vec3 ey = vec3(0.3, 0.32, 0.32);
+		ey = mix(ey, vec3(0.24, 0.26, 0.28), 1.0 - smoothstep(eye_r * 0.42, eye_r * 0.55, de));
+		ey = mix(ey, vec3(0.08, 0.08, 0.09), 1.0 - smoothstep(eye_r * 0.08, eye_r * 0.15, de));
+		ey *= 0.8 + 0.2 * vnoise(v_hp.xy * 900.0);                   // муть
+		ey = mix(ey, ey * vec3(1.0, 0.75, 0.75), smoothstep(0.6, 0.95, de / eye_r) * 0.6);   // красные жилки по краю
+		sk = mix(sk, ey, eyem);
+		col = mix(col, sk, facem);
+	}
 	ALBEDO = col;
 	SPECULAR = mix(0.5, 0.65, clamp(hair + red, 0.0, 1.0));
+	SPECULAR = mix(SPECULAR, 0.3, hair * (1.0 - facem) * face_fx);     // мокрые, но не пластиковые
 	if (blood > 0.0) {
 		// пятна + вертикальные потёки (растянутый шум), чем больше blood — тем шире
 		float n = vnoise(UV * vec2(9.0, 9.0)) * 0.6 + vnoise(UV * vec2(31.0, 31.0)) * 0.4;
@@ -122,6 +189,7 @@ void fragment() {
 		ALBEDO = mix(ALBEDO, vec3(0.2, 0.006, 0.005), m * 0.92);
 		rough = mix(rough, 0.2, m);
 	}
+	rough = mix(rough, 0.3, eyem * facem);                 // глаз мокрый, блестит
 	ROUGHNESS = rough;
 	// тонкая ткань и кожа светятся насквозь, когда свет сзади
 	BACKLIGHT = vec3(0.55, 0.42, 0.36) * (cloth * 0.5 + skin * 0.35);
@@ -133,6 +201,14 @@ void fragment() {
 	// у губ — мокрое тёмно-красное (кровь, дёсны), в глубине — чёрная глотка
 	float deep = smoothstep(0.34, 0.06, abs(v_jaw - 0.5)) * smoothstep(0.3, 0.8, v_mx) * mouth_deep;
 	vec3 throat = mix(mouth_col, vec3(0.008, 0.002, 0.002), deep);
+	// зубы: мелкие, неровные, жёлто-серые — по верхнему и нижнему краю раскрытого рта
+	float tband = max(1.0 - smoothstep(0.2, 0.34, v_jaw), smoothstep(0.66, 0.8, v_jaw));
+	float tcol = floor(v_hp.x * 220.0);
+	float tl = 0.6 + 0.4 * hash(vec2(tcol, 1.7));
+	float tooth = smoothstep(0.08, 0.2, abs(fract(v_hp.x * 220.0) - 0.5) * 2.0 * -1.0 + 1.0);
+	float tm = gap * tband * tooth * step(abs(v_hp.x), 0.016) * face_fx * smoothstep(0.07, 0.08, v_hp.z) * step(mouth_at.y - 0.03, v_hp.y);
+	tm *= step(v_jaw < 0.5 ? (v_jaw - 0.08) / 0.26 : (0.8 - v_jaw) / 0.14 + 0.0, tl);
+	throat = mix(throat, vec3(0.42, 0.37, 0.27) * (0.6 + 0.4 * hash(vec2(tcol, 3.1))), tm);
 	ALBEDO = mix(ALBEDO, throat, gap);
 	ROUGHNESS = mix(ROUGHNESS, 0.18, gap);
 	SPECULAR = mix(SPECULAR, 0.7, gap * (1.0 - deep));
