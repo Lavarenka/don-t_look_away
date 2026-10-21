@@ -33,12 +33,28 @@ uniform vec3 eye_at = vec3(0.017, 0.098, 0.1);   // центр глаза от �
 uniform float eye_r = 0.0068;                     // радиус глаза (м)
 uniform float face_fx = 1.0;                      // 0 — старое лицо, 1 — новое
 varying vec3 v_hp;
-varying vec3 v_obj;          // точка модели в покое (для шумов, если развёртка — мелкий атлас)
+varying vec3 v_obj;
+varying float v_zone;       // 1 — где у старой модели открытая кожа: голова, кисти/предплечья, ступни          // точка модели в покое (для шумов, если развёртка — мелкий атлас)
 uniform bool obj_noise = false;
+uniform float realism = 0.0;      // «не пластик» (старая модель): микрорельеф, пряди, ворс ткани, матовость; 0 — как было
 uniform bool skin_mask = false;   // новая модель: кожа — по маске в цвете вершин (r), а не угадывается по цвету           // точка в осях кости головы (м), до движения челюсти
+
+float segd(vec3 p, vec3 a, vec3 b) {
+	vec3 ab = b - a;
+	float t = clamp(dot(p - a, ab) / max(dot(ab, ab), 1e-6), 0.0, 1.0);
+	return length(p - a - ab * t);
+}
 
 void vertex() {
 	masks = COLOR;
+	{
+		float hd = 1.0 - smoothstep(0.16, 0.2, length((head_inv * vec4(VERTEX, 1.0)).xyz * head_k));
+		float al = segd(VERTEX, mix(l1, l2, 0.3), l2 + (l2 - l1) * 0.5) * head_k;
+		float ar = segd(VERTEX, mix(r1, r2, 0.3), r2 + (r2 - r1) * 0.5) * head_k;
+		float hands = 1.0 - smoothstep(0.065, 0.09, min(al, ar));
+		float feet = 1.0 - smoothstep(0.1, 0.14, VERTEX.y * head_k);
+		v_zone = max(hd, max(hands, feet));
+	}
 	v_jaw = 0.0;
 	v_mx = 0.0;
 	v_obj = VERTEX;
@@ -111,6 +127,7 @@ float vnoise(vec2 p) {
 	vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
 	return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
 }
+float n3(vec3 p) { return (vnoise(p.xy) + vnoise(p.zy + 17.3) + vnoise(p.xz + 31.7)) / 3.0; }
 
 void fragment() {
 	vec4 c = texture(albedo_tex, flip_v ? vec2(UV.x, 1.0 - UV.y) : UV) * tint;
@@ -130,6 +147,7 @@ void fragment() {
 		red = smoothstep(0.55, 0.75, sat) * step(col.g * 1.8, col.r) * (1.0 - hair);
 		skin = masks.r * (1.0 - red) * (1.0 - hair);
 	}
+	if (realism > 0.0 && !skin_mask) skin *= mix(1.0, v_zone, realism);   // бежевое платье — не кожа
 	float cloth = clamp(1.0 - hair - red - skin, 0.0, 1.0);
 	// кожа мёртвая: серо-синяя, с пятнами (трупные пятна, вены)
 	vec2 nuv = obj_noise ? vec2(v_obj.x + v_obj.z * 0.7, v_obj.y) * 0.65 + 0.5 : UV;   // шумы — по телу, не по атласу
@@ -190,9 +208,55 @@ void fragment() {
 		sk = mix(sk, ey, eyem);
 		col = mix(col, sk, facem);
 	}
+	// ---- «не пластик»: рельеф и неоднородность поверхности (старая модель)
+	float spec_r = 0.0;
+	if (realism > 0.0) {
+		vec3 o = v_obj * 1.6;                              // примерно метры
+		float hm2 = max(hair, masks.b) * (1.0 - facem);
+		float fine = 1.0 - smoothstep(0.002, 0.008, length(fwidth(o)));   // вдали мелочь гасим — без ряби
+		// волосы: тонкие вертикальные пряди, слипшиеся в пучки
+		float ang = atan(o.x, o.z);
+		float sx = ang * 70.0 + vnoise(vec2(o.y * 5.0, ang * 7.0)) * 5.0;
+		float fib = vnoise(vec2(sx, o.y * 2.5)) * 0.55 + vnoise(vec2(sx * 2.7, o.y * 4.0)) * 0.45;
+		float clump = vnoise(vec2(ang * 14.0 + o.y * 2.0, o.y * 1.2));
+		// кожа: поры и мелкие складки; ткань: ворс, переплетение, мятые складки
+		float pore = n3(o * 700.0);
+		float wrink = n3(o * 90.0);
+		float weave = (sin(o.x * 2200.0 + o.z * 1500.0) * sin(o.y * 2200.0)) * 0.5 + 0.5;
+		float crumple = n3(o * 22.0) * 0.6 + n3(o * 55.0) * 0.4;
+		float h = hm2 * (fib * 0.0012 * (0.4 + 0.6 * fine) + clump * 0.004)
+			+ skin * (pore * 0.00018 * fine + wrink * 0.0005)
+			+ cloth * (weave * 0.00012 * fine + crumple * 0.006);
+		// рельеф без касательных: градиент высоты по экранным производным
+		vec3 dpx = dFdx(VERTEX); vec3 dpy = dFdy(VERTEX);
+		vec3 bx = cross(dpy, NORMAL); vec3 by = cross(NORMAL, dpx);
+		float det = dot(dpx, bx);
+		vec3 grad = sign(det) * (dFdx(h) * bx + dFdy(h) * by);
+		NORMAL = normalize(mix(NORMAL, normalize(abs(det) * NORMAL - grad), realism));
+		// цвет: пряди разного тона, кожа пятнистая, ткань в разводах грязи
+		vec3 c2 = col;
+		c2 = mix(c2, c2 * mix(0.35, 1.2, fib) * mix(0.55, 1.0, clump), hm2);
+		float fr2 = 1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0);
+		c2 = mix(c2, c2 * 0.45, hm2 * fr2 * fr2);          // волосы к краям — глубже и темнее (объём, не оболочка)
+		c2 = mix(c2, c2 * mix(0.82, 1.08, wrink) * mix(0.93, 1.03, pore), skin);
+		float grime = smoothstep(0.35, 0.8, n3(o * 6.0 + 5.0));
+		float cl = dot(c2, vec3(0.3, 0.59, 0.11));
+		c2 = mix(c2, vec3(cl) * vec3(0.98, 0.93, 0.84) * 0.85, cloth * 0.6);   // старый застиранный лён, а не розовый
+		c2 = mix(c2, c2 * mix(vec3(1.0), vec3(0.62, 0.58, 0.52), grime) * mix(0.86, 1.04, crumple), cloth);
+		c2 = mix(c2, c2 * 0.8, cloth * (1.0 - weave) * 0.25 * fine);
+		col = mix(col, c2, realism);
+		// матовость: кожа сухая, ткань впитывает свет, волосы — тусклый мокрый блеск прядями
+		float r2_ = rough;
+		r2_ = mix(r2_, mix(0.62, 0.9, fib), hm2);
+		r2_ = mix(r2_, mix(0.62, 0.86, pore * 0.5 + wrink * 0.5), skin * (1.0 - facem * 0.3));
+		r2_ = mix(r2_, mix(0.88, 0.98, crumple), cloth);
+		rough = mix(rough, r2_, realism);
+		spec_r = realism;
+	}
 	ALBEDO = col;
 	SPECULAR = mix(0.5, 0.65, clamp(hair + red, 0.0, 1.0));
 	SPECULAR = mix(SPECULAR, 0.3, hair * (1.0 - facem) * face_fx);     // мокрые, но не пластиковые
+	SPECULAR = mix(SPECULAR, max(hair, masks.b) * 0.15 + skin * 0.35 + cloth * 0.18 + red * 0.5, spec_r);
 	if (blood > 0.0) {
 		// пятна + вертикальные потёки (растянутый шум), чем больше blood — тем шире
 		float n = vnoise(nuv * vec2(9.0, 9.0)) * 0.6 + vnoise(nuv * vec2(31.0, 31.0)) * 0.4;
@@ -200,7 +264,7 @@ void fragment() {
 		float m = smoothstep(0.78 - 0.45 * blood, 0.86 - 0.4 * blood, max(n, drip * 0.95));
 		m *= blood;
 		m *= 1.0 - hair;                                   // по чёрным волосам кровь не видна — не красим их
-		ALBEDO = mix(ALBEDO, vec3(0.2, 0.006, 0.005), m * 0.92);
+		ALBEDO = mix(ALBEDO, mix(vec3(0.2, 0.006, 0.005), vec3(0.075, 0.006, 0.004), spec_r), m * 0.92);   // запёкшаяся — темнее
 		rough = mix(rough, 0.2, m);
 	}
 	rough = mix(rough, 0.3, eyem * facem);                 // глаз мокрый, блестит

@@ -43,6 +43,10 @@ var _mur_next := 3.0
 var _mur_to := 0.0
 
 
+## Старая Аня «не пластик» (рельеф кожи/прядей/ткани, матовость). 0.0 — вернуть как было.
+const REALISM := 1.0
+
+
 func _ready() -> void:
 	if new_model:
 		_load_new()
@@ -75,6 +79,7 @@ func _load_old() -> void:
 	mat = ShaderMaterial.new()
 	mat.shader = load("res://shaders/spirit.gdshader")
 	mat.set_shader_parameter("albedo_tex", load("res://models/spirit/spirit_albedo.png"))
+	mat.set_shader_parameter("realism", REALISM)
 	mi.material_override = mat
 
 
