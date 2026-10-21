@@ -967,8 +967,8 @@ func _under_water(delta: float) -> void:
 	tw.chain().tween_method(func(v: float): wm.set_shader_parameter("shape_a", v), 0.85, 0.0, 1.0)
 
 
-## Уходишь из ванной с ключом: дверь в тамбур захлопывается, а когда её откроешь — за ней стоит она.
-## Дрожит, дышит — и бросается: сбивает с ног, нависает над тобой (фонарь стробит, она всё ниже),
+## Уходишь из ванной с ключом: дверь в тамбур захлопывается, а как только её откроешь — она сразу
+## бросается из-за двери: сбивает с ног, нависает над тобой (фонарь стробит, она всё ниже),
 ## бросается в лицо — темнота. Приходишь в себя на полу, поднимаешься — в проёме пусто.
 func _update_exit_scare() -> void:
 	match exit_scare:
@@ -1004,30 +1004,24 @@ func _exit_ghost() -> void:
 	dir.y = 0.0
 	dir = dir.normalized()
 	g.rotation.y = atan2(dir.x, dir.z)
-	g.play_from("zidle", 2.2, 0.35)
 	g.set_blood(1.0)
 	g.set_eyes(1.0)
-	g.set_shiver(0.7)
+	g.set_shiver(1.0)
 	var face := OmniLight3D.new()                              # мертвенный свет — видно лицо в темноте
 	face.light_color = Color(0.7, 0.8, 1.0)
-	face.light_energy = 0.0
+	face.light_energy = 1.8
 	face.omni_range = 1.8
 	face.position = Vector3(0, 1.4, 0.5)
 	g.add_child(face)
-	# 1. стоит в проёме, голова дёргается; дыхание вплотную
-	L._sfx("heartbeat", 0.0, 1.2, true)
-	L._sfx3d("breath_dark", at + Vector3(0, 1.5, 0), -4.0, 0.8, true)
-	create_tween().tween_property(face, "light_energy", 0.45, 0.7)
-	await get_tree().create_timer(0.9).timeout
-	# 2. бросок
-	g.play_from("reach", 1.2, 1.6)
+	# 1. дверь открылась — она уже летит на тебя, без паузы
+	g.play_from("reach", 1.2, 1.8)
 	g.scream(2.2)
-	face.light_energy = 1.8
+	L._sfx("sting", 2.0, 1.0, true)
 	L._sfx("scream", 2.0, 1.15, true)
-	L._sfx("sting", 0.0, 1.0, true)
+	L._sfx("heartbeat", 0.0, 1.3, true)
 	var hit := Vector3(p.global_position.x, Y2, p.global_position.z) - dir * 0.45
 	var tw := create_tween()
-	tw.tween_property(g, "global_position", hit, 0.15).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	tw.tween_property(g, "global_position", hit, 0.12).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
 	await tw.finished
 	# 3. удар: сбивает с ног — падаешь навзничь, камера у самого пола смотрит вверх
 	L._sfx("thump", 4.0, 0.7, true)
