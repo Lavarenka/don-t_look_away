@@ -1,15 +1,15 @@
 extends RefCounted
-## Настройки графики: 0 — низкое, 1 — среднее, 2 — высокое, 3 — ультра.
+## Настройки графики: 0 — низкое, 1 — среднее, 2 — высокое, 3 — ультра, 4 — ультра+ (для мощных ПК).
 ## Сохраняются в user://settings.cfg (папка сохранений игры).
 
-const NAMES := ["SET_01", "SET_02", "SET_03", "SET_04"]
+const NAMES := ["SET_01", "SET_02", "SET_03", "SET_04", "SET_05"]
 const PATH := "user://settings.cfg"
 
 
 static func get_quality() -> int:
 	var cf := ConfigFile.new()
 	if cf.load(PATH) == OK:
-		return clampi(int(cf.get_value("graphics", "quality", 2)), 0, 3)
+		return clampi(int(cf.get_value("graphics", "quality", 2)), 0, 4)
 	return 2
 
 
@@ -100,6 +100,15 @@ static func apply(env: Environment, post: ShaderMaterial, q: int) -> void:
 		env.glow_bloom = 0.08
 		env.glow_hdr_threshold = 0.9
 		env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
+		# отражения в реальном времени (SSR): в лаковом полу, в чёрной воде, в стекле и фарфоре отражаются
+		# свеча и луч фонаря — только то, что освещено, поэтому темнота остаётся темнотой
+		env.ssr_enabled = q >= 2
+		env.ssr_max_steps = 128 if q >= 4 else 64
+		env.ssr_fade_in = 0.15
+		env.ssr_fade_out = 2.0
+		env.ssr_depth_tolerance = 0.25
+		if q >= 4:
+			env.sdfgi_cascades = 6
 	if post:
 		post.set_shader_parameter("fx", 1.0 if q >= 1 else 0.6)
 	var vp := Engine.get_main_loop() as SceneTree
@@ -112,6 +121,12 @@ static func apply(env: Environment, post: ShaderMaterial, q: int) -> void:
 		vp.root.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if q == 2 else Viewport.SCREEN_SPACE_AA_DISABLED
 		vp.root.anisotropic_filtering_level = Viewport.ANISOTROPY_16X if ultra else Viewport.ANISOTROPY_4X
 		vp.root.mesh_lod_threshold = 0.0 if ultra else 1.0          # ультра: модели всегда в полной детализации
+		# ультра+: кадр считается в 1.3 раза крупнее и сжимается (суперсэмплинг), сглаживание 8×
+		vp.root.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
+		vp.root.scaling_3d_scale = 1.3 if q >= 4 else 1.0
+		if q >= 4:
+			vp.root.msaa_3d = Viewport.MSAA_8X
+		vp.root.use_debanding = q >= 3                               # без «ступенек» в тёмных градиентах
 	# тени, затенение углов и объёмный туман — качество задаётся на весь рендер
 	var hi := q >= 3
 	RenderingServer.directional_shadow_atlas_set_size(8192 if hi else 4096, true)
@@ -119,7 +134,13 @@ static func apply(env: Environment, post: ShaderMaterial, q: int) -> void:
 	RenderingServer.directional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_HIGH if hi else RenderingServer.SHADOW_QUALITY_SOFT_LOW)
 	RenderingServer.environment_set_ssao_quality(RenderingServer.ENV_SSAO_QUALITY_ULTRA if hi else RenderingServer.ENV_SSAO_QUALITY_MEDIUM, not hi, 0.5, 3 if hi else 2, 50.0, 300.0)
 	RenderingServer.environment_set_ssil_quality(RenderingServer.ENV_SSIL_QUALITY_HIGH if hi else RenderingServer.ENV_SSIL_QUALITY_MEDIUM, not hi, 0.5, 4, 50.0, 300.0)
-	RenderingServer.environment_set_volumetric_fog_volume_size(128 if hi else 64, 128 if hi else 64)
+	RenderingServer.environment_set_volumetric_fog_volume_size(192 if q >= 4 else (128 if hi else 64), 192 if q >= 4 else (128 if hi else 64))
+	RenderingServer.environment_set_volumetric_fog_filter_active(q >= 3)       # столб света мягкий, без «зерна»
+	RenderingServer.environment_set_ssr_roughness_quality(RenderingServer.ENV_SSR_ROUGHNESS_QUALITY_HIGH if q >= 4 else RenderingServer.ENV_SSR_ROUGHNESS_QUALITY_MEDIUM)
+	if q >= 4:
+		RenderingServer.positional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_ULTRA)
+		RenderingServer.directional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_ULTRA)
+		RenderingServer.environment_set_sdfgi_ray_count(RenderingServer.ENV_SDFGI_RAY_COUNT_64)
 
 
 # ---------------- язык ----------------
