@@ -31,6 +31,8 @@
 - «Horror mask» — Bulat.Shakirov, sketchfab.com/Bulat.Shakirov, CC BY 4.0.
 - Звуки Freesound.org (обрезаны и выровнены по громкости):
   scream — «scream14», Grez1, CC0
+  scream_demon — собран из «scream14» (Grez1, CC0) + Sonniss GDC 2026 (Epic Stock Media: Humanoid Creatures Vol 4 «Sea Beast Creature Pain Intense Yell»,
+                 Halloween Game «Jumpscare Vocal Aggressive Whisper»; royalty-free) — понижен, искажён, с ударом и эхом
   sting — «Violin Scare», SirBedlam, CC BY 3.0 (freesound.org/s/393824)
   heartbeat — «Heartbeat 97 BPM», Cloud-10, CC0
   whisper — «Creepy whispering», RaspberryTickle, CC0
