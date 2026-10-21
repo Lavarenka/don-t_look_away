@@ -91,6 +91,7 @@ var tv_static: AudioStreamPlayer3D
 var sfx_cache := {}
 var last_loud := -100.0      ## когда звучал последний громкий звук (крик, скример, удар)
 const RUNNER_ON := false     ## бегущий призрак в коридоре (пока выключен)
+const TEST_GRAB := true      ## ПРОБНЫЙ скример в прихожей: новая Аня держит за голову и кричит в лицо (scripts/test_grab.gd)
 const LOUD := ["scream", "scream_mask", "sting", "bang", "whisper_harsh", "girl_appear", "phone_call", "gurgle", "pipes", "heartbeat", "far_moan", "far_whisper", "far_scream"]
 var tv_mat: ShaderMaterial
 
@@ -177,6 +178,10 @@ func _ready() -> void:
 	hall_glow = _own_mat($HallBulbMesh)
 	exit_glow = _own_mat($ExitLampPanel)
 	add_child(preload("res://scripts/pause.gd").new())
+	if TEST_GRAB:
+		var tg := preload("res://scripts/test_grab.gd").new()
+		tg.L = self
+		add_child(tg)
 	# ключ в серванте — модель из Blender вместо кольца и стержня
 	for nm in ["Ring", "Shaft"]:
 		(key_node.get_node(nm) as Node3D).visible = false

@@ -9,8 +9,9 @@ extends Node3D
 const HEIGHT := 1.7          ## рост, м (один для всех появлений призрака)
 const EYE_OFS := Vector3(0.017, 0.098, 0.1)   ## глаза от кости головы (м): в стороны, вверх, вперёд (старая модель)
 ## Новая модель Ани (MakeHuman, tools: mpfb/ghost/make_ghost.py): лицо, карточки волос.
-## Откатить на старую: NEW_MODEL = false.
-const NEW_MODEL := true
+## В игре пока — старая модель; новая — только там, где задано new_model = true до добавления в сцену
+## (пробный скример scripts/test_grab.gd).
+var new_model := false
 const NEW_DIR := "res://models/spirit2/"
 ## Из make_ghost.py (anya_ghost.json), координаты Blender: глаза, рот, кость головы; рост до макушки.
 const NEW_INFO := {"eye_l": [0.025338, -0.100612, 1.389180], "mouth": [-0.000000, -0.142592, 1.350613], "head": [-0.001301, -0.014884, 1.307164], "height": 1.508432}
@@ -43,7 +44,7 @@ var _mur_to := 0.0
 
 
 func _ready() -> void:
-	if NEW_MODEL:
+	if new_model:
 		_load_new()
 	else:
 		_load_old()
@@ -53,7 +54,7 @@ func _ready() -> void:
 	sk.add_child(life)
 	_make_eyes()
 	_head_b = sk.find_bone("mixamorig_Head")
-	_r0 = sk.get_bone_global_rest(_head_b).basis.orthonormalized() if NEW_MODEL else Basis.IDENTITY
+	_r0 = sk.get_bone_global_rest(_head_b).basis.orthonormalized() if new_model else Basis.IDENTITY
 	_p("head_k", model.scale.x)
 	sk.skeleton_updated.connect(_head_to_shader)
 	play("idle")

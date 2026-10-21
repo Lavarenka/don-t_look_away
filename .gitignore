@@ -1742,6 +1742,7 @@
 !/scripts/fps_counter.gd.uid
 !/scripts/furniture.gd
 !/scripts/furniture.gd.uid
+!/scripts/grab_pose.gd
 !/scripts/hall_puzzle.gd
 !/scripts/hall_puzzle.gd.uid
 !/scripts/haunts.gd
@@ -1776,6 +1777,7 @@
 !/scripts/spirit.gd.uid
 !/scripts/spirit_life.gd
 !/scripts/spirit_life.gd.uid
+!/scripts/test_grab.gd
 !/scripts/trailer.gd
 !/scripts/trailer.gd.uid
 !/scripts/vera.gd
