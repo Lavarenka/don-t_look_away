@@ -2,7 +2,7 @@ extends Node
 ## Детская Ани (третья комната).
 ## Загадка: 5 рисунков Ани, на каждом цифра и цвет мелка. На музыкальной шкатулке
 ## 5 цветных клавиш — сыграть мелодию в порядке рисунков: жёлтый, красный, синий,
-## зелёный, белый. Рисунок №5 лежит под кроватью — там скример.
+## зелёный, чёрный (белый мел на чёрной бумаге). Рисунок №5 лежит под кроватью — там скример.
 ## Ошибся — шкатулка фальшивит, а одна из игрушек, на которую ты не смотришь,
 ## поворачивается к тебе. Разгадал — финал демки.
 
@@ -53,6 +53,7 @@ func _ready() -> void:
 		L.targets.append({"id": "n_d%d" % (i + 1), "pos": d.global_position, "th": 0.35 if i < 4 else 0.45, "dist": 2.2})
 		L.extra_hints["n_d%d" % (i + 1)] = "NUR_12" if i < 4 else "NUR_13"
 	var mb: Node3D = L.get_node("MusicBox")
+	_rebuild_box(mb)
 	L.targets.append({"id": "n_box", "pos": mb.global_position + Vector3(0, 0.05, -0.04), "th": 0.18, "dist": 1.8})
 	L.extra_hints["n_box"] = "NUR_14"
 	for sp in SPOTS:
@@ -187,6 +188,28 @@ func _process(delta: float) -> void:
 
 
 ## Случайные номера на рисунках: дорисовываем цифру мелком в кружок в углу.
+## Шкатулка из Blender (models/nursery/music_box.glb): узлы те же, меняются только меши.
+## Клавиши: жёлтая, красная, синяя, зелёная, чёрная.
+func _rebuild_box(mb: Node3D) -> void:
+	var src: Node3D = load("res://models/nursery/music_box.glb").instantiate()
+	for nm in ["Body", "Inner", "LidHinge/Lid", "Key0", "Key1", "Key2", "Key3", "Key4"]:
+		var dst := mb.get_node_or_null(nm) as MeshInstance3D
+		var from := src.find_child(nm.get_file(), true, false) as MeshInstance3D
+		if dst == null or from == null:
+			continue
+		dst.mesh = from.mesh
+		for i in dst.get_surface_override_material_count():
+			dst.set_surface_override_material(i, null)
+		if nm.begins_with("Key") and nm != "Key4":
+			# цветные клавиши чуть светятся — видны в полутьме, как раньше
+			var m := (from.mesh.surface_get_material(0) as StandardMaterial3D).duplicate() as StandardMaterial3D
+			m.emission_enabled = true
+			m.emission = m.albedo_color
+			m.emission_energy_multiplier = 0.25
+			dst.set_surface_override_material(0, m)
+	src.free()
+
+
 func _number_drawings() -> void:
 	nums.shuffle()
 	CODE.clear()
@@ -489,7 +512,7 @@ func _start_hide() -> void:
 		f.material_override = mat
 		f.layers = L.hallp.MIRROR_LAYER
 		f.position = from + dir * (0.28 * (i + 0.5)) + side * (0.06 if i % 2 == 0 else -0.06)
-		f.rotation.y = atan2(dir.x, dir.z)
+		f.rotation.y = atan2(dir.x, dir.z) + PI          # пальчики — по ходу движения
 		L.add_child(f)
 		_steps.append(f)
 

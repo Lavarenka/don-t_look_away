@@ -65,7 +65,7 @@ func _scare() -> void:
 	g.set_speed(0.0)
 	g.set_blood(0.5)
 	g.set_eyes(1.0)
-	g.set_shiver(1.0)
+	g.set_shiver(0.35)                  # лёгкая дрожь — лицо должно читаться
 	g.murmur = false
 	await get_tree().process_frame
 	var hb: int = g.sk.find_bone("mixamorig_Head")
@@ -89,11 +89,11 @@ func _scare() -> void:
 	L._sfx("sting", 4.0, 1.0, true)
 	L._sfx("scream", 4.0, 1.05, true)
 	L._sfx("scream", 0.0, 0.8, true)
-	p.shake = 1.4
+	p.shake = 0.15
 	L.red_flash.color.a = 0.2
 	for k in 6:
 		await get_tree().create_timer(HOLD / 6.0).timeout
-		p.shake = 1.2
+		p.shake = 0.12
 		L.red_flash.color.a = 0.16 if k % 2 else 0.05
 	L.fade.color.a = 1.0
 	L.red_flash.color.a = 0.0
@@ -120,8 +120,8 @@ func _hold_frame() -> void:
 	fwd.y = 0.0
 	fwd = fwd.normalized()
 	var right := fwd.cross(Vector3.UP).normalized()
-	var jit := Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)) * 0.012
-	g.rotation = Vector3(0.0, atan2(-fwd.x, -fwd.z), sin(_t * 31.0) * 0.03)
+	var jit := Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)) * 0.003
+	g.rotation = Vector3(0.0, atan2(-fwd.x, -fwd.z), sin(_t * 23.0) * 0.01)
 	# от кости головы до глаз: ~0.09 вверх и ~0.1 вперёд
 	var want: Vector3 = cam.global_position + fwd * (DIST + 0.1) + Vector3(0, -0.1, 0) + jit
 	g.global_position = want - g.global_basis * _hoff
