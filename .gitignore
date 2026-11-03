@@ -1803,6 +1803,7 @@
 !/scripts/bedroom.gd.uid
 !/scripts/creature.gd
 !/scripts/creature.gd.uid
+!/scripts/curtains.gd
 !/scripts/decals.gd
 !/scripts/decals.gd.uid
 !/scripts/distant.gd
@@ -1838,6 +1839,7 @@
 !/scripts/level.gd
 !/scripts/level.gd.uid
 !/scripts/living_furniture.gd
+!/scripts/living_furniture.gd.uid
 !/scripts/mannequin.gd
 !/scripts/mannequin.gd.uid
 !/scripts/memory_video.gd
@@ -1884,6 +1886,7 @@
 !/shaders/ceiling.gdshader.uid
 !/shaders/crt.gdshader
 !/shaders/crt.gdshader.uid
+!/shaders/curtain.gdshader
 !/shaders/dress.gdshader
 !/shaders/dress.gdshader.uid
 !/shaders/fog.gdshader
@@ -1909,6 +1912,7 @@
 !/shaders/spirit_eye.gdshader
 !/shaders/spirit_eye.gdshader.uid
 !/shaders/veneer.gdshader
+!/shaders/veneer.gdshader.uid
 !/shaders/vera.gdshader
 !/shaders/vera.gdshader.uid
 !/shaders/wallpaper.gdshader
@@ -1971,6 +1975,12 @@
 !/textures/drawings/risunok5.png.import
 !/textures/drawings/risunok5_en.png
 !/textures/drawings/risunok5_en.png.import
+!/textures/fabric/drape_albedo.png
+!/textures/fabric/drape_albedo.png.import
+!/textures/fabric/drape_normal.png
+!/textures/fabric/drape_normal.png.import
+!/textures/fabric/tulle.png
+!/textures/fabric/tulle.png.import
 !/textures/fog_base.png
 !/textures/fog_base.png.import
 !/textures/fog_base_en.png

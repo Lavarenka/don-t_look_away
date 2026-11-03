@@ -46,6 +46,7 @@ func setup(level: Node3D) -> void:
 	_woodwork(level)
 	_ceilings(level)
 	preload("res://scripts/living_furniture.gd").setup(level)     # свой сервант и тумба под телевизор
+	preload("res://scripts/curtains.gd").setup(level)             # шторы: портьеры в складку и тюль, колышутся
 	preload("res://scripts/interior_decals.gd").place(level)
 
 

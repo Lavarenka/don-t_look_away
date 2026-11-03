@@ -8,7 +8,7 @@ signal toggled_light
 @export var walk_speed := 1.9
 @export var run_speed := 3.1
 @export var mouse_sens := 0.0022
-@export var flash_energy := 6.0       ## чуть тусклее для атмосферы (было 7)
+@export var flash_energy := 5.0       ## чуть тусклее для атмосферы (было 7, потом 6)
 
 var frozen := false
 var light_on := true
@@ -25,7 +25,10 @@ var _step_acc := 0.0
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	flash.light_volumetric_fog_energy = 4.0     # луч фонаря виден в воздухе — столб света с пылью
+	flash.light_volumetric_fog_energy = 3.2     # луч фонаря виден в воздухе — столб света с пылью
+	# фонарь не участвует в глобальном освещении (SDFGI): иначе после выключения ещё долго
+	# висит светлое пятно там, куда он светил
+	flash.light_bake_mode = Light3D.BAKE_DISABLED
 
 
 func _unhandled_input(e: InputEvent) -> void:
