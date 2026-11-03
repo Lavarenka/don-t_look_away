@@ -2,12 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-path="res://.godot/imported/whisper_2.wav-c23f643de7d88244197d55e3024c09b0.sample"
+uid="uid://vllcr6u2lt1j"
+path="res://.godot/imported/whisper_2.wav-1cc3d3de7815383bfca337aa8d551ffa.sample"
 
 [deps]
 
 source_file="res://audio/whisper_2.wav"
-dest_files=["res://.godot/imported/whisper_2.wav-c23f643de7d88244197d55e3024c09b0.sample"]
+dest_files=["res://.godot/imported/whisper_2.wav-1cc3d3de7815383bfca337aa8d551ffa.sample"]
 
 [params]
 

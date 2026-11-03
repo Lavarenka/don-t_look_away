@@ -541,6 +541,9 @@ func _stream(n: String) -> AudioStream:
 func _sfx(n: String, db := 0.0, pitch := 1.0, force := false) -> void:
 	if hush and not force:
 		return
+	if n == "sting":                  # скрипичный «удар» при испуге убран — вместо него шёпот у самого уха
+		n = "whisper"
+		db -= 3.0
 	if n in LOUD and db > -12.0:
 		last_loud = time_now
 	var p := AudioStreamPlayer.new()
@@ -553,6 +556,9 @@ func _sfx(n: String, db := 0.0, pitch := 1.0, force := false) -> void:
 
 
 func _sfx3d(n: String, pos: Vector3, db := 0.0, pitch := 1.0, force := false) -> void:
+	if n == "sting":
+		n = "whisper"
+		db -= 3.0
 	if hush and not force:
 		return
 	if n in LOUD and db > -12.0:
