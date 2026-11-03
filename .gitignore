@@ -188,8 +188,14 @@
 !/audio/water_run.wav.import
 !/audio/whisper.wav
 !/audio/whisper.wav.import
+!/audio/whisper_2.wav
+!/audio/whisper_2.wav.import
+!/audio/whisper_3.wav
+!/audio/whisper_3.wav.import
 !/audio/whisper_harsh.wav
 !/audio/whisper_harsh.wav.import
+!/audio/whisper_old.wav
+!/audio/whisper_old.wav.import
 !/audio/whoosh.wav
 !/audio/whoosh.wav.import
 !/fonts/CormorantSC-Light.ttf
@@ -1860,6 +1866,7 @@
 !/scripts/player.gd
 !/scripts/player.gd.uid
 !/scripts/portrait_frames.gd
+!/scripts/portrait_frames.gd.uid
 !/scripts/settings.gd
 !/scripts/settings.gd.uid
 !/scripts/spirit.gd

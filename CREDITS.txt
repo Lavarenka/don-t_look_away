@@ -35,7 +35,9 @@
                  Halloween Game «Jumpscare Vocal Aggressive Whisper»; royalty-free) — понижен, искажён, с ударом и эхом
   sting — «Violin Scare», SirBedlam, CC BY 3.0 (freesound.org/s/393824)
   heartbeat — «Heartbeat 97 BPM», Cloud-10, CC0
-  whisper — «Creepy whispering», RaspberryTickle, CC0
+  whisper — три варианта, выбираются случайно: «Ghost Whispers», Litruv (freesound.org/s/175944); «whisper5», rafaelzimrp (s/570851);
+            «whispers», saha213131 (s/679010) — все CC0, обрезаны, с эхом
+  whisper_old (только комната бабушки) — «Creepy whispering», RaspberryTickle, CC0
   whisper_harsh — «Crowd of demonic whispers», ShangusBurger, CC0
   creak — «Heavy door creaking 05», rambler52, CC0
   breath_dark — «Scary ghost/spirit breathing», 4_and_a_half_Star_Games, CC0 (freesound.org/s/353874)

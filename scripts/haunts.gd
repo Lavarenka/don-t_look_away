@@ -386,10 +386,7 @@ func _chandelier_swing() -> void:
 func _clock_strike() -> void:
 	done["clock_stop"] = true
 	tick.stop()
-	for k in 3:
-		_once3d("clock_chime", _pos("Clock"), -2.0)
-		await _wait(1.7)
-	await _wait(1.0)
+	await _wait(2.0)            # часы просто замолкают (бой убран)
 
 
 func _tv_self() -> void:
