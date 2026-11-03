@@ -26,6 +26,10 @@ var _drone: AudioStreamPlayer
 
 
 const SETTINGS = preload("res://scripts/settings.gd")
+## Вид главного меню: 0 — как было (название слева сверху), 1 — «по центру», 2 — «кровь»,
+## 3 — «старая фотография». Только оформление, кнопки и логика одинаковые.
+const STYLE := 0
+var _style := STYLE
 const FLICKER = preload("res://scripts/flicker.gd")
 var _grain_mat: ShaderMaterial
 
@@ -135,6 +139,9 @@ func _ready() -> void:
 	var keys := _label("MENU_10", 16, Color(0.5, 0.48, 0.44))
 	keys.add_theme_font_override("font", FONT_TEXT)
 	box.add_child(keys)
+	if OS.has_environment("MENU_STYLE"):          # для снимков вариантов
+		_style = int(OS.get_environment("MENU_STYLE"))
+	_apply_style(box, title, sub, keys, shade, gm)
 
 	_loading = VBoxContainer.new()
 	_loading.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
@@ -171,6 +178,74 @@ func _ready() -> void:
 	if Engine.has_meta("after_intro"):
 		Engine.remove_meta("after_intro")
 		_start()
+
+
+## Оформление меню (см. STYLE).
+func _apply_style(box: VBoxContainer, title: Label, sub: Label, keys: Label, shade: ColorRect, gm: ShaderMaterial) -> void:
+	if _style == 0:
+		return
+	var over := ColorRect.new()                   # цветовой тон поверх фона (под надписями)
+	over.set_anchors_preset(Control.PRESET_FULL_RECT)
+	over.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(over)
+	move_child(over, shade.get_index() + 1)
+	match _style:
+		1:  # по центру: название крупно посередине сверху с тонкой красной чертой, кнопки — слева внизу
+			over.color = Color(0, 0, 0, 0.18)
+			var vw := get_viewport_rect().size.x
+			var head := VBoxContainer.new()
+			head.custom_minimum_size = Vector2(900, 0)
+			head.position = Vector2((vw - 900.0) * 0.5, 50)
+			head.add_theme_constant_override("separation", 10)
+			add_child(head)
+			for l in [title, sub]:
+				l.reparent(head, false)
+				l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			title.add_theme_font_size_override("font_size", 66)
+			FLICKER.apply_font(title)
+			sub.text = tr("MENU_06").to_upper()
+			var line := ColorRect.new()
+			line.color = Color(0.55, 0.05, 0.03, 0.8)
+			line.custom_minimum_size = Vector2(0, 2)
+			head.add_child(line)
+			head.move_child(line, 1)
+			box.position = Vector2(90, 140)
+		2:  # кровь: название шрифтом с потёками, тёмно-красное, багровый тон
+			over.color = Color(0.25, 0.0, 0.0, 0.28)
+			var f := FontVariation.new()
+			f.base_font = load("res://fonts/RubikWetPaint-Regular.ttf")
+			f.spacing_glyph = 4
+			title.add_theme_font_override("font", f)
+			title.add_theme_font_size_override("font_size", 72)
+			title.add_theme_color_override("font_color", Color(0.55, 0.03, 0.02))
+			title.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.95))
+			sub.add_theme_color_override("font_color", Color(0.6, 0.15, 0.12))
+			box.position = Vector2(90, 30)
+			for b in _buttons.get_children():
+				(b as Button).add_theme_color_override("font_color", Color(0.75, 0.62, 0.58))
+		3:  # старая фотография: сепия, рамка-кайма, название внизу слева, кнопки над ним
+			over.color = Color(0.32, 0.22, 0.1, 0.32)
+			shade.color = Color(0, 0, 0, 0.35)
+			var vs := get_viewport_rect().size
+			title.add_theme_font_size_override("font_size", 40)
+			FLICKER.apply_font(title)
+			title.add_theme_color_override("font_color", Color(0.86, 0.8, 0.66))
+			# порядок: кнопки, подсказка, потом название внизу — как подпись под фото
+			box.move_child(title, box.get_child_count() - 1)
+			box.move_child(sub, box.get_child_count() - 1)
+			box.move_child(_gap, 0)
+			_gap.custom_minimum_size.y = 0
+			box.position = Vector2(80, vs.y - 400.0)
+			for b in _buttons.get_children():
+				(b as Button).add_theme_font_size_override("font_size", 26)
+			var fr := ReferenceRect.new()
+			fr.set_anchors_preset(Control.PRESET_FULL_RECT)
+			fr.offset_left = 24; fr.offset_top = 24; fr.offset_right = -24; fr.offset_bottom = -24
+			fr.border_color = Color(0.75, 0.68, 0.55, 0.35)
+			fr.border_width = 2.0
+			fr.editor_only = false
+			fr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			add_child(fr)
 
 
 ## Картинка на весь экран с обрезкой по краям (как фон).
