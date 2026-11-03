@@ -817,8 +817,119 @@ func _dress(i: int) -> void:
 	dressed[i] = true
 	L.inv.remove("att_" + carry.to_lower())
 	carry = ""
+	if BEHIND_SCARE and dressed.size() == 2 and not _behind_done:
+		await _behind_scare(form)
 	if dressed.size() == WEAR.size():
 		_finale()
+
+
+# ---------------- скример «Пока одеваешь» ----------------
+## На второй правильно надетой вещи: пока возишься с манекеном, гаснет свет, за спиной — дыхание.
+## Оборачиваешься — вплотную стоит человек-манекен; голова с хрустом проворачивается, и он бросается в лицо.
+## Откатить: BEHIND_SCARE = false.
+const BEHIND_SCARE := true
+var _behind_done := false
+
+
+func _behind_scare(form: Node3D) -> void:
+	_behind_done = true
+	if men.is_empty():
+		return
+	var p = L.player
+	L.busy = true
+	await get_tree().create_timer(0.6).timeout
+	# свет гаснет «сам», фонарь не включить
+	var ws: float = p.walk_speed
+	var rs: float = p.run_speed
+	p.light_on = false
+	p.light_locked = true
+	L._sfx3d("click", p.cam.global_position + p.forward() * 0.3, -4.0, 0.7)
+	L.drone.stop()
+	await get_tree().create_timer(0.9).timeout
+	# ближайший манекен — прямо за спиной, лицом к тебе, руки вперёд
+	var m: Dictionary = men[0]
+	var best := INF
+	for c in men:
+		var d: float = (c.q.node as Node3D).global_position.distance_to(p.global_position)
+		if d < best:
+			best = d
+			m = c
+	var n: Node3D = m.q.node
+	var fw: Vector3 = p.forward()
+	fw.y = 0.0
+	fw = fw.normalized()
+	(m.body as StaticBody3D).process_mode = Node.PROCESS_MODE_DISABLED
+	var back: Vector3 = p.global_position - fw * 0.8
+	n.global_position = Vector3(back.x, 0.0, back.z)
+	n.rotation.y = atan2(fw.x, fw.z)            # лицом к игроку
+	m.q.set_pose("reach")
+	m.q.yaw = 1.3                               # голова свёрнута набок — до поворота
+	m.q.pitch = 0.2
+	m.q._apply_head()
+	m.cool = 99999.0
+	# дыхание за спиной, сердце; можно только крутить головой
+	p.walk_speed = 0.0
+	p.run_speed = 0.0
+	L._sfx3d("breath_dark", n.global_position + Vector3(0, 1.5, 0), 2.0, 0.8, true)
+	L._sfx("heartbeat", -6.0, 1.1, true)
+	var t := 0.0
+	var turned := false
+	while t < 7.0:
+		await get_tree().process_frame
+		t += get_process_delta_time()
+		var to: Vector3 = n.global_position - p.global_position
+		to.y = 0.0
+		var f: Vector3 = p.forward()
+		f.y = 0.0
+		if f.normalized().dot(to.normalized()) > 0.75:
+			turned = true
+			break
+		if t > 3.5 and int(t * 2.0) % 3 == 0:
+			p.shake = 0.05
+	if not turned:
+		# не обернулся — его разворачивает самого (рывком), чтобы увидел
+		var aim: Vector3 = n.global_position + Vector3(0, 1.5, 0) - p.cam.global_position
+		create_tween().tween_property(p, "rotation:y", atan2(-aim.x, -aim.z), 0.25).set_trans(Tween.TRANS_QUAD)
+		await get_tree().create_timer(0.3).timeout
+	# вспышка фонаря: он вплотную. Голова с хрустом встаёт на место — и бросок
+	p.frozen = true
+	p.light_locked = false
+	p.light_on = true
+	p.flicker = 0.0
+	L._sfx3d("creak", n.global_position + Vector3(0, 1.6, 0), 6.0, 2.2, true)      # хруст шеи
+	L._sfx3d("click", n.global_position + Vector3(0, 1.6, 0), 2.0, 0.5, true)
+	var tw := create_tween()
+	tw.tween_method(func(v: float): m.q.yaw = v; m.q._apply_head(), 1.3, 0.0, 0.12).set_trans(Tween.TRANS_BACK)
+	await get_tree().create_timer(0.35).timeout
+	var cam_p: Vector3 = p.cam.global_position
+	var lunge := Vector3(cam_p.x, 0.0, cam_p.z) - fw * 0.32
+	create_tween().tween_property(n, "global_position", lunge, 0.12).set_ease(Tween.EASE_IN)
+	L._sfx("scream_demon", 4.0, 0.8, true)
+	L._sfx("bang", 0.0, 0.7, true)
+	L._sfx("whisper_harsh", -2.0, 0.9, true)
+	p.shake = 1.2
+	L.red_flash.color.a = 0.35
+	await get_tree().create_timer(0.55).timeout
+	# темнота — и его уже нет на месте
+	L.fade.color.a = 1.0
+	L.red_flash.color.a = 0.0
+	await get_tree().create_timer(0.6).timeout
+	var z: Rect2 = m.zone
+	n.global_position = Vector3(z.position.x + z.size.x * 0.5, 0.0, z.position.y + z.size.y * 0.5)
+	m.q.set_pose("slump")
+	m.q.yaw = 0.0
+	m.q.pitch = 0.0
+	m.q._apply_head()
+	m.cool = randf_range(10.0, 14.0)
+	(m.body as StaticBody3D).process_mode = Node.PROCESS_MODE_INHERIT
+	L._sfx("tinnitus", -10.0, 1.0, true)
+	create_tween().tween_property(L.fade, "color:a", 0.0, 0.8)
+	p.walk_speed = ws
+	p.run_speed = rs
+	p.frozen = false
+	p.flicker = 0.3
+	L.drone.play()
+	L.busy = false
 
 
 ## Все одеты: манекены поворачиваются к тайнику, свет гаснет — и они уже вокруг тебя.
