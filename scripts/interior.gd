@@ -18,7 +18,7 @@ const ROOMS := {
 		"ghosts": [[Vector3(-1.06, 1.55, 5.0), Vector2(0.34, 0.44)], [Vector3(1.06, 1.72, 1.55), Vector2(0.52, 0.38)]],
 	},
 	"living": {
-		"walls": ["Wall9", "DwLiving", "Wall10", "Wall11", "Door1Wall", "Wall12", "Wall13", "Wall14", "WindowW", "WindowE", "Wall17", "Wall18"],
+		"walls": ["Wall9", "DwLiving", "Wall10", "Wall13", "Wall14", "WindowW", "WindowE", "Wall17", "Wall18"],
 		"paper": ["res://textures/wallpaper/wallpaper_living_albedo.png", "res://textures/wallpaper/wallpaper_living_normal.png", "res://textures/wallpaper/wallpaper_living_rough.png"],
 		"room": Vector4(-2.86, 2.86, -5.86, -0.14), "seed": 7.9, "seam": 0.37,
 		"ceil": ["LivingCeil00", "LivingCeil01", "LivingCeil10", "LivingCeil11"],
@@ -45,7 +45,9 @@ func setup(level: Node3D) -> void:
 	# один материал на все стены обеих комнат: шейдер сам решает, какая сторона в какой комнате
 	var mat := _wall_mat(ROOMS.hall, ROOMS.living)
 	_paper_walls(level, ROOMS.hall.walls + ROOMS.living.walls, mat)
-	_paper_walls(level, ROOMS.corridor.walls, _wall_mat(ROOMS.corridor, NOWHERE))
+	# перегородки коридора: две стены-модуля стоят вплотную, и какая сторона видна — зависит от модуля;
+	# поэтому у них один материал на коридор и зал (шейдер сам выбирает обои по стороне)
+	_paper_walls(level, ROOMS.corridor.walls + ["Wall11", "Door1Wall", "Wall12", "Wall33", "DwNursery", "Wall34"], _wall_mat(ROOMS.corridor, ROOMS.living))
 	_woodwork(level)
 	_ceilings(level)
 	preload("res://scripts/portrait_frames.gd").setup(level)      # рамки портретов в коридоре, табличка с именем
@@ -60,7 +62,7 @@ const CEIL_SHADER := preload("res://shaders/ceiling.gdshader")
 ## Входная дверь — тёмные старые доски (лак), межкомнатные коробки и окна — эмаль цвета слоновой кости.
 const WOODWORK := {
 	"FrontDoorWall": 0.0, "Door1Wall": 1.0, "DwHall": 1.0, "DwLiving": 1.0, "WindowW": 1.0, "WindowE": 1.0,
-	"DwCorr": 1.0, "ExitWall": 1.0,
+	"DwCorr": 1.0, "ExitWall": 1.0, "DwNursery": 1.0,
 }
 
 

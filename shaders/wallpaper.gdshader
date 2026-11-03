@@ -144,7 +144,7 @@ void fragment() {
 		vec3 c = ghost_a[i].xyz;
 		float gu = xw ? v_wp.z - c.z : v_wp.x - c.x;
 		float gn = xw ? abs(v_wp.x - c.x) : abs(v_wp.z - c.z);
-		if (gn > 0.25) continue;
+		if (gn > 0.12) continue;
 		vec2 dd = abs(vec2(gu, y - c.y)) - vec2(ghost_a[i].w, ghost_h[i]) * 0.5;
 		float inside = 1.0 - smoothstep(-0.008, 0.004, max(dd.x, dd.y));
 		gmask = max(gmask, inside);
