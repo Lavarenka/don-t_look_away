@@ -80,8 +80,42 @@ void fragment() {
 	float n_fine = vnoise(wq * 40.0);
 
 	// старение дерева панелей и карнизов: пыль в порах, затёртости
+	// --- дерево панелей, плинтус, карниз (атлас пака): старый лак, пыль, сколы, грязь у пола
 	vec3 wood = col * mix(0.82, 1.0, n_mid);
-	wood = mix(wood, wood * 0.7, smoothstep(0.25, 0.0, y) * age);   // у пола темнее (швабра, грязь)
+	float wsat = (max(col.r, max(col.g, col.b)) - min(col.r, min(col.g, col.b))) / max(max(col.r, max(col.g, col.b)), 0.001);
+	float plast = smoothstep(0.22, 0.1, wsat) * (1.0 - paper);            // серые полосы атласа — крашеный гипсовый карниз
+	vec3 Nw0 = normalize(v_wn);
+	float curv = clamp(length(fwidth(NORMAL)) / max(length(fwidth(VERTEX)), 1e-5) * 0.012, 0.0, 1.0);
+	// лак потемнел и вытерт на выступах; мелкие светлые царапины
+	float worn = smoothstep(0.55, 0.85, n_big + curv * 0.45) * age;
+	wood = mix(wood, wood * vec3(0.72, 0.64, 0.56), (1.0 - worn) * 0.35 * age);
+	wood = mix(wood, wood * vec3(1.2, 1.12, 1.0), worn * 0.45);
+	float scr = smoothstep(0.93, 0.99, vnoise(vec2(u * 260.0 + y * 30.0, y * 5.0))) * age;
+	wood = mix(wood, wood * 1.45 + 0.03, scr * 0.3);
+	// у пола: плинтус в грязи, следы швабры и обуви, разбухший от воды низ
+	float low = smoothstep(0.3, 0.0, y);
+	float patchy = smoothstep(0.35, 0.75, n_mid);
+	wood *= 1.0 - 0.55 * low * patchy * age;
+	// чёрные полосы от обуви и мебели, светлые — от швабры с известью
+	float kick = smoothstep(0.7, 0.9, vnoise(vec2(u * 11.0, y * 1.5))) * smoothstep(0.22, 0.02, y) * age;
+	wood = mix(wood, vec3(0.04, 0.035, 0.03), kick * 0.7);
+	float mop = smoothstep(0.8, 0.95, vnoise(vec2(u * 3.0 + 5.0, y * 40.0))) * smoothstep(0.08, 0.0, y) * age;
+	wood = mix(wood, vec3(0.55, 0.52, 0.47), mop * 0.5);
+	float swell = smoothstep(0.62, 0.8, n_big) * smoothstep(0.18, 0.0, y) * age;
+	wood = mix(wood, wood * vec3(0.6, 0.55, 0.5), swell * 0.6);
+	// пыль на верхних гранях (верх плинтуса, полочка панели, карниз)
+	float dusty = smoothstep(0.55, 0.9, Nw0.y) * age;
+	wood = mix(wood, vec3(0.46, 0.44, 0.4), dusty * 0.75 * (0.6 + 0.4 * n_fine));
+	// углы комнаты темнее
+	wood *= 1.0 - 0.25 * smoothstep(0.35, 0.0, cd) * age;
+	// карниз под потолком: пожелтевшая краска, копоть, трещины по стыкам
+	vec3 cor = col * vec3(0.98, 0.93, 0.8) * mix(0.85, 1.0, n_mid);
+	cor *= 1.0 - 0.35 * smoothstep(0.8, 0.0, ceil_y - y) * (0.5 + 0.5 * n_big) * age;
+	cor *= 1.0 - 0.3 * smoothstep(0.35, 0.0, cd) * age;
+	float cjoint = 1.0 - smoothstep(0.004, 0.012, abs(fract((u + so_) / 1.2) - 0.5) * 1.2 - 0.59);
+	cor = mix(cor, cor * 0.5, cjoint * smoothstep(0.4, 0.7, n_mid) * age);
+	wood = mix(wood, cor, plast);
+	rough = mix(rough, mix(0.7, 0.9, worn), (1.0 - paper) * (1.0 - plast));
 
 	// --- обои
 	float pu = u + so_;

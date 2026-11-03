@@ -14,12 +14,14 @@ const ROOMS := {
 		"walls": ["Wall1", "FrontDoorWall", "Wall2", "Wall3", "DwHall", "Wall4", "Wall5", "Wall6", "Wall7", "Wall8"],
 		"paper": ["res://textures/wallpaper/wallpaper_hall_albedo.png", "res://textures/wallpaper/wallpaper_hall_normal.png", "res://textures/wallpaper/wallpaper_hall_rough.png"],
 		"room": Vector4(-1.06, 1.06, 0.14, 5.86), "seed": 1.3, "seam": 0.11,
+		"ceil": ["HallCeil00", "HallCeil01"],
 		"ghosts": [[Vector3(-1.06, 1.55, 5.0), Vector2(0.34, 0.44)], [Vector3(1.06, 1.72, 1.55), Vector2(0.52, 0.38)]],
 	},
 	"living": {
 		"walls": ["Wall9", "DwLiving", "Wall10", "Wall11", "Door1Wall", "Wall12", "Wall13", "Wall14", "WindowW", "WindowE", "Wall17", "Wall18", "Wall19", "DwCorr", "Wall20", "Wall27"],
 		"paper": ["res://textures/wallpaper/wallpaper_living_albedo.png", "res://textures/wallpaper/wallpaper_living_normal.png", "res://textures/wallpaper/wallpaper_living_rough.png"],
 		"room": Vector4(-2.86, 2.86, -5.86, -0.14), "seed": 7.9, "seam": 0.37,
+		"ceil": ["LivingCeil00", "LivingCeil01", "LivingCeil10", "LivingCeil11"],
 		"ghosts": [[Vector3(0.55, 1.7, -5.86), Vector2(0.45, 0.56)], [Vector3(-2.86, 1.65, -1.85), Vector2(0.6, 0.45)]],
 	},
 }
@@ -41,7 +43,110 @@ func setup(level: Node3D) -> void:
 				var src := m.mesh.surface_get_material(s)
 				if src and String(src.resource_name).findn("Walls") >= 0:
 					m.set_surface_override_material(s, mat)
+	_woodwork(level)
+	_ceilings(level)
 	preload("res://scripts/interior_decals.gd").place(level)
+
+
+const WOOD_SHADER := preload("res://shaders/aged_wood.gdshader")
+const CEIL_SHADER := preload("res://shaders/ceiling.gdshader")
+## Двери, коробки и окна в прихожей и зале: на какой стене, крашеные или нет.
+## Входная дверь — тёмные старые доски (лак), межкомнатные коробки и окна — эмаль цвета слоновой кости.
+const WOODWORK := {
+	"FrontDoorWall": 0.0, "Door1Wall": 1.0, "DwHall": 1.0, "DwLiving": 1.0, "WindowW": 1.0, "WindowE": 1.0,
+}
+
+
+static func _in_rooms(p: Vector3) -> bool:
+	return p.x > -3.1 and p.x < 3.1 and p.z > -6.2 and p.z < 6.2 and p.y < 3.0
+
+
+## Материал «старого дерева» на основе исходного (текстуры те же, сверху — время).
+func _aged(src: Material, paint: float, handle_local := Vector3(0, -10, 0), seed := 0.0) -> Material:
+	var b := src as BaseMaterial3D
+	if b == null:
+		return src
+	var m := ShaderMaterial.new()
+	m.shader = WOOD_SHADER
+	m.set_shader_parameter("albedo_tex", b.albedo_texture)
+	m.set_shader_parameter("albedo_col", b.albedo_color)
+	if b.normal_enabled and b.normal_texture:
+		m.set_shader_parameter("normal_tex", b.normal_texture)
+		m.set_shader_parameter("has_normal", true)
+	if b.roughness_texture:
+		m.set_shader_parameter("rough_tex", b.roughness_texture)
+		m.set_shader_parameter("has_rough", true)
+		m.set_shader_parameter("rough_ch", 1 if b.roughness_texture_channel == BaseMaterial3D.TEXTURE_CHANNEL_GREEN else (2 if b.roughness_texture_channel == BaseMaterial3D.TEXTURE_CHANNEL_BLUE else 0))
+	m.set_shader_parameter("rough_k", b.roughness)
+	m.set_shader_parameter("uv_scale", b.uv1_scale)
+	m.set_shader_parameter("uv_ofs", b.uv1_offset)
+	m.set_shader_parameter("paint", paint)
+	m.set_shader_parameter("handle", handle_local)
+	m.set_shader_parameter("seed", seed)
+	return m
+
+
+func _retex(mi: MeshInstance3D, paint: float, handle_local := Vector3(0, -10, 0)) -> void:
+	if mi.mesh == null:
+		return
+	for s in mi.mesh.get_surface_count():
+		var src := mi.get_active_material(s)
+		if src is ShaderMaterial:
+			continue
+		mi.set_surface_override_material(s, _aged(src, paint, handle_local, mi.global_position.x * 3.1 + mi.global_position.z))
+
+
+func _woodwork(level: Node3D) -> void:
+	for wn in WOODWORK:
+		var w := level.get_node_or_null(wn) as Node3D
+		if w == null:
+			continue
+		var paint: float = WOODWORK[wn]
+		for nm in ["small_door_frame", "window_small", "window_small_frame"]:
+			var f := w.get_node_or_null(nm) as MeshInstance3D
+			if f and f.visible:
+				_retex(f, paint)
+		var leaf := w.get_node_or_null("small_door") as Node3D
+		if leaf:
+			# полотна из набора дверей висят на старом полотне: ручка — у свободного края на высоте ~0.95 м
+			for d in leaf.find_children("*", "MeshInstance3D", true, false):
+				var dm := d as MeshInstance3D
+				if not dm.has_meta("door_kit"):
+					continue
+				var ab: AABB = dm.global_transform * dm.get_aabb()
+				var c := ab.get_center()
+				var away := c - leaf.global_position
+				away.y = 0.0
+				var hw := c + away * 0.85
+				hw.y = 0.95
+				_retex(dm, paint, dm.global_transform.affine_inverse() * hw)
+	# коробки из набора дверей стоят прямо в уровне — берём те, что в этих комнатах
+	for n in level.get_children():
+		if n is MeshInstance3D and n.has_meta("door_kit") and _in_rooms((n as MeshInstance3D).global_position):
+			var front: bool = (n as MeshInstance3D).global_position.z > 5.0
+			_retex(n, 0.0 if front else 1.0)
+
+
+func _ceilings(level: Node3D) -> void:
+	var base: Texture2D = load("res://models/vintage/tex/ceiling_basecolor.jpg")
+	var nrm: Texture2D = load("res://models/vintage/tex/ceiling_normal.jpg")
+	for rn in ["hall", "living"]:
+		var r: Dictionary = ROOMS[rn]
+		var m := ShaderMaterial.new()
+		m.shader = CEIL_SHADER
+		m.set_shader_parameter("base_tex", base)
+		m.set_shader_parameter("base_normal", nrm)
+		m.set_shader_parameter("room", ROOMS.hall.room)
+		m.set_shader_parameter("room2", ROOMS.living.room)
+		m.set_shader_parameter("slab_along_x", rn == "hall")
+		m.set_shader_parameter("seed", r.seed)
+		for cn in r.ceil:
+			var c := level.get_node_or_null(cn) as Node3D
+			if c == null:
+				continue
+			for mi in c.find_children("*", "MeshInstance3D", true, false):
+				for s in (mi as MeshInstance3D).mesh.get_surface_count():
+					(mi as MeshInstance3D).set_surface_override_material(s, m)
 
 
 func _wall_mat(a: Dictionary, b: Dictionary) -> ShaderMaterial:
