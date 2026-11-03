@@ -12,6 +12,9 @@ uniform float sag = 1.0;           // насколько рукав «повис
 uniform float drop = 2.6;          // во сколько раз ткань свисает ниже, чем отстояла от руки в покое
 uniform float sway = 1.0;          // общая сила колыхания
 uniform float lift = 0.0;          // испуг: волосы поднимаются
+uniform float alive = 0.0;         // «живая» Аня: волосы и подол по инерции, кожа просвечивает, мокрые пряди; 0 — как было
+uniform vec3 hair_drag = vec3(0.0);   // смещение кончиков прядей (оси меша) — отстают от головы
+uniform vec3 hem_drag = vec3(0.0);    // смещение подола — отстаёт от бёдер
 uniform float blood = 0.0;         // 0..1: кровь проступает пятнами и потёками
 uniform float pallor = 0.85;       // насколько кожа мертвенно-бледная
 uniform float rim = 0.06;          // холодный ореол по краю силуэта (скрипт усиливает при испуге)
@@ -108,6 +111,12 @@ void vertex() {
 	// подол: как будто снизу тянет холодом
 	float ph = VERTEX.x * 14.0 + VERTEX.z * 11.0;
 	VERTEX += vec3(sin(t * 1.3 + ph), 0.0, cos(t * 1.1 + ph * 0.8)) * 0.009 * COLOR.a * sway;
+	// инерция: пряди тем сильнее отстают, чем ниже от кости головы; подол — по своей маске
+	if (alive > 0.0) {
+		float hw = COLOR.b * clamp(-v_hp.y / 0.45, 0.0, 1.0);
+		VERTEX += hair_drag * hw * hw * alive;
+		VERTEX += hem_drag * COLOR.a * alive;
+	}
 }
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -256,6 +265,10 @@ void fragment() {
 		r2_ = mix(r2_, mix(0.62, 0.86, pore * 0.5 + wrink * 0.5), skin * (1.0 - facem * 0.3));
 		r2_ = mix(r2_, mix(0.88, 0.98, crumple), cloth);
 		rough = mix(rough, r2_, realism);
+		// мокрые пучки: отдельные слипшиеся пряди ловят свет узкими бликами
+		float wet = smoothstep(0.62, 0.8, clump) * hm2 * alive;
+		rough = mix(rough, 0.3, wet * 0.8);
+		col = mix(col, col * 0.75, wet);
 		spec_r = realism;
 	}
 	ALBEDO = col;
@@ -274,6 +287,11 @@ void fragment() {
 	}
 	rough = mix(rough, 0.3, eyem * facem);                 // глаз мокрый, блестит
 	ROUGHNESS = rough;
+	// кожа: свет уходит под неё и просвечивает уши, пальцы, тонкие места — не пластик, а плоть
+	SSS_STRENGTH = skin * 0.55 * alive;
+	SSS_TRANSMITTANCE_COLOR = vec4(0.78, 0.38, 0.4, 1.0);
+	SSS_TRANSMITTANCE_DEPTH = 0.08 * alive + 0.001;
+	SSS_TRANSMITTANCE_BOOST = 0.2 * skin * alive;
 	// тонкая ткань и кожа светятся насквозь, когда свет сзади
 	BACKLIGHT = vec3(0.55, 0.42, 0.36) * (cloth * 0.5 + skin * 0.35);
 	// холодный ореол по краю силуэта — видна в темноте, хоть и не освещена

@@ -4,6 +4,7 @@ shader_type spatial;
 render_mode unshaded, blend_add, depth_draw_never, cull_disabled, shadows_disabled, fog_disabled;
 uniform float power = 0.45;
 uniform float seed = 0.0;
+uniform float lid = 0.0;           // 0 — открыт, 1 — веки сомкнуты (моргание)
 
 void vertex() {
 	MODELVIEW_MATRIX = VIEW_MATRIX * mat4(INV_VIEW_MATRIX[0], INV_VIEW_MATRIX[1], INV_VIEW_MATRIX[2], MODEL_MATRIX[3]);
@@ -11,12 +12,12 @@ void vertex() {
 
 void fragment() {
 	vec2 p = UV * 2.0 - 1.0;
-	p.y *= 1.7;                                    // вытянута вбок — как щель между веками
+	p.y *= 1.7 / max(1.0 - lid, 0.04);             // вытянута вбок — как щель между веками; моргнула — щель схлопнулась
 	float r = length(p);
 	float core = smoothstep(0.2, 0.0, r);
 	float halo = smoothstep(1.0, 0.05, r);
 	halo *= halo;
 	float fl = 0.8 + 0.2 * sin(TIME * 11.0 + seed) * sin(TIME * 4.7 + seed * 2.3);
 	vec3 c = vec3(0.8, 0.85, 0.95) * core * 0.6 + vec3(0.18, 0.22, 0.3) * halo * 0.35;
-	ALBEDO = c * power * fl;
+	ALBEDO = c * power * fl * (1.0 - lid * 0.85);
 }

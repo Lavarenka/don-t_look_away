@@ -46,6 +46,27 @@ var _mur_to := 0.0
 ## Старая Аня «не пластик» (рельеф кожи/прядей/ткани, матовость). 0.0 — вернуть как было.
 const REALISM := 1.0
 
+## «Живая» Аня: следит за тобой головой, моргает, дышит ртом, губы дрожат, волосы и подол
+## отстают по инерции, кожа просвечивает, мокрые пряди. false — всё как было до этого
+## (бэкап файлов: backup/anya_before_alive, метка в git: anya-before-alive).
+const ALIVE := true
+var watch := true            ## следить головой за камерой игрока (можно выключить для отдельной сцены)
+const WATCH_DIST := 9.0      ## дальше — не замечает
+var _blink := 0.0            ## 0..1 — веки
+var _blink_next := 4.0
+var _blink_t := -1.0         ## идёт моргание: время от начала
+var _blink_len := 0.14
+var _mi: MeshInstance3D      ## тело (для перевода инерции в оси меша)
+var _hair_x := Vector3.ZERO  ## пружины инерции: смещение и скорость (мир)
+var _hair_v := Vector3.ZERO
+var _hem_x := Vector3.ZERO
+var _hem_v := Vector3.ZERO
+var _prev_head := Vector3.ZERO
+var _prev_hips := Vector3.ZERO
+var _prev_hb := Basis.IDENTITY
+var _hips_b := -1
+var _inert_ready := false
+
 
 func _ready() -> void:
 	if new_model:
@@ -61,6 +82,9 @@ func _ready() -> void:
 	_r0 = sk.get_bone_global_rest(_head_b).basis.orthonormalized() if new_model else Basis.IDENTITY
 	_p("head_k", model.scale.x)
 	sk.skeleton_updated.connect(_head_to_shader)
+	_hips_b = sk.find_bone("mixamorig_Hips")
+	_p("alive", 1.0 if ALIVE else 0.0)
+	_blink_next = randf_range(2.0, 6.0)
 	play("idle")
 
 
@@ -81,6 +105,7 @@ func _load_old() -> void:
 	mat.set_shader_parameter("albedo_tex", load("res://models/spirit/spirit_albedo.png"))
 	mat.set_shader_parameter("realism", REALISM)
 	mi.material_override = mat
+	_mi = mi
 
 
 ## Новая модель: тело (кожа, рубашка, глаза — одна текстура) и волосы-карточки, свои анимации
@@ -123,6 +148,7 @@ func _load_new() -> void:
 			hair_mat = sm
 		else:
 			mat = sm
+			_mi = g
 
 
 ## Параметр шейдера — и телу, и волосам.
@@ -298,6 +324,8 @@ func set_layer(mask: int) -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	_update_face(delta)
+	if ALIVE:
+		_alive(delta)
 	# парит: плавно поднимается и медленно покачивается вверх-вниз
 	_float = move_toward(_float, float_h, delta * 0.6)
 	model.position.y = _float + (sin(_t * 1.4) * 0.035 if _float > 0.01 else 0.0)
@@ -333,10 +361,87 @@ func _update_face(delta: float) -> void:
 	else:
 		_mur = move_toward(_mur, 0.0, delta)
 	var m := maxf(mouth, _mur)
+	var gr := grimace
+	if ALIVE:
+		# дышит ртом: на вдохе губы чуть размыкаются (в такт груди, см. spirit_life.gd)
+		var br := sin(_t * 1.05) * 0.5 + 0.5
+		br = br * br * (0.7 + 0.3 * sin(_t * 0.37))
+		m = maxf(m, 0.045 * br)
+		# губы мелко дрожат — от холода или от сдерживаемого плача
+		gr += 0.07 * sin(_t * 17.0) * sin(_t * 5.3 + 1.7) + 0.05
 	if mouth > 0.3:                  # в крике челюсть подрагивает
 		m += sin(_t * 41.0) * 0.04 * mouth
 	_p("mouth", m)
-	_p("grimace", grimace)
+	_p("grimace", gr)
+
+
+## Взгляд, моргание, инерция волос и подола.
+func _alive(delta: float) -> void:
+	if life == null:
+		return
+	# --- взгляд за камерой
+	var cam := get_viewport().get_camera_3d()
+	var want := 0.0
+	if watch and cam and visible:
+		var dist := cam.global_position.distance_to(global_position)
+		want = 1.0 - smoothstep(WATCH_DIST - 2.0, WATCH_DIST, dist)
+		life.look_target = cam.global_position
+	life.look_w = move_toward(life.look_w, want, delta * 0.8)
+	life.fwd_world = global_basis.z
+	# --- моргание: редко, иногда глаза надолго закрыты, иногда два раза подряд
+	_blink_next -= delta
+	if _blink_t < 0.0 and _blink_next <= 0.0:
+		_blink_t = 0.0
+		_blink_len = 0.13 if randf() < 0.8 else randf_range(0.6, 1.4)
+		_blink_next = randf_range(0.25, 0.4) if randf() < 0.2 else randf_range(3.0, 9.0)
+	if _blink_t >= 0.0:
+		_blink_t += delta
+		var cl := 0.06                                  # веки смыкаются быстро...
+		var op := 0.12 if _blink_len < 0.3 else 0.35    # ...открываются медленнее
+		if _blink_t < cl:
+			_blink = _blink_t / cl
+		elif _blink_t < cl + _blink_len:
+			_blink = 1.0
+		elif _blink_t < cl + _blink_len + op:
+			_blink = 1.0 - (_blink_t - cl - _blink_len) / op
+		else:
+			_blink = 0.0
+			_blink_t = -1.0
+	for e in eyes:
+		(e.material_override as ShaderMaterial).set_shader_parameter("lid", _blink)
+	# --- инерция: кончики волос и подол отстают от движения головы/бёдер и качаются, как на пружине
+	if delta <= 0.0 or _mi == null:
+		return
+	var skx := sk.global_transform
+	var hb := skx * sk.get_bone_global_pose(_head_b)
+	var hips := skx * sk.get_bone_global_pose(_hips_b).origin if _hips_b >= 0 else global_position
+	if not _inert_ready:
+		_prev_head = hb.origin
+		_prev_hips = hips
+		_prev_hb = hb.basis.orthonormalized()
+		_inert_ready = true
+		return
+	var hv := (hb.origin - _prev_head) / delta
+	# поворот головы: кончики (≈ на 30 см ниже) получают скорость от вращения
+	var dq := (hb.basis.orthonormalized() * _prev_hb.inverse()).get_rotation_quaternion()
+	var ang := dq.get_axis() * dq.get_angle() / delta if dq.get_angle() > 0.0001 else Vector3.ZERO
+	var tip_v := hv + ang.cross(Vector3.DOWN * 0.3)
+	var pv := (hips - _prev_hips) / delta
+	_prev_head = hb.origin
+	_prev_hips = hips
+	_prev_hb = hb.basis.orthonormalized()
+	# телепорт (появилась в другом месте) — не дёргать волосы через всю комнату
+	if tip_v.length() > 12.0 or pv.length() > 12.0:
+		_hair_x = Vector3.ZERO; _hair_v = Vector3.ZERO; _hem_x = Vector3.ZERO; _hem_v = Vector3.ZERO
+		return
+	var d := minf(delta, 0.05)
+	_hair_v += ((-tip_v * 0.04).limit_length(0.14) - _hair_x) * 38.0 * d - _hair_v * 5.0 * d
+	_hair_x += _hair_v * d
+	_hem_v += ((-pv * 0.045).limit_length(0.12) - _hem_x) * 30.0 * d - _hem_v * 4.0 * d
+	_hem_x += _hem_v * d
+	var to_mesh := _mi.global_basis.inverse()
+	_p("hair_drag", to_mesh * _hair_x)
+	_p("hem_drag", to_mesh * _hem_x)
 
 
 ## Поза головы — уже после «живости» (рывки головы), иначе рот съезжал бы при рывках.
