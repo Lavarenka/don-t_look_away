@@ -31,6 +31,7 @@ var still := 0.0
 var cooldown := 0.0
 var _lib: AnimationLibrary
 var _frame := 0
+var _spill: OmniLight3D      ## подсветка тела игрока для зеркала (только тело, не туман)
 
 
 ## Прогрев: один кадр отражения в темноте при входе на чердак — шейдеры тела и окружения
@@ -133,8 +134,11 @@ func _setup_body() -> void:
 	spill.omni_range = 1.8
 	spill.light_cull_mask = (1 << (BODY_LAYER - 1)) | (1 << (GHOST_LAYER - 1))
 	spill.shadow_enabled = false
+	spill.light_volumetric_fog_energy = 0.0   # иначе в тумане перед глазами висит белое пятно, даже с выключенным фонарём
+	spill.light_bake_mode = Light3D.BAKE_DISABLED
 	spill.position = Vector3(0, 1.25, -0.55)
 	p.add_child(spill)
+	_spill = spill
 	sk = body.get_node("Skeleton3D")
 	for i in sk.get_bone_count():
 		bones[sk.get_bone_name(i).trim_prefix("mixamorig_")] = i
@@ -177,6 +181,8 @@ func _setup_body() -> void:
 
 
 func _process(delta: float) -> void:
+	if _spill:
+		_spill.visible = L.player.is_light_lit()      # фонарь выключен — и отсвета на теле нет
 	if body == null:
 		return
 	_animate(delta)

@@ -1231,6 +1231,8 @@
 !/models/industrial_wall_lamp/textures/industrial_wall_lamp_diff_1k.jpg.import
 !/models/industrial_wall_lamp/textures/industrial_wall_lamp_nor_gl_1k.jpg
 !/models/industrial_wall_lamp/textures/industrial_wall_lamp_nor_gl_1k.jpg.import
+!/models/living/portrait_frame.glb
+!/models/living/portrait_frame.glb.import
 !/models/living/servant_door_a.glb
 !/models/living/servant_door_a.glb.import
 !/models/living/servant_door_b.glb
@@ -1804,6 +1806,7 @@
 !/scripts/creature.gd
 !/scripts/creature.gd.uid
 !/scripts/curtains.gd
+!/scripts/curtains.gd.uid
 !/scripts/decals.gd
 !/scripts/decals.gd.uid
 !/scripts/distant.gd
@@ -1856,6 +1859,7 @@
 !/scripts/pause.gd.uid
 !/scripts/player.gd
 !/scripts/player.gd.uid
+!/scripts/portrait_frames.gd
 !/scripts/settings.gd
 !/scripts/settings.gd.uid
 !/scripts/spirit.gd
@@ -1887,6 +1891,7 @@
 !/shaders/crt.gdshader
 !/shaders/crt.gdshader.uid
 !/shaders/curtain.gdshader
+!/shaders/curtain.gdshader.uid
 !/shaders/dress.gdshader
 !/shaders/dress.gdshader.uid
 !/shaders/fog.gdshader
@@ -2047,6 +2052,12 @@
 !/textures/wallpaper/soot.png.import
 !/textures/wallpaper/stain_leak.png
 !/textures/wallpaper/stain_leak.png.import
+!/textures/wallpaper/wallpaper_corridor_albedo.png
+!/textures/wallpaper/wallpaper_corridor_albedo.png.import
+!/textures/wallpaper/wallpaper_corridor_normal.png
+!/textures/wallpaper/wallpaper_corridor_normal.png.import
+!/textures/wallpaper/wallpaper_corridor_rough.png
+!/textures/wallpaper/wallpaper_corridor_rough.png.import
 !/textures/wallpaper/wallpaper_hall_albedo.png
 !/textures/wallpaper/wallpaper_hall_albedo.png.import
 !/textures/wallpaper/wallpaper_hall_normal.png

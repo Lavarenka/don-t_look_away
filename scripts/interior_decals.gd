@@ -35,6 +35,17 @@ static func place(level: Node3D) -> void:
 	_web(root, Vector3(-2.86, CEIL, -5.86), Vector3(1, 0, 0), Vector3(0, 0, 1), 0.7)
 	_web(root, Vector3(2.86, CEIL, -0.14), Vector3(-1, 0, 0), Vector3(0, 0, -1), 0.6)
 	_web(root, Vector3(2.86, CEIL, -5.86), Vector3(-1, 0, 0), Vector3(0, 0, 1), 0.45)
+	# --- коридор
+	_ceil(root, "stain_leak", Vector3(0.3, CEIL, -8.2), Vector2(1.3, 1.0), 0.4, 0.8)
+	_ceil(root, "stain_leak", Vector3(-0.4, CEIL, -15.6), Vector2(1.6, 1.2), 2.0, 0.9)
+	_ceil(root, "soot", Vector3(0.0, CEIL, -11.0), Vector2(1.0, 1.0), 0.0, 0.75)
+	_wall(root, "crack", Vector3(0.95, 2.2, -13.0), Vector3(1, 0, 0), Vector2(0.45, 0.9), 0.85)
+	_wall(root, "crack", Vector3(0.2, 2.3, -17.86), Vector3(0, 0, -1), Vector2(0.45, 0.9), 0.9)
+	_wall(root, "mold_corner", Vector3(-0.6, 0.4, -17.86), Vector3(0, 0, -1), Vector2(0.9, 0.9), 0.95, true)
+	_wall(root, "mold_corner", Vector3(1.06, 0.4, -16.9), Vector3(1, 0, 0), Vector2(1.0, 1.0), 0.9, true)
+	_web(root, Vector3(-1.06, CEIL, -17.86), Vector3(1, 0, 0), Vector3(0, 0, 1), 0.6)
+	_web(root, Vector3(1.06, CEIL, -6.14), Vector3(-1, 0, 0), Vector3(0, 0, -1), 0.5)
+	_web(root, Vector3(1.06, CEIL, -17.86), Vector3(-1, 0, 0), Vector3(0, 0, 1), 0.4)
 
 
 ## Пятно на потолке (проецируется вверх).

@@ -340,7 +340,8 @@ func _tilt(v: float, p: Node3D) -> void:
 func _build_mirror_world() -> void:
 	L.player.cam.cull_mask &= ~MIRROR_LAYER
 	for i in 3:
-		var pl := L.get_node_or_null("Portrait%d/Plaque" % (i + 1)) as Label3D
+		var pr := L.get_node_or_null("Portrait%d" % (i + 1))
+		var pl := pr.find_child("Plaque", true, false) as Label3D if pr else null   # табличка может быть в рамке (portrait_frames.gd)
 		if pl == null:
 			continue
 		pl.layers = REAL_LAYER
@@ -348,7 +349,7 @@ func _build_mirror_world() -> void:
 		m.name = "PlaqueMirror"
 		m.text = tr("LVL_PORTRAIT_%dR" % (i + 1))
 		m.layers = MIRROR_LAYER
-		m.modulate = Color(0.95, 0.85, 0.75)
+		m.modulate = Color(0.95, 0.85, 0.75) if pl.outline_size > 0 else Color(0.3, 0.03, 0.02, 0.95)   # на латуни — будто процарапано и в крови
 		pl.get_parent().add_child(m)
 	# надпись сажей на стене напротив портретов
 	var soot := Label3D.new()

@@ -18,13 +18,25 @@ const ROOMS := {
 		"ghosts": [[Vector3(-1.06, 1.55, 5.0), Vector2(0.34, 0.44)], [Vector3(1.06, 1.72, 1.55), Vector2(0.52, 0.38)]],
 	},
 	"living": {
-		"walls": ["Wall9", "DwLiving", "Wall10", "Wall11", "Door1Wall", "Wall12", "Wall13", "Wall14", "WindowW", "WindowE", "Wall17", "Wall18", "Wall19", "DwCorr", "Wall20", "Wall27"],
+		"walls": ["Wall9", "DwLiving", "Wall10", "Wall11", "Door1Wall", "Wall12", "Wall13", "Wall14", "WindowW", "WindowE", "Wall17", "Wall18"],
 		"paper": ["res://textures/wallpaper/wallpaper_living_albedo.png", "res://textures/wallpaper/wallpaper_living_normal.png", "res://textures/wallpaper/wallpaper_living_rough.png"],
 		"room": Vector4(-2.86, 2.86, -5.86, -0.14), "seed": 7.9, "seam": 0.37,
 		"ceil": ["LivingCeil00", "LivingCeil01", "LivingCeil10", "LivingCeil11"],
 		"ghosts": [[Vector3(0.55, 1.7, -5.86), Vector2(0.45, 0.56)], [Vector3(-2.86, 1.65, -1.85), Vector2(0.6, 0.45)]],
 	},
+	# коридор к детской: портреты на западной стене, бордовые обои в полоску
+	"corridor": {
+		"walls": ["Wall19", "DwCorr", "Wall20", "Wall21", "ExitWall", "Wall22", "Wall23", "Wall24", "Wall25", "Wall26", "Wall27",
+			"Wall28", "Wall29", "Wall30", "Wall31", "Wall32"],
+		"paper": ["res://textures/wallpaper/wallpaper_corridor_albedo.png", "res://textures/wallpaper/wallpaper_corridor_normal.png", "res://textures/wallpaper/wallpaper_corridor_rough.png"],
+		"room": Vector4(-1.06, 1.06, -17.86, -6.14), "seed": 4.4, "seam": 0.2,
+		"ceil": ["CorrCeil00", "CorrCeil01", "CorrCeil02", "CorrCeil03", "CorrCeil04"],
+		"lamp": Vector3(0, 2.8, -11.0),
+		"ghosts": [[Vector3(1.06, 1.6, -15.2), Vector2(0.5, 0.4)], [Vector3(1.06, 1.75, -8.9), Vector2(0.3, 0.42)]],
+	},
 }
+## Вторая «комната» для шейдеров, где нужна одна — далеко, никогда не совпадает.
+const NOWHERE := {"room": Vector4(100, 101, 100, 101), "seed": 0.0, "seam": 0.0, "ghosts": [], "paper": []}
 
 
 func setup(level: Node3D) -> void:
@@ -32,19 +44,11 @@ func setup(level: Node3D) -> void:
 		return
 	# один материал на все стены обеих комнат: шейдер сам решает, какая сторона в какой комнате
 	var mat := _wall_mat(ROOMS.hall, ROOMS.living)
-	var walls: Array = ROOMS.hall.walls + ROOMS.living.walls
-	for wn in walls:
-		var w := level.get_node_or_null(wn) as Node3D
-		if w == null:
-			continue
-		for mi in w.find_children("*", "MeshInstance3D", true, false):
-			var m := mi as MeshInstance3D
-			for s in m.mesh.get_surface_count():
-				var src := m.mesh.surface_get_material(s)
-				if src and String(src.resource_name).findn("Walls") >= 0:
-					m.set_surface_override_material(s, mat)
+	_paper_walls(level, ROOMS.hall.walls + ROOMS.living.walls, mat)
+	_paper_walls(level, ROOMS.corridor.walls, _wall_mat(ROOMS.corridor, NOWHERE))
 	_woodwork(level)
 	_ceilings(level)
+	preload("res://scripts/portrait_frames.gd").setup(level)      # рамки портретов в коридоре, табличка с именем
 	preload("res://scripts/living_furniture.gd").setup(level)     # свой сервант и тумба под телевизор
 	preload("res://scripts/curtains.gd").setup(level)             # шторы: портьеры в складку и тюль, колышутся
 	preload("res://scripts/interior_decals.gd").place(level)
@@ -56,11 +60,12 @@ const CEIL_SHADER := preload("res://shaders/ceiling.gdshader")
 ## Входная дверь — тёмные старые доски (лак), межкомнатные коробки и окна — эмаль цвета слоновой кости.
 const WOODWORK := {
 	"FrontDoorWall": 0.0, "Door1Wall": 1.0, "DwHall": 1.0, "DwLiving": 1.0, "WindowW": 1.0, "WindowE": 1.0,
+	"DwCorr": 1.0, "ExitWall": 1.0,
 }
 
 
 static func _in_rooms(p: Vector3) -> bool:
-	return p.x > -3.1 and p.x < 3.1 and p.z > -6.2 and p.z < 6.2 and p.y < 3.0
+	return p.x > -3.1 and p.x < 3.1 and p.z > -18.3 and p.z < 6.2 and p.y < 3.0
 
 
 ## Материал «старого дерева» на основе исходного (текстуры те же, сверху — время).
@@ -129,17 +134,32 @@ func _woodwork(level: Node3D) -> void:
 			_retex(n, 0.0 if front else 1.0)
 
 
+func _paper_walls(level: Node3D, walls: Array, mat: Material) -> void:
+	for wn in walls:
+		var w := level.get_node_or_null(wn) as Node3D
+		if w == null:
+			continue
+		for mi in w.find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			for s in m.mesh.get_surface_count():
+				var src := m.mesh.surface_get_material(s)
+				if src and String(src.resource_name).findn("Walls") >= 0:
+					m.set_surface_override_material(s, mat)
+
+
 func _ceilings(level: Node3D) -> void:
 	var base: Texture2D = load("res://models/vintage/tex/ceiling_basecolor.jpg")
 	var nrm: Texture2D = load("res://models/vintage/tex/ceiling_normal.jpg")
-	for rn in ["hall", "living"]:
+	for rn in ["hall", "living", "corridor"]:
 		var r: Dictionary = ROOMS[rn]
 		var m := ShaderMaterial.new()
 		m.shader = CEIL_SHADER
 		m.set_shader_parameter("base_tex", base)
 		m.set_shader_parameter("base_normal", nrm)
-		m.set_shader_parameter("room", ROOMS.hall.room)
-		m.set_shader_parameter("room2", ROOMS.living.room)
+		m.set_shader_parameter("room", ROOMS.hall.room if rn != "corridor" else ROOMS.corridor.room)
+		m.set_shader_parameter("room2", ROOMS.living.room if rn != "corridor" else NOWHERE.room)
+		if r.has("lamp"):
+			m.set_shader_parameter("lamp", r.lamp)
 		m.set_shader_parameter("slab_along_x", rn == "hall")
 		m.set_shader_parameter("seed", r.seed)
 		for cn in r.ceil:
@@ -160,9 +180,10 @@ func _wall_mat(a: Dictionary, b: Dictionary) -> ShaderMaterial:
 	m.set_shader_parameter("paper_albedo", load(a.paper[0]))
 	m.set_shader_parameter("paper_normal", load(a.paper[1]))
 	m.set_shader_parameter("paper_rough", load(a.paper[2]))
-	m.set_shader_parameter("paper2_albedo", load(b.paper[0]))
-	m.set_shader_parameter("paper2_normal", load(b.paper[1]))
-	m.set_shader_parameter("paper2_rough", load(b.paper[2]))
+	var pb: Array = b.paper if not b.paper.is_empty() else a.paper
+	m.set_shader_parameter("paper2_albedo", load(pb[0]))
+	m.set_shader_parameter("paper2_normal", load(pb[1]))
+	m.set_shader_parameter("paper2_rough", load(pb[2]))
 	m.set_shader_parameter("room", a.room)
 	m.set_shader_parameter("room2", b.room)
 	m.set_shader_parameter("seed", a.seed)
