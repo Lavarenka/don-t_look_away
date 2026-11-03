@@ -261,11 +261,14 @@ func _update_gramophone() -> void:
 	if gram and gram.playing and _dist(gram.global_position) < 1.3 and not done.has("gram_stop"):
 		done["gram_stop"] = true
 		var g := gram
+		var gp := g.global_position
 		var tw := create_tween()
 		tw.tween_property(g, "pitch_scale", 0.35, 1.2)
 		await tw.finished
-		g.stop()
-		_once3d("click", g.global_position, 0.0, 0.6)
+		# пластинка могла доиграть сама, пока «плыла», — тогда плеер уже удалён
+		if is_instance_valid(g):
+			g.stop()
+		_once3d("click", gp, 0.0, 0.6)
 		L.player.flicker = 0.3
 
 
