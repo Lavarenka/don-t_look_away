@@ -158,7 +158,32 @@ func _hint_text(h) -> String:
 	return tr(str(h))
 
 
+## Журнал загрузки: сколько заняла каждая часть (user://load_log.txt, путь — в конце журнала).
+var _lt_prev := 0
+var _lt_lines: PackedStringArray = []
+func _lt(what: String) -> void:
+	var now := Time.get_ticks_msec()
+	_lt_lines.append("%6d ms  %s" % [now - _lt_prev, what])
+	_lt_prev = now
+
+
+func _lt_save() -> void:
+	var total := 0
+	for l in _lt_lines:
+		total += int(l.strip_edges().split(" ")[0])
+	_lt_lines.append("------ итого в _ready: %d ms" % total)
+	if Engine.has_meta("load_scene_ms"):
+		_lt_lines.append("загрузка сцены в меню (main.tscn): %d ms" % int(Engine.get_meta("load_scene_ms")))
+	var f := FileAccess.open("user://load_log.txt", FileAccess.WRITE)
+	if f:
+		f.store_string("\n".join(_lt_lines) + "\n")
+		f.close()
+	print("\n".join(_lt_lines))
+	print("load log: ", ProjectSettings.globalize_path("user://load_log.txt"))
+
+
 func _ready() -> void:
+	_lt_prev = Time.get_ticks_msec()
 	SETTINGS.apply_lang()
 	randomize()
 	# три разных канала Гостя (не первый — на нём телевизор включается)
@@ -173,6 +198,7 @@ func _ready() -> void:
 	_localize_scene()
 	_build_hud()
 	SETTINGS.apply($WorldEnvironment.environment, grain_mat, SETTINGS.get_quality())
+	_lt("старт, интерфейс, графика")
 	# у каждой лампочки свой материал свечения, чтобы гасить их отдельно
 	corr_glow = _own_mat($CorrBulbMesh)
 	hall_glow = _own_mat($HallBulbMesh)
@@ -197,14 +223,19 @@ func _ready() -> void:
 	inv = preload("res://scripts/inventory.gd").new()
 	inv.L = self
 	add_child(inv)
+	_lt("ключ, осколок, инвентарь")
 	_setup_audio()
+	_lt("звук")
 	player.step.connect(_on_step)
 	player.action.connect(_interact)
 	player.toggled_light.connect(func(): _sfx("click", -6.0))
 	guest.visible = false
 	preload("res://scripts/door_kit.gd").apply_all(self)     # двери из набора вместо фанерных
+	_lt("двери")
 	_setup_house()
+	_lt("материалы дома, обои")
 	_setup_girl()
+	_lt("девочка")
 	shade.visible = false
 	tv_mat = ShaderMaterial.new()
 	tv_mat.shader = preload("res://shaders/crt.gdshader")
@@ -232,24 +263,30 @@ func _ready() -> void:
 	haunts = preload("res://scripts/haunts.gd").new()
 	haunts.L = self
 	add_child(haunts)
+	_lt("haunts")
 	nursery = preload("res://scripts/nursery.gd").new()
 	nursery.L = self
 	add_child(nursery)
+	_lt("детская")
 	attic = preload("res://scripts/attic.gd").new()
 	attic.L = self
 	add_child(attic)
+	_lt("чердак")
 	var distant := preload("res://scripts/distant.gd").new()
 	distant.L = self
 	add_child(distant)
 	hallp = preload("res://scripts/hall_puzzle.gd").new()
 	hallp.L = self
 	add_child(hallp)
+	_lt("загадка холла")
 	floor2 = preload("res://scripts/floor2.gd").new()
 	add_child(floor2)
 	floor2.setup(self)
+	_lt("второй этаж")
 	bath = preload("res://scripts/bathroom.gd").new()
 	add_child(bath)
 	bath.setup(self)
+	_lt("ванная")
 	doors = preload("res://scripts/doors.gd").new()
 	doors.L = self
 	add_child(doors)
@@ -261,21 +298,27 @@ func _ready() -> void:
 	bedroom = preload("res://scripts/bedroom.gd").new()
 	add_child(bedroom)
 	bedroom.setup(self)
+	_lt("спальня Веры")
 	var atmo := preload("res://scripts/atmosphere.gd").new()     # туман по полу, пыль, облака на луне, мелкие события
 	add_child(atmo)
 	atmo.setup(self)
+	_lt("атмосфера")
 	furn = preload("res://scripts/furniture.gd").new()          # мебель чердака и полочки холла (ящики, дверцы, крышки)
 	add_child(furn)
 	furn.setup(self)
+	_lt("мебель")
 	var dec := preload("res://scripts/decals.gd").new()          # подтёки, пятна, плесень по дому
 	add_child(dec)
 	dec.setup(self)
+	_lt("декали")
 	# тяжёлый подсвечник в прихожей издалека (со второго этажа сквозь стены) не нужен — экономим отрисовку
 	for mi in get_node("HallCandlestick").find_children("*", "GeometryInstance3D", true, false):
 		mi.visibility_range_end = 20.0
 	_setup_zombie()
 	player.mouse_sens *= SETTINGS.get_sens()
 	SETTINGS.apply_general()
+	_lt("бегущая девочка, настройки")
+	_lt_save()
 	# выбрана глава в меню — переносим в её начало
 	if Engine.has_meta("chapter"):
 		var ch: int = Engine.get_meta("chapter")
@@ -1177,6 +1220,10 @@ func _setup_house() -> void:
 	# в межкомнатных проёмах дверей нет
 	for w in ["DwHall", "DwLiving", "DwCorr", "DwNursery"]:
 		get_node(w + "/small_door").visible = false
+	# прихожая и зал: советские обои, старение стен, грязь (interior.gd; ENABLED = false — как было)
+	var it := preload("res://scripts/interior.gd").new()
+	add_child(it)
+	it.setup(self)
 
 
 func _hinge(wall: String, pivot: Node3D) -> void:

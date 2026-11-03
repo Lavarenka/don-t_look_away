@@ -593,6 +593,9 @@ func _click(db: float) -> void:
 	p.play()
 
 
+var _load_t0 := 0
+
+
 func _start() -> void:
 	if _loading_started:
 		return
@@ -600,6 +603,7 @@ func _start() -> void:
 	_buttons.get_parent().visible = false
 	_loading.visible = true
 	ResourceLoader.load_threaded_request(GAME_SCENE)
+	_load_t0 = Time.get_ticks_msec()
 
 
 func _process(delta: float) -> void:
@@ -613,6 +617,7 @@ func _process(delta: float) -> void:
 		_bar.value = lerp(_bar.value, float(prog[0]) * 100.0, 0.2)
 	if st == ResourceLoader.THREAD_LOAD_LOADED and _t_load > 1.2:
 		var scene: PackedScene = ResourceLoader.load_threaded_get(GAME_SCENE)
+		Engine.set_meta("load_scene_ms", Time.get_ticks_msec() - _load_t0)
 		_loading_started = false
 		get_tree().change_scene_to_packed(scene)
 	elif st == ResourceLoader.THREAD_LOAD_FAILED or st == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
