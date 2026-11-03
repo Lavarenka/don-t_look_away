@@ -26,13 +26,22 @@ const ROOMS := {
 	},
 	# коридор к детской: портреты на западной стене, бордовые обои в полоску
 	"corridor": {
-		"walls": ["Wall19", "DwCorr", "Wall20", "Wall21", "ExitWall", "Wall22", "Wall23", "Wall24", "Wall25", "Wall26", "Wall27",
+		"walls": ["Wall19", "DwCorr", "Wall20", "Wall23", "Wall24", "Wall25", "Wall26", "Wall27",
 			"Wall28", "Wall29", "Wall30", "Wall31", "Wall32"],
 		"paper": ["res://textures/wallpaper/wallpaper_corridor_albedo.png", "res://textures/wallpaper/wallpaper_corridor_normal.png", "res://textures/wallpaper/wallpaper_corridor_rough.png"],
 		"room": Vector4(-1.06, 1.06, -17.86, -6.14), "seed": 4.4, "seam": 0.2,
 		"ceil": ["CorrCeil00", "CorrCeil01", "CorrCeil02", "CorrCeil03", "CorrCeil04"],
 		"lamp": Vector3(0, 2.8, -11.0),
 		"ghosts": [[Vector3(1.06, 1.6, -15.2), Vector2(0.5, 0.4)], [Vector3(1.06, 1.75, -8.9), Vector2(0.3, 0.42)]],
+	},
+	# детская Ани: бледно-розовые обои с мишками, звёздочками и шариками
+	"nursery": {
+		"walls": ["Wall35", "WindowNW", "Wall37", "Wall38", "WindowNE", "Wall40", "Wall41", "Wall42"],
+		"paper": ["res://textures/wallpaper/wallpaper_nursery_albedo.png", "res://textures/wallpaper/wallpaper_nursery_normal.png", "res://textures/wallpaper/wallpaper_nursery_rough.png"],
+		"room": Vector4(-2.26, 2.26, -23.86, -18.14), "seed": 9.2, "seam": 0.05,
+		"ceil": ["NursCeil00", "NursCeil01", "NursCeil10", "NursCeil11"],
+		"lamp": Vector3(0, 2.8, -21.0),
+		"ghosts": [[Vector3(2.26, 1.5, -19.6), Vector2(0.36, 0.48)], [Vector3(-1.4, 1.8, -23.86), Vector2(0.5, 0.36)]],
 	},
 }
 ## Вторая «комната» для шейдеров, где нужна одна — далеко, никогда не совпадает.
@@ -47,7 +56,10 @@ func setup(level: Node3D) -> void:
 	_paper_walls(level, ROOMS.hall.walls + ROOMS.living.walls, mat)
 	# перегородки коридора: две стены-модуля стоят вплотную, и какая сторона видна — зависит от модуля;
 	# поэтому у них один материал на коридор и зал (шейдер сам выбирает обои по стороне)
-	_paper_walls(level, ROOMS.corridor.walls + ["Wall11", "Door1Wall", "Wall12", "Wall33", "DwNursery", "Wall34"], _wall_mat(ROOMS.corridor, ROOMS.living))
+	_paper_walls(level, ROOMS.corridor.walls + ["Wall11", "Door1Wall", "Wall12"], _wall_mat(ROOMS.corridor, ROOMS.living))
+	# стена коридор / детская — с обеих сторон
+	_paper_walls(level, ["Wall21", "ExitWall", "Wall22", "Wall33", "DwNursery", "Wall34"], _wall_mat(ROOMS.corridor, ROOMS.nursery))
+	_paper_walls(level, ROOMS.nursery.walls, _wall_mat(ROOMS.nursery, NOWHERE))
 	_woodwork(level)
 	_ceilings(level)
 	preload("res://scripts/portrait_frames.gd").setup(level)      # рамки портретов в коридоре, табличка с именем
@@ -62,12 +74,12 @@ const CEIL_SHADER := preload("res://shaders/ceiling.gdshader")
 ## Входная дверь — тёмные старые доски (лак), межкомнатные коробки и окна — эмаль цвета слоновой кости.
 const WOODWORK := {
 	"FrontDoorWall": 0.0, "Door1Wall": 1.0, "DwHall": 1.0, "DwLiving": 1.0, "WindowW": 1.0, "WindowE": 1.0,
-	"DwCorr": 1.0, "ExitWall": 1.0, "DwNursery": 1.0,
+	"DwCorr": 1.0, "ExitWall": 1.0, "DwNursery": 1.0, "WindowNW": 1.0, "WindowNE": 1.0,
 }
 
 
 static func _in_rooms(p: Vector3) -> bool:
-	return p.x > -3.1 and p.x < 3.1 and p.z > -18.3 and p.z < 6.2 and p.y < 3.0
+	return p.x > -3.1 and p.x < 3.1 and p.z > -24.2 and p.z < 6.2 and p.y < 3.0
 
 
 ## Материал «старого дерева» на основе исходного (текстуры те же, сверху — время).
@@ -152,14 +164,15 @@ func _paper_walls(level: Node3D, walls: Array, mat: Material) -> void:
 func _ceilings(level: Node3D) -> void:
 	var base: Texture2D = load("res://models/vintage/tex/ceiling_basecolor.jpg")
 	var nrm: Texture2D = load("res://models/vintage/tex/ceiling_normal.jpg")
-	for rn in ["hall", "living", "corridor"]:
+	for rn in ["hall", "living", "corridor", "nursery"]:
 		var r: Dictionary = ROOMS[rn]
 		var m := ShaderMaterial.new()
 		m.shader = CEIL_SHADER
 		m.set_shader_parameter("base_tex", base)
 		m.set_shader_parameter("base_normal", nrm)
-		m.set_shader_parameter("room", ROOMS.hall.room if rn != "corridor" else ROOMS.corridor.room)
-		m.set_shader_parameter("room2", ROOMS.living.room if rn != "corridor" else NOWHERE.room)
+		var solo: bool = rn == "corridor" or rn == "nursery"
+		m.set_shader_parameter("room", r.room if solo else ROOMS.hall.room)
+		m.set_shader_parameter("room2", NOWHERE.room if solo else ROOMS.living.room)
 		if r.has("lamp"):
 			m.set_shader_parameter("lamp", r.lamp)
 		m.set_shader_parameter("slab_along_x", rn == "hall")

@@ -3,6 +3,8 @@ extends RefCounted
 ## трещины над проёмами, паутина в верхних углах. Вызывается из interior.gd.
 
 const T := {
+	"scribble_family": "res://textures/wallpaper/scribble_family.png",
+	"scribble_spiral": "res://textures/wallpaper/scribble_spiral.png",
 	"stain_leak": "res://textures/wallpaper/stain_leak.png",
 	"soot": "res://textures/wallpaper/soot.png",
 	"mold_corner": "res://textures/wallpaper/mold_corner.png",
@@ -46,6 +48,16 @@ static func place(level: Node3D) -> void:
 	_web(root, Vector3(-1.06, CEIL, -17.86), Vector3(1, 0, 0), Vector3(0, 0, 1), 0.6)
 	_web(root, Vector3(1.06, CEIL, -6.14), Vector3(-1, 0, 0), Vector3(0, 0, -1), 0.5)
 	_web(root, Vector3(1.06, CEIL, -17.86), Vector3(-1, 0, 0), Vector3(0, 0, 1), 0.4)
+	# --- детская: протечка над кроватью, копоть над лампой, плесень у окна, каракули мелками на обоях
+	_ceil(root, "stain_leak", Vector3(-1.5, CEIL, -22.6), Vector2(1.4, 1.1), 1.1, 0.85)
+	_ceil(root, "soot", Vector3(0.0, CEIL, -21.0), Vector2(0.9, 0.9), 0.0, 0.6)
+	_wall(root, "mold_corner", Vector3(2.26, 0.4, -23.3), Vector3(1, 0, 0), Vector2(1.0, 1.0), 0.9, true)
+	_wall(root, "mold_corner", Vector3(-2.26, 2.4, -20.1), Vector3(-1, 0, 0), Vector2(0.9, 0.9), 0.8, false, true)
+	_wall(root, "crack", Vector3(1.6, 2.2, -23.86), Vector3(0, 0, -1), Vector2(0.45, 0.9), 0.85)
+	_wall(root, "scribble_family", Vector3(1.25, 0.5, -23.86), Vector3(0, 0, -1), Vector2(0.75, 0.75), 0.9)
+	_wall(root, "scribble_spiral", Vector3(2.26, 0.5, -19.8), Vector3(1, 0, 0), Vector2(0.55, 0.55), 0.85)
+	_web(root, Vector3(-2.26, CEIL, -23.86), Vector3(1, 0, 0), Vector3(0, 0, 1), 0.55)
+	_web(root, Vector3(2.26, CEIL, -18.14), Vector3(-1, 0, 0), Vector3(0, 0, -1), 0.45)
 
 
 ## Пятно на потолке (проецируется вверх).

@@ -30,18 +30,25 @@ static func setup(level: Node3D) -> void:
 	rod.albedo_color = Color(0.16, 0.12, 0.08)
 	rod.metallic = 0.6
 	rod.roughness = 0.45
+	# детская: выцветший голубой ситец в цветочек
+	var drape_n := drape.duplicate() as ShaderMaterial
+	drape_n.set_shader_parameter("tex", load("res://textures/fabric/drape_nursery_albedo.png"))
+	drape_n.set_shader_parameter("has_nrm", false)
+	drape_n.set_shader_parameter("tile", 0.35)
 	var i := 0
-	for nm in ["CurtainW", "CurtainE"]:
+	for nm in ["CurtainW", "CurtainE", "NCurtainW", "NCurtainE"]:
 		var old := level.get_node_or_null(nm) as Node3D
 		if old == null:
 			continue
-		old.visible = false
+		# старые шторы прячем, а новые вешаем внутрь того же узла — если сцена дёргает штору
+		# (прятки в детской), двигается и новая
+		for mi in old.find_children("*", "GeometryInstance3D", true, false):
+			(mi as GeometryInstance3D).visible = false
 		var h := Node3D.new()
-		h.name = nm + "Soviet"
-		level.add_child(h)
-		h.global_transform = old.global_transform
+		h.name = "SovietCurtain"
+		old.add_child(h)
 		var L := old.global_position.y + TOP - FLOOR_GAP
-		var d1 := drape.duplicate() as ShaderMaterial
+		var d1 := (drape_n if nm.begins_with("N") else drape).duplicate() as ShaderMaterial
 		d1.set_shader_parameter("cloth_len", L)
 		d1.set_shader_parameter("seed", i * 3.7)
 		var t1 := tul.duplicate() as ShaderMaterial

@@ -1991,6 +1991,8 @@
 !/textures/fabric/drape_albedo.png.import
 !/textures/fabric/drape_normal.png
 !/textures/fabric/drape_normal.png.import
+!/textures/fabric/drape_nursery_albedo.png
+!/textures/fabric/drape_nursery_albedo.png.import
 !/textures/fabric/tulle.png
 !/textures/fabric/tulle.png.import
 !/textures/fog_base.png
@@ -2055,6 +2057,10 @@
 !/textures/wallpaper/crack.png.import
 !/textures/wallpaper/mold_corner.png
 !/textures/wallpaper/mold_corner.png.import
+!/textures/wallpaper/scribble_family.png
+!/textures/wallpaper/scribble_family.png.import
+!/textures/wallpaper/scribble_spiral.png
+!/textures/wallpaper/scribble_spiral.png.import
 !/textures/wallpaper/soot.png
 !/textures/wallpaper/soot.png.import
 !/textures/wallpaper/stain_leak.png
@@ -2077,6 +2083,12 @@
 !/textures/wallpaper/wallpaper_living_normal.png.import
 !/textures/wallpaper/wallpaper_living_rough.png
 !/textures/wallpaper/wallpaper_living_rough.png.import
+!/textures/wallpaper/wallpaper_nursery_albedo.png
+!/textures/wallpaper/wallpaper_nursery_albedo.png.import
+!/textures/wallpaper/wallpaper_nursery_normal.png
+!/textures/wallpaper/wallpaper_nursery_normal.png.import
+!/textures/wallpaper/wallpaper_nursery_rough.png
+!/textures/wallpaper/wallpaper_nursery_rough.png.import
 !/tools/git_used.py
 !/tools/render_menu_plate.gd
 !/tools/render_menu_plate.gd.uid
