@@ -1231,6 +1231,14 @@
 !/models/industrial_wall_lamp/textures/industrial_wall_lamp_diff_1k.jpg.import
 !/models/industrial_wall_lamp/textures/industrial_wall_lamp_nor_gl_1k.jpg
 !/models/industrial_wall_lamp/textures/industrial_wall_lamp_nor_gl_1k.jpg.import
+!/models/living/servant_door_a.glb
+!/models/living/servant_door_a.glb.import
+!/models/living/servant_door_b.glb
+!/models/living/servant_door_b.glb.import
+!/models/living/servant_soviet.glb
+!/models/living/servant_soviet.glb.import
+!/models/living/tv_stand_soviet.glb
+!/models/living/tv_stand_soviet.glb.import
 !/models/mannequin/mannequin.scn
 !/models/mannequin/mannequin_albedo.jpg
 !/models/mannequin/mannequin_albedo.jpg.import
@@ -1818,7 +1826,9 @@
 !/scripts/haunts.gd
 !/scripts/haunts.gd.uid
 !/scripts/interior.gd
+!/scripts/interior.gd.uid
 !/scripts/interior_decals.gd
+!/scripts/interior_decals.gd.uid
 !/scripts/intro.gd
 !/scripts/intro.gd.uid
 !/scripts/inventory.gd
@@ -1827,6 +1837,7 @@
 !/scripts/jaw_open.gd.uid
 !/scripts/level.gd
 !/scripts/level.gd.uid
+!/scripts/living_furniture.gd
 !/scripts/mannequin.gd
 !/scripts/mannequin.gd.uid
 !/scripts/memory_video.gd
@@ -1866,9 +1877,11 @@
 !/scripts/vintage.gd
 !/scripts/vintage.gd.uid
 !/shaders/aged_wood.gdshader
+!/shaders/aged_wood.gdshader.uid
 !/shaders/candle_flame.gdshader
 !/shaders/candle_flame.gdshader.uid
 !/shaders/ceiling.gdshader
+!/shaders/ceiling.gdshader.uid
 !/shaders/crt.gdshader
 !/shaders/crt.gdshader.uid
 !/shaders/dress.gdshader
@@ -1895,9 +1908,11 @@
 !/shaders/spirit.gdshader.uid
 !/shaders/spirit_eye.gdshader
 !/shaders/spirit_eye.gdshader.uid
+!/shaders/veneer.gdshader
 !/shaders/vera.gdshader
 !/shaders/vera.gdshader.uid
 !/shaders/wallpaper.gdshader
+!/shaders/wallpaper.gdshader.uid
 !/textures/attic_photo.png
 !/textures/attic_photo.png.import
 !/textures/cobweb.png

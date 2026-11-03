@@ -45,6 +45,7 @@ func setup(level: Node3D) -> void:
 					m.set_surface_override_material(s, mat)
 	_woodwork(level)
 	_ceilings(level)
+	preload("res://scripts/living_furniture.gd").setup(level)     # свой сервант и тумба под телевизор
 	preload("res://scripts/interior_decals.gd").place(level)
 
 
