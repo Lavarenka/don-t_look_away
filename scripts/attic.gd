@@ -881,16 +881,24 @@ func _behind_scare(form: Node3D) -> void:
 		to.y = 0.0
 		var f: Vector3 = p.forward()
 		f.y = 0.0
-		if f.normalized().dot(to.normalized()) > 0.75:
+		if f.normalized().dot(to.normalized()) > 0.5:
 			turned = true
 			break
 		if t > 3.5 and int(t * 2.0) % 3 == 0:
 			p.shake = 0.05
-	if not turned:
-		# не обернулся — его разворачивает самого (рывком), чтобы увидел
-		var aim: Vector3 = n.global_position + Vector3(0, 1.5, 0) - p.cam.global_position
-		create_tween().tween_property(p, "rotation:y", atan2(-aim.x, -aim.z), 0.25).set_trans(Tween.TRANS_QUAD)
-		await get_tree().create_timer(0.3).timeout
+	# обернулся хотя бы наполовину (или не обернулся вовсе) — взгляд сам «дёргается» точно на него:
+	# мышь отключена, камера доворачивается на лицо, чтобы манекен был ровно в центре кадра
+	p.frozen = true
+	var aim: Vector3 = n.global_position + Vector3(0, 1.5, 0) - p.cam.global_position
+	var y0: float = p.rotation.y
+	var y1: float = atan2(-aim.x, -aim.z)
+	var x0: float = p.head.rotation.x
+	var x1: float = clampf(atan2(aim.y, Vector2(aim.x, aim.z).length()), -1.0, 1.0)
+	var dur := 0.18 if turned else 0.3
+	create_tween().tween_method(func(k: float):
+		p.rotation.y = lerp_angle(y0, y1, k)
+		p.head.rotation.x = lerpf(x0, x1, k), 0.0, 1.0, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	await get_tree().create_timer(dur + 0.25).timeout
 	# вспышка фонаря: он вплотную. Голова с хрустом встаёт на место — и бросок
 	p.frozen = true
 	p.light_locked = false
