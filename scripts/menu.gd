@@ -38,6 +38,24 @@ var CAM_XF: Transform3D = str_to_var("Transform3D(0.99782705, -0.0063137123, 0.0
 var FLASH_XF: Transform3D = str_to_var("Transform3D(0.9942423, 0.013865624, -0.10625452, 0, 0.9915928, 0.12939733, 0.10715539, -0.1286523, 0.98588353, -0.07921533, 1.4509205, 2.5046284)")
 var GIRL_XF: Transform3D = str_to_var("Transform3D(0.98412704, 0, -0.17746553, 0, 1, 0, 0.17746553, 0, 0.98412704, 0.25, 0, -0.55)")
 const FLASH_E := 7.0
+## Фон меню (textures/menu/*.png, рендер из уровня — tools/render_menu_plate.gd):
+## 0 — старый (до новых обоев), 1 — новая прихожая, свет как был, 2 — фонарь садится (темнее),
+## 3 — фонаря нет, только луна из зала (Аня — силуэт), 4 — фонаря нет, в прихожей тлеет торшер.
+const PLATE := 4
+var _pl := PLATE
+## img — картинка; flash — фонарь (0 — нет); ang — ширина луча; shade — затемнение поверх;
+## rim — контровой свет на Аню из зала; lamp — тёплый свет торшера на неё; amb — общий свет на неё;
+## dim — во сколько раз «сбои» слабее/медленнее (луна — облака, а не моргание)
+const PLATES := [
+	{"img": "res://textures/menu_plate.png", "flash": 7.0, "ang": 24.0, "shade": 0.45, "rim": 0.9, "lamp": 0.0, "amb": 0.1, "dim": 1.0},
+	{"img": "res://textures/menu/plate_1.png", "flash": 7.0, "ang": 24.0, "shade": 0.4, "rim": 0.9, "lamp": 0.0, "amb": 0.08, "dim": 1.0},
+	{"img": "res://textures/menu/plate_2.png", "flash": 4.8, "ang": 21.0, "shade": 0.35, "rim": 0.7, "lamp": 0.0, "amb": 0.05, "dim": 1.0},
+	{"img": "res://textures/menu/plate_3.png", "flash": 0.0, "ang": 24.0, "shade": 0.2, "rim": 2.8, "lamp": 0.0, "amb": 0.03, "dim": 0.35},
+	{"img": "res://textures/menu/plate_4.png", "flash": 0.0, "ang": 24.0, "shade": 0.25, "rim": 0.6, "lamp": 1.6, "amb": 0.04, "dim": 1.0},
+]
+var _cfg: Dictionary
+var _lamp: OmniLight3D
+var _rim: OmniLight3D
 const GHOST_TINT := Color(0.74, 0.74, 0.8)     ## призрак темнее, будто в тени
 ## Позы: [позиция, поворот, анимация ("" — живая idle), секунда анимации, повороты костей, прячется за стеной]
 var POSES: Array = [
@@ -92,8 +110,13 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	get_tree().paused = false
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	# фон: перерисованный из уровня (tools/render_menu_plate.gd) — если есть, иначе старый
-	var plate_path := "res://textures/menu_plate.png" if ResourceLoader.exists("res://textures/menu_plate.png") else "res://textures/menu_plate.jpg"
+	# фон: перерисованный из уровня (tools/render_menu_plate.gd) — вариант PLATE
+	if OS.has_environment("MENU_PLATE"):          # для снимков вариантов
+		_pl = int(OS.get_environment("MENU_PLATE"))
+	_cfg = PLATES[clampi(_pl, 0, PLATES.size() - 1)]
+	var plate_path: String = _cfg.img
+	if not ResourceLoader.exists(plate_path):
+		plate_path = "res://textures/menu_plate.png" if ResourceLoader.exists("res://textures/menu_plate.png") else "res://textures/menu_plate.jpg"
 	_plate = _cover(load(plate_path))
 	add_child(_plate)
 	_build_live()
@@ -104,9 +127,10 @@ func _ready() -> void:
 	_haze_mat = ShaderMaterial.new()
 	_haze_mat.shader = load("res://shaders/menu_haze.gdshader")
 	haze.material = _haze_mat
+	haze.visible = _cfg.flash > 0.0             # дымка — в луче фонаря; без фонаря её нет
 	add_child(haze)
 	var shade := ColorRect.new()
-	shade.color = Color(0, 0, 0, 0.45)
+	shade.color = Color(0, 0, 0, _cfg.shade)
 	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(shade)
 	var grain := ColorRect.new()
@@ -273,7 +297,7 @@ func _build_live() -> void:
 	env.background_mode = Environment.BG_CLEAR_COLOR
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.35, 0.4, 0.5)
-	env.ambient_light_energy = 0.1
+	env.ambient_light_energy = _cfg.amb
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	env.tonemap_exposure = 1.1
 	env.adjustment_enabled = true
@@ -295,14 +319,23 @@ func _build_live() -> void:
 	_flash.shadow_normal_bias = 2.5
 	_flash.spot_range = 18.0
 	_flash.spot_attenuation = 1.2
-	_flash.spot_angle = 24.0
+	_flash.spot_angle = _cfg.ang
 	_flash.spot_angle_attenuation = 1.5
 	vp.add_child(_flash)
+	_lamp = OmniLight3D.new()                   # торшер в прихожей (вариант 4): тёплый свет сбоку-спереди
+	_lamp.light_color = Color(1.0, 0.55, 0.3)
+	_lamp.light_energy = _cfg.lamp
+	_lamp.omni_range = 4.5
+	_lamp.omni_attenuation = 1.6
+	_lamp.position = Vector3(-0.75, 1.38, 0.75)
+	_lamp.visible = _cfg.lamp > 0.0
+	vp.add_child(_lamp)
 	_shadow_catcher(vp)
 	var rim := OmniLight3D.new()                # холодный контровой свет из комнаты за ней — силуэт отделяется от темноты
 	rim.light_color = Color(0.55, 0.65, 0.9)
-	rim.light_energy = 0.9
-	rim.omni_range = 2.6
+	rim.light_energy = _cfg.rim
+	rim.omni_range = 2.6 if _cfg.rim < 1.5 else 3.2
+	_rim = rim
 	rim.position = Vector3(0.1, 1.5, -2.6)
 	vp.add_child(rim)
 	_girl = Node3D.new()
@@ -454,6 +487,21 @@ void fragment() {
 func _flicker(delta: float) -> void:
 	_fl_t += delta
 	var target := 1.0 - 0.04 * sin(_fl_t * 1.7) * sin(_fl_t * 4.3)
+	var dim: float = _cfg.dim
+	if dim < 1.0:
+		# луна: не моргает, а медленно меркнет — по ней идут облака; в темноте Аня «меняется»
+		var was := _burst > 0.0
+		_burst -= delta
+		if was and _burst <= 0.0 and _deep:
+			_ghost_shift()
+		if _burst <= 0.0 and _fl_t > _next_fl:
+			_burst = randf_range(1.8, 2.8)
+			_deep = randf() < 0.45
+			_next_fl = _fl_t + randf_range(7.0, 12.0)
+		var goal := (0.12 if _deep else 0.55) if _burst > 0.0 else target
+		_fl = move_toward(_fl, goal, delta * 0.9)
+		_apply_fl()
+		return
 	if _burst > 0.0:
 		_burst -= delta
 		if randf() < delta * 22.0:
@@ -468,11 +516,19 @@ func _flicker(delta: float) -> void:
 		if _fl_t > _next_fl:
 			_deep = randf() < 0.3
 			_burst = randf_range(0.5, 0.9) if _deep else randf_range(0.12, 0.35)
-	_flash.light_energy = FLASH_E * _fl
+	_apply_fl()
+
+
+func _apply_fl() -> void:
+	var fe: float = _cfg.flash
+	_flash.light_energy = fe * _fl
+	_lamp.light_energy = float(_cfg.lamp) * _fl
+	_rim.light_energy = float(_cfg.rim) * (_fl if fe == 0.0 and _cfg.lamp == 0.0 else 1.0)
 	var c := Color(_fl, _fl, _fl)
 	_plate.modulate = c
 	_haze_mat.set_shader_parameter("power", _fl)
-	(_shadow_rect.material as ShaderMaterial).set_shader_parameter("k", SHADOW_K * _fl)   # фонарь гаснет — и тень с ним
+	# тень Ани на стене — от фонаря; без фонаря её нет
+	(_shadow_rect.material as ShaderMaterial).set_shader_parameter("k", SHADOW_K * _fl if fe > 0.0 else 0.0)
 
 
 ## Пока фонарик моргает, она успевает «перемениться»: то стоит в проёме,
