@@ -1895,6 +1895,7 @@
 !/scripts/vera_showcase.gd.uid
 !/scripts/vintage.gd
 !/scripts/vintage.gd.uid
+!/scripts/wall_text.gd
 !/shaders/aged_wood.gdshader
 !/shaders/aged_wood.gdshader.uid
 !/shaders/candle_flame.gdshader

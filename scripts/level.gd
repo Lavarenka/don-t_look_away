@@ -140,6 +140,15 @@ func _localize_scene() -> void:
 		var pl := get_node_or_null("Portrait%d/Plaque" % (i + 1)) as Label3D
 		if pl:
 			pl.text = tr("LVL_PORTRAIT_%d" % (i + 1))
+	# надписи кровью — вплотную к обоям: декаль тонкая (±10 см), иначе ложится и на то, что стоит у стены (тоньше — не рисуется)
+	for n in ["DecalNeSmotri", "DecalOnZdes"]:
+		var d := get_node_or_null(n) as Decal
+		if d and preload("res://scripts/wall_text.gd").ENABLED:
+			d.position.x = signf(d.position.x) * 1.098
+			d.size.y = 0.2
+			d.texture_orm = preload("res://scripts/wall_text.gd").matte(0.85)
+			d.upper_fade = 0.3
+			d.lower_fade = 0.3
 	if not TranslationServer.get_locale().begins_with("en"):
 		return
 	for n in ["DecalNeSmotri", "DecalOnZdes"]:

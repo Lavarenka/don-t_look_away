@@ -222,6 +222,9 @@ func _build_door() -> void:
 	body.position = Vector3(c.x - door_pivot.global_position.x, 0.935, 0)
 	door_angle = -1.6 if c.x < door_pivot.global_position.x else 1.6   # открывается внутрь ванной
 	# табличка «ВАННАЯ» висит на самой двери (иначе остаётся в воздухе, когда дверь открыта)
+	var sign_n := L.get_node_or_null("Sign_F2_SIGN_BATH")
+	if sign_n:
+		sign_n.reparent(leaf, true)
 	for n in L.get_children():
 		if n is Node3D and n.get_child_count() > 0 and n.get_child(n.get_child_count() - 1) is Label3D \
 				and (n.get_child(n.get_child_count() - 1) as Label3D).text == tr("F2_SIGN_BATH"):

@@ -3,6 +3,7 @@ extends Node
 ## Все четыре комнаты пока заперты; в холле — тихие жуткие события.
 
 const SETTINGS = preload("res://scripts/settings.gd")
+const WT = preload("res://scripts/wall_text.gd")
 const Y2 := -3.4
 const ST_N := 16
 const ST_RISE := 3.4 / 16.0
@@ -42,15 +43,25 @@ func setup(level: Node) -> void:
 		L.targets.append({"id": id, "pos": DOORS[id][0], "th": 0.5, "dist": 2.0})
 		L.extra_hints[id] = "LVL_68"
 	# таблички на дверях
-	_sign("F2_SIGN_ANYA", Vector3(HX1 - 0.07, Y2 + 1.45, (HZ0 + HZ1) / 2), -PI / 2, Color(0.15, 0.1, 0.25), 0.0025, true)
-	_sign("F2_SIGN_BATH", Vector3(-0.8, Y2 + 1.6, HZ0 + 0.07), 0.0, Color(0.75, 0.6, 0.3), 0.0018, false)
+	# таблички — вплотную к полотну двери (лицевая сторона полотна: 3,9 см от оси стены)
+	var face := 0.0388 if WT.ENABLED else 0.07
+	_sign("F2_SIGN_ANYA", Vector3(HX1 - face, Y2 + 1.45, (HZ0 + HZ1) / 2), -PI / 2, Color(0.15, 0.1, 0.25), 0.0025, true)
+	_sign("F2_SIGN_BATH", Vector3(-0.8, Y2 + 1.6, HZ0 + face), 0.0, Color(0.75, 0.6, 0.3), 0.0018, false)
 
 
 func _sign(key: String, pos: Vector3, yaw: float, col: Color, px: float, paper: bool) -> void:
 	var holder := Node3D.new()
+	holder.name = "Sign_" + key
 	L.add_child(holder)
 	holder.global_position = pos
 	holder.rotation.y = yaw
+	if WT.ENABLED:
+		# листок с детскими буквами мелком / эмалированная табличка — текст запечён в текстуру
+		if paper:
+			WT.paper(holder, tr(key), Color(0.36, 0.16, 0.5))
+		else:
+			WT.enamel(holder, tr(key))
+		return
 	if paper:
 		var q := MeshInstance3D.new()
 		var qm := QuadMesh.new()

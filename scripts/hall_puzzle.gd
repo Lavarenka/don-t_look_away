@@ -10,6 +10,7 @@ extends Node
 ## Свечи зажигать в порядке ухода: Степан (1991) → Аня (2004) → Вера (2026).
 ## Пока свечи горят, нельзя поворачиваться к портретам спиной — задуют.
 
+const WT = preload("res://scripts/wall_text.gd")
 const MIRROR_LAYER := 1 << 10   ## видно только в осколке
 const REAL_LAYER := 1 << 11     ## видно только без осколка
 const TURN_LIMIT := 3.0         ## сколько секунд можно стоять спиной к горящим свечам
@@ -76,6 +77,9 @@ func _setup_extras() -> void:
 	soot.rotation.z = -0.05
 	preload("res://scripts/fonts.gd").label3d(soot, preload("res://scripts/fonts.gd").SCRAWL, 1.3)
 	L.add_child(soot)
+	if WT.ENABLED:                                # сажа прямо на обоях (декаль), а не табличка в воздухе
+		soot.visible = false
+		WT.soot(L, soot.text, Vector3(1.098, 1.05, -11.0), Vector3.RIGHT, 0.2, soot.modulate, MIRROR_LAYER, -0.05, 11)
 
 
 ## Смотрит ли игрок сквозь поднятый осколок примерно на точку p.
@@ -367,6 +371,9 @@ func _build_mirror_world() -> void:
 	soot.rotation.z = 0.06
 	preload("res://scripts/fonts.gd").label3d(soot, preload("res://scripts/fonts.gd").SCRAWL, 1.3)
 	L.add_child(soot)
+	if WT.ENABLED:
+		soot.visible = false
+		WT.soot(L, soot.text, Vector3(1.098, 1.35, -15.2), Vector3.RIGHT, 0.27, soot.modulate, MIRROR_LAYER, 0.06, 23)
 	# Аня: в коридоре её видно только в осколке
 	_anya = preload("res://scripts/spirit.gd").new()
 	_anya.position = Vector3(-0.55, 0, -9.55)
