@@ -6,6 +6,7 @@ var CHANNEL_CODE := [3, 7, 5]        ## «шоу Гостя»: каналы с �
 const CANDLE_CODE := [2, 3, 1]       ## Степан (1991) → Аня (2004) → Вера (2026)
 const VINTAGE = preload("res://scripts/vintage.gd")
 const SETTINGS = preload("res://scripts/settings.gd")
+const FONTS = preload("res://scripts/fonts.gd")
 
 @onready var player: CharacterBody3D = $Player
 @onready var guest: Node3D = $Guest
@@ -185,6 +186,8 @@ func _lt_save() -> void:
 func _ready() -> void:
 	_lt_prev = Time.get_ticks_msec()
 	SETTINGS.apply_lang()
+	FONTS.apply_default()
+	FONTS.label3d(get_node_or_null("TV/ChannelLabel") as Label3D, FONTS.MONO)
 	randomize()
 	# три разных канала Гостя (не первый — на нём телевизор включается)
 	var chans := [2, 3, 4, 5, 6, 7, 8, 9]
@@ -409,6 +412,7 @@ func _build_hud() -> void:
 	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint_label.position = Vector2(-200, 30)
 	hint_label.size = Vector2(400, 30)
+	FONTS.subtitle(hint_label)
 	hud.add_child(hint_label)
 	msg_label = _label(22, Color(0.9, 0.87, 0.8))
 	msg_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
@@ -416,6 +420,7 @@ func _build_hud() -> void:
 	msg_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	msg_label.position = Vector2(-400, -120)
 	msg_label.size = Vector2(800, 80)
+	FONTS.subtitle(msg_label)
 	hud.add_child(msg_label)
 
 	note_panel = PanelContainer.new()
@@ -427,6 +432,8 @@ func _build_hud() -> void:
 	note_panel.position = Vector2(-260, -230)
 	note_panel.size = Vector2(520, 460)
 	note_label = _label(19, Color(0.17, 0.13, 0.09))
+	FONTS.set_font(note_label, FONTS.HAND, 1.35)          # записки — от руки
+	note_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0))
 	note_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	note_label.custom_minimum_size = Vector2(464, 0)
 	note_panel.add_child(note_label)

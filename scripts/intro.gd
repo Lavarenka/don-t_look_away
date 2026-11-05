@@ -53,6 +53,7 @@ func _voice(key: String) -> void:
 
 func _ready() -> void:
 	SETTINGS.apply_lang()
+	preload("res://scripts/fonts.gd").apply_default()
 	rng.seed = 7
 	_environment()
 	_ground()

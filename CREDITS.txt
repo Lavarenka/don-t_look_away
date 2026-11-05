@@ -72,3 +72,5 @@
 - Призрак бабушки Веры «The Haggard Witch» — Azura_SQ, Sketchfab, CC BY 4.0 (сгенерирована в Meshy; упрощена, скелет, веса и челюсть — свои, анимации перенесены с Ани).
 - Почерк в письме Веры (текстура textures/letter) — шрифт Marck Script, Denis Masharov, SIL Open Font License 1.1 (буквы запечены в картинку).
 - Видеовставка «1986» (video/memory_1986.ogv) — отрендерена в игре: молодая Вера собрана в MakeHuman/MPFB (CC0), движения — Mixamo (Adobe, бесплатные анимации для игр).
+- Шрифты интерфейса и надписей (fonts/, все — SIL Open Font License 1.1, тексты лицензий в fonts/OFL_*.txt):
+  PT Serif и PT Mono — ParaType; Marck Script — Denis Masharov; Caveat — Impallari Type.

@@ -71,6 +71,8 @@ func _sign(key: String, pos: Vector3, yaw: float, col: Color, px: float, paper: 
 	l.position = Vector3(0, 0, 0.004)
 	l.rotation.z = 0.06 if paper else 0.0
 	l.shaded = true
+	var FN = preload("res://scripts/fonts.gd")
+	FN.label3d(l, FN.SCRAWL if paper else FN.ENGRAVE, 1.3 if paper else 1.0)   # детская табличка — от руки, на ванной — гравировка
 	holder.add_child(l)
 
 

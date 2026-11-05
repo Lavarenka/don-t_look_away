@@ -106,6 +106,7 @@ var _deep := false        ## глубокий сбой: фонарик гасн�
 func _ready() -> void:
 	SETTINGS.master_fx(false)                    # из игры вернулись в меню — реверберацию уровня убрать
 	SETTINGS.apply_lang()
+	preload("res://scripts/fonts.gd").apply_default()
 	SETTINGS.apply_general()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	get_tree().paused = false

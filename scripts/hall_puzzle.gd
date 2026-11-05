@@ -74,6 +74,7 @@ func _setup_extras() -> void:
 	soot.position = Vector3(1.06, 1.05, -11.0)
 	soot.rotation.y = -PI / 2
 	soot.rotation.z = -0.05
+	preload("res://scripts/fonts.gd").label3d(soot, preload("res://scripts/fonts.gd").SCRAWL, 1.3)
 	L.add_child(soot)
 
 
@@ -350,6 +351,7 @@ func _build_mirror_world() -> void:
 		m.text = tr("LVL_PORTRAIT_%dR" % (i + 1))
 		m.layers = MIRROR_LAYER
 		m.modulate = Color(0.95, 0.85, 0.75) if pl.outline_size > 0 else Color(0.3, 0.03, 0.02, 0.95)   # на латуни — будто процарапано и в крови
+		preload("res://scripts/fonts.gd").label3d(m, preload("res://scripts/fonts.gd").SCRAWL, 1.25)
 		pl.get_parent().add_child(m)
 	# надпись сажей на стене напротив портретов
 	var soot := Label3D.new()
@@ -363,6 +365,7 @@ func _build_mirror_world() -> void:
 	soot.position = Vector3(1.06, 1.35, -15.2)
 	soot.rotation.y = -PI / 2
 	soot.rotation.z = 0.06
+	preload("res://scripts/fonts.gd").label3d(soot, preload("res://scripts/fonts.gd").SCRAWL, 1.3)
 	L.add_child(soot)
 	# Аня: в коридоре её видно только в осколке
 	_anya = preload("res://scripts/spirit.gd").new()

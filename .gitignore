@@ -196,10 +196,15 @@
 !/audio/whisper_old.wav.import
 !/audio/whoosh.wav
 !/audio/whoosh.wav.import
+!/fonts/Caveat-Variable.ttf
 !/fonts/CormorantSC-Light.ttf
 !/fonts/CormorantSC-Light.ttf.import
 !/fonts/Lora-Italic-Variable.ttf
 !/fonts/Lora-Italic-Variable.ttf.import
+!/fonts/MarckScript-Regular.ttf
+!/fonts/PTMono-Regular.ttf
+!/fonts/PTSerif-Italic.ttf
+!/fonts/PTSerif-Regular.ttf
 !/fonts/RubikWetPaint-Regular.ttf
 !/fonts/RubikWetPaint-Regular.ttf.import
 !/lang/strings.csv
@@ -1825,6 +1830,7 @@
 !/scripts/flicker.gd.uid
 !/scripts/floor2.gd
 !/scripts/floor2.gd.uid
+!/scripts/fonts.gd
 !/scripts/fps_counter.gd
 !/scripts/fps_counter.gd.uid
 !/scripts/furniture.gd
@@ -2014,9 +2020,13 @@
 !/textures/linen_rough.jpg
 !/textures/linen_rough.jpg.import
 !/textures/menu/plate_1.png
+!/textures/menu/plate_1.png.import
 !/textures/menu/plate_2.png
+!/textures/menu/plate_2.png.import
 !/textures/menu/plate_3.png
+!/textures/menu/plate_3.png.import
 !/textures/menu/plate_4.png
+!/textures/menu/plate_4.png.import
 !/textures/menu_plate.jpg
 !/textures/menu_plate.jpg.import
 !/textures/menu_plate.png

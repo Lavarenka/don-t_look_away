@@ -57,6 +57,7 @@ static func setup(level: Node3D) -> void:
 			pl.modulate = Color(0.04, 0.03, 0.015, 1.0)
 			pl.shaded = true
 			pl.line_spacing = -6.0
+			preload("res://scripts/fonts.gd").label3d(pl, preload("res://scripts/fonts.gd").ENGRAVE)
 	src.free()
 
 
