@@ -31,6 +31,11 @@ const DOLL_XZ := Vector2(-7.0, -28.55)                  ## кресло с ку�
 const WARD_XZ := Vector2(-5.9, -31.5)                   ## платяной шкаф у восточной стены, лицом в комнату (на запад)
 const DOLL_SCALE := 0.75
 const TEETH := [Vector3(-6.75, 1.0, -32.85), Vector3(-9.5, 1.0, -33.2), Vector3(-13.42, 0.7, -29.85)]   ## y — откуда пускать луч
+## Фотография из шкафа: её место — пустой гвоздь в коридоре у самого входа (южная стена, справа от жирафа)
+const HANG_FROM := Vector3(-5.22, Y2 + 1.75, -35.5)     ## откуда луч к стене (стена — на -Z)
+const PHOTO_W := 0.3
+const PHOTO_H := 0.4
+const CREEPY_PICTURES := "res://textures/bedroom_pictures_creepy.png"   ## картины коридора после шкафа
 const GLASS_C := Vector3(-13.762, Y2 + 1.7, -31.165)    ## стекло зеркала над комодом (смотрит на +X)
 const GLASS_W := 0.76
 const GLASS_H := 0.98
@@ -87,6 +92,12 @@ var ward_open := false
 var secret: Node3D                   ## потайной ящичек шкатулки
 var eye_item: MeshInstance3D         ## стеклянный глаз в ящичке
 var letter_node: MeshInstance3D
+var photo_node: Node3D               ## фотография в шкафу (коридор, у двери стоит Аня)
+var hang_pos := Vector3.ZERO         ## где висеть фотографии (на стене) и куда смотреть стене
+var hang_n := Vector3.BACK
+var hang_mark: Node3D                ## гвоздь и светлый след от рамы на обоях
+var photo_hung := false
+var pictures_creepy := false
 var doll_state := "chair"            ## chair → armed (прочитал письмо) → floor → back (следит за тобой)
 var _doll_t := 0.0
 var vp: SubViewport
@@ -102,6 +113,7 @@ func setup(level: Node, bedroom: Node) -> void:
 	await get_tree().physics_frame          # столкновения комнаты уже в мире — можно мерить лучами
 	await get_tree().physics_frame
 	_place_props()
+	_make_hang_spot()
 	_make_mirror()
 	portrait = preload("res://scripts/vera_portrait.gd").new()
 	add_child(portrait)
@@ -279,6 +291,12 @@ func _place_wardrobe() -> void:
 	letter_node.position = Vector3(0.08, 0.145, 0.02)
 	letter_node.rotation = Vector3(-PI / 2, 0.4, 0)
 	letter_node.visible = false
+	# рядом с письмом — фотография в рамке, лицом вверх
+	photo_node = _make_photo()
+	ward.add_child(photo_node)
+	photo_node.position = Vector3(-0.24, 0.16, 0.0)
+	photo_node.rotation = Vector3(-PI / 2, -0.25, 0)
+	photo_node.visible = false
 
 
 ## Невидимая коробка-столкновение для мебели (в локальных осях узла n).
@@ -358,6 +376,129 @@ func _wool_mat() -> StandardMaterial3D:
 	var m := _cloth_mat(Color(0.36, 0.07, 0.08), 0.08)
 	m.normal_scale = 1.2
 	return m
+
+
+# ---------------------------------------------------------------- фотография из шкафа
+## Фотография в тёмной деревянной рамке (лицом к +Z, центр — середина снимка).
+func _make_photo() -> Node3D:
+	var n := Node3D.new()
+	n.name = "VeraPhoto"
+	var pic := MeshInstance3D.new()
+	var q := QuadMesh.new()
+	q.size = Vector2(PHOTO_W, PHOTO_H)
+	pic.mesh = q
+	var pm := StandardMaterial3D.new()
+	pm.albedo_texture = load("res://textures/vera_photo.png")
+	pm.roughness = 0.55
+	pic.material_override = pm
+	n.add_child(pic)
+	pic.position.z = 0.012
+	var wood := StandardMaterial3D.new()
+	wood.albedo_color = Color(0.16, 0.1, 0.06)
+	wood.roughness = 0.6
+	var fw := 0.03
+	var bars := [[Vector3(0, PHOTO_H / 2 + fw / 2, 0), Vector3(PHOTO_W + fw * 2, fw, 0.03)],
+		[Vector3(0, -PHOTO_H / 2 - fw / 2, 0), Vector3(PHOTO_W + fw * 2, fw, 0.03)],
+		[Vector3(-PHOTO_W / 2 - fw / 2, 0, 0), Vector3(fw, PHOTO_H, 0.03)],
+		[Vector3(PHOTO_W / 2 + fw / 2, 0, 0), Vector3(fw, PHOTO_H, 0.03)],
+		[Vector3(0, 0, -0.006), Vector3(PHOTO_W, PHOTO_H, 0.012)]]
+	for b in bars:
+		var m := MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = b[1]
+		m.mesh = bm
+		m.material_override = wood
+		n.add_child(m)
+		m.position = b[0]
+	return n
+
+
+## Пустое место на стене у входа: гвоздь и чуть светлее обои там, где раньше висела рама.
+func _make_hang_spot() -> void:
+	var sp: PhysicsDirectSpaceState3D = (L as Node3D).get_world_3d().direct_space_state
+	var q := PhysicsRayQueryParameters3D.create(HANG_FROM, HANG_FROM + Vector3(0, 0, -2.0))
+	var hit: Dictionary = sp.intersect_ray(q)
+	if hit.is_empty():
+		push_warning("vera_room: стена для фотографии не найдена")
+		return
+	hang_n = hit.normal
+	hang_pos = hit.position + hang_n * 0.018
+	hang_mark = Node3D.new()
+	L.add_child(hang_mark)
+	hang_mark.global_position = hit.position + hang_n * 0.002
+	hang_mark.look_at(hang_mark.global_position - hang_n, Vector3.UP)    # -Z узла — в стену
+	var patch := MeshInstance3D.new()
+	var pq := QuadMesh.new()
+	pq.size = Vector2(PHOTO_W + 0.07, PHOTO_H + 0.07)
+	patch.mesh = pq
+	var pm := StandardMaterial3D.new()
+	pm.albedo_color = Color(1.0, 0.97, 0.86, 0.05)
+	pm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	pm.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	patch.material_override = pm
+	patch.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	hang_mark.add_child(patch)
+	var nail := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = 0.004
+	cm.bottom_radius = 0.003
+	cm.height = 0.025
+	nail.mesh = cm
+	var nm := StandardMaterial3D.new()
+	nm.albedo_color = Color(0.25, 0.22, 0.2)
+	nm.metallic = 0.8
+	nm.roughness = 0.45
+	nail.material_override = nm
+	hang_mark.add_child(nail)
+	nail.position = Vector3(0, PHOTO_H / 2 + 0.02, 0.0125)
+	nail.rotation.x = PI / 2
+	_target("v_hang", hang_pos, "BR_HANG", 0.45, 2.0)
+
+
+## Повесить фотографию на гвоздь.
+func _hang_photo() -> void:
+	if photo_hung or hang_mark == null:
+		return
+	photo_hung = true
+	L.inv.remove("v_photo")
+	var ph := _make_photo()
+	L.add_child(ph)
+	ph.global_position = hang_pos
+	ph.look_at(hang_pos + hang_n, Vector3.UP)
+	ph.rotate_object_local(Vector3.UP, PI)        # лицом из стены (снимок смотрит в +Z узла)
+	ph.rotate_object_local(Vector3.BACK, 0.03)    # чуть криво, как вешают в темноте
+	(hang_mark.get_child(0) as Node3D).visible = false
+	L._sfx3d("click", hang_pos, -8.0, 0.7, true)
+	L._sfx3d("thump", hang_pos, -16.0, 1.2, true)
+	_on_photo_hung()
+
+
+## Фотография повешена. Что будет дальше — ещё придумаем.
+func _on_photo_hung() -> void:
+	pass
+
+
+## Шкаф открылся — картины в коридоре (и вся живопись модели спальни) становятся жуткими:
+## темнее, грязнее; на каждой фотографии и пейзаже в темноте стоит Аня, у старика выколоты глаза.
+func _creepy_pictures() -> void:
+	if pictures_creepy:
+		return
+	pictures_creepy = true
+	var tex: Texture2D = load(CREEPY_PICTURES)
+	if tex == null:
+		return
+	for mi in B.root.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		if m.mesh == null:
+			continue
+		for i in m.mesh.get_surface_count():
+			var mat := m.get_active_material(i)
+			if mat is BaseMaterial3D and (mat as BaseMaterial3D).albedo_texture \
+					and (mat as BaseMaterial3D).albedo_texture.resource_path.ends_with("_Image_20.png"):
+				var d := mat.duplicate() as BaseMaterial3D
+				d.albedo_texture = tex
+				m.set_surface_override_material(i, d)
+	L._sfx3d("creak", Vector3(-7.5, Y2 + 1.6, -35.6), -10.0, 0.55, true)   # в коридоре что-то скрипнуло
 
 
 # ---------------------------------------------------------------- зеркало над комодом
@@ -817,6 +958,8 @@ func target_ok(id: String) -> bool:
 		"v_doll": return doll_state == "chair" and not doll_eye.visible
 		"v_ward": return not ward_open
 		"v_letter": return letter_node.visible
+		"v_photo": return photo_node.visible
+		"v_hang": return not photo_hung and L.inv.has("v_photo") and hang_mark != null
 	if id.begins_with("v_tooth"):
 		return teeth[int(id.right(1)) - 1].visible
 	return false
@@ -857,6 +1000,12 @@ func interact(id: String) -> void:
 			letter_node.visible = false
 			L._show_note("VL_NOTE")
 			doll_state = "armed"
+		"v_photo":
+			if L.inv.add("v_photo", photo_node):
+				photo_node.visible = false
+				L._sfx("pickup", -6.0, 0.9, true)
+		"v_hang":
+			_hang_photo()
 	if id.begins_with("v_tooth"):
 		var t: Node3D = teeth[int(id.right(1)) - 1]
 		if L.inv.add(id, t):
@@ -1015,6 +1164,9 @@ func _open_wardrobe() -> void:
 	await get_tree().create_timer(0.9).timeout
 	letter_node.visible = true
 	_target("v_letter", letter_node.global_position + Vector3(0, 0.03, 0), "BR_LETTER", 0.4, 2.2)
+	photo_node.visible = true
+	_target("v_photo", photo_node.global_position + Vector3(0, 0.03, 0), "BR_PHOTO", 0.4, 2.2)
+	_creepy_pictures()
 
 
 ## Кукла после письма: на полу за спиной → посмотрел — пропала → снова в кресле и следит за тобой.

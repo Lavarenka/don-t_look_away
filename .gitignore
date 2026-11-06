@@ -1824,6 +1824,7 @@
 !/scripts/bathroom.gd
 !/scripts/bathroom.gd.uid
 !/scripts/bed_grab.gd
+!/scripts/bed_grab.gd.uid
 !/scripts/bedroom.gd
 !/scripts/bedroom.gd.uid
 !/scripts/creature.gd
@@ -1845,6 +1846,7 @@
 !/scripts/fonts.gd
 !/scripts/fonts.gd.uid
 !/scripts/fp_arm.gd
+!/scripts/fp_arm.gd.uid
 !/scripts/fps_counter.gd
 !/scripts/fps_counter.gd.uid
 !/scripts/furniture.gd
@@ -1932,6 +1934,7 @@
 !/shaders/fog.gdshader
 !/shaders/fog.gdshader.uid
 !/shaders/ghost_arm.gdshader
+!/shaders/ghost_arm.gdshader.uid
 !/shaders/glass.gdshader
 !/shaders/glass.gdshader.uid
 !/shaders/glass_eye.gdshader
@@ -1960,6 +1963,7 @@
 !/shaders/wallpaper.gdshader.uid
 !/textures/attic_photo.png
 !/textures/attic_photo.png.import
+!/textures/bedroom_pictures_creepy.png
 !/textures/cobweb.png
 !/textures/cobweb.png.import
 !/textures/decal_ne_smotri.png
@@ -2088,6 +2092,7 @@
 !/textures/servant_wood_normal.jpg.import
 !/textures/vanity_drawer.jpg
 !/textures/vanity_drawer.jpg.import
+!/textures/vera_photo.png
 !/textures/wallpaper/cobweb_corner.png
 !/textures/wallpaper/cobweb_corner.png.import
 !/textures/wallpaper/crack.png

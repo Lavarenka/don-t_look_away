@@ -31,6 +31,7 @@ const ITEMS := {
 	"shawl": ["INV_SHAWL", "INV_SHAWL_D"],
 	"smallkey": ["INV_SMALLKEY", "INV_SMALLKEY_D"],
 	"dolleye": ["INV_DOLLEYE", "INV_DOLLEYE_D"],
+	"v_photo": ["INV_VPHOTO", "INV_VPHOTO_D"],
 }
 const MAX_ITEMS := 8
 const PROPS := {

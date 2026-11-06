@@ -303,6 +303,10 @@ BR_DOLL_MISS,One of her eyes is missing.,У куклы нет одного гл�
 BR_WARD,E — open the wardrobe,E — открыть шкаф
 BR_WARD_LOCK,It won't open.,Не открывается.
 BR_LETTER,E — take the letter,E — взять письмо
+BR_PHOTO,E — take the photograph,E — взять фотографию
+BR_HANG,E — hang the photograph,E — повесить фотографию
 INV_DOLLEYE,Glass eye,Стеклянный глаз
 INV_DOLLEYE_D,Blue and cold. It rolled out of the music box.,"Голубой, холодный. Выкатился из шкатулки."
+INV_VPHOTO,Photograph,Фотография
+INV_VPHOTO_D,"An old photo in a frame. This very corridor, 1986.","Старая фотография в рамке. Этот самый коридор, 1986 год."
 INV_N_VERA,Vera's letter,Письмо Веры
