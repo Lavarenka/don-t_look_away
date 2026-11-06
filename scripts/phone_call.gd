@@ -30,6 +30,8 @@ var grip := 0.0                         ## 0 — ладонь раскрыта, 
 var _wrist_local := Vector3.ZERO        ## где запястье относительно трубки, пока её держишь
 var _holding := false
 var _spill: OmniLight3D
+var _lean := 0.0                       ## насколько наклонился к телефону, м
+var _head0 := Vector3.ZERO
 
 
 func prepare(level: Node, ph: Node3D) -> void:
@@ -278,15 +280,17 @@ func _ear_xf() -> Transform3D:
 	var y_axis: Vector3 = -cb.x                                                    # чашки — к голове (вправо)
 	y_axis = (y_axis - x_axis * x_axis.dot(y_axis)).normalized()
 	var bas := Basis(x_axis, y_axis, x_axis.cross(y_axis))
-	var ear: Vector3 = cam.global_position - cb.x * 0.085 - cb.y * 0.03 + cb.z * 0.04
+	var ear: Vector3 = cam.global_position - cb.x * 0.105 - cb.y * 0.03 + cb.z * 0.07   # у уха, чуть сзади — кисть почти за кадром
 	return Transform3D(bas, ear - bas * EARPIECE)
 
 
-func _handset_move(from: Transform3D, to: Transform3D, sec: float) -> void:
+## to — Transform3D или Callable (цель пересчитывается каждый кадр: голова в это время движется).
+func _handset_move(from: Transform3D, to: Variant, sec: float) -> void:
 	var tw := create_tween()
 	tw.tween_method(func(k: float):
 		var e := k * k * (3.0 - 2.0 * k)
-		var xf := from.interpolate_with(to, e)
+		var dst: Transform3D = to.call() if to is Callable else to
+		var xf := from.interpolate_with(dst, e)
 		xf.origin += Vector3.UP * 0.08 * sin(PI * e)          # дуга, а не прямая
 		handset.global_transform = xf, 0.0, 1.0, sec)
 	await tw.finished
@@ -362,8 +366,18 @@ func run() -> void:
 	dir = dir.normalized()
 	var grab: Vector3 = handset.global_position - dir * 0.07 + Vector3.UP * 0.045
 	# тянется и чуть наклоняется вперёд всем телом — плечо ближе к трубке
-	var lean := create_tween()
-	lean.tween_property(body, "global_position", body.global_position - p.global_basis.z * 0.14, 1.0).set_trans(Tween.TRANS_SINE)
+	# стол может не пустить близко (игрока выталкивает из мебели) — тогда наклоняется над ним:
+	# голова (камера) и тело уходят вперёд ровно настолько, чтобы рука дотянулась
+	var fwd: Vector3 = -p.global_basis.z
+	fwd.y = 0.0
+	fwd = fwd.normalized()
+	var shoulder0: Vector3 = _bone_pos("mixamorig_LeftArm")
+	var reach := Vector2(grab.x - shoulder0.x, grab.z - shoulder0.z).length()
+	_lean = clampf(reach - 0.36, 0.06, 0.45)
+	_head0 = p.head.position
+	var lean := create_tween().set_parallel()
+	lean.tween_property(body, "global_position", body.global_position + fwd * _lean - Vector3(0, _lean * 0.3, 0), 1.0).set_trans(Tween.TRANS_SINE)
+	lean.tween_property(p.head, "position", _head0 + Vector3(0, -_lean * 0.3, -_lean), 1.0).set_trans(Tween.TRANS_SINE)
 	await _move(grab, 1.0)
 	var g1 := create_tween()
 	g1.tween_property(self, "grip", 1.0, 0.2)
@@ -374,8 +388,10 @@ func run() -> void:
 	# поднимает к уху, голова чуть клонится к трубке
 	var tw := create_tween().set_parallel()
 	tw.tween_property(p.head, "rotation:x", -0.05, 1.0).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(p.head, "position", _head0, 1.0).set_trans(Tween.TRANS_SINE)            # выпрямляется
+	tw.tween_property(body, "global_position", body.global_position - fwd * _lean + Vector3(0, _lean * 0.3, 0), 1.0).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(cam, "rotation:z", 0.07, 1.0).set_trans(Tween.TRANS_SINE)
-	await _handset_move(home, _ear_xf(), 1.0)
+	await _handset_move(home, _ear_xf, 1.0)
 	# в трубке
 	var line := _play_phone(L._stream("tv_static"), -26.0)
 	await get_tree().create_timer(0.9).timeout
@@ -395,13 +411,18 @@ func run() -> void:
 	var tw2 := create_tween().set_parallel()
 	tw2.tween_property(cam, "rotation:z", 0.0, 0.9)
 	tw2.tween_property(p.head, "rotation:x", -0.6, 0.9).set_trans(Tween.TRANS_SINE)
+	tw2.tween_property(p.head, "position", _head0 + Vector3(0, -_lean * 0.3, -_lean), 0.9).set_trans(Tween.TRANS_SINE)   # снова наклоняется к телефону
+	tw2.tween_property(body, "global_position", body.global_position + fwd * _lean - Vector3(0, _lean * 0.3, 0), 0.9).set_trans(Tween.TRANS_SINE)
 	await _handset_move(handset.global_transform, home, 0.9)
 	_holding = false
 	handset.transform = _rest_xf
 	L._sfx("click", -4.0, 0.6)
 	var g2 := create_tween()
 	g2.tween_property(self, "grip", 0.0, 0.15)
-	await _move(p.global_position + Vector3(0, 0.8, 0) - p.global_basis.x * 0.25, 0.6)
+	var back := create_tween().set_parallel()
+	back.tween_property(p.head, "position", _head0, 0.7).set_trans(Tween.TRANS_SINE)
+	back.tween_property(body, "global_position", body.global_position - fwd * _lean + Vector3(0, _lean * 0.3, 0), 0.7).set_trans(Tween.TRANS_SINE)
+	await _move(p.global_position + Vector3(0, 0.8, 0) - p.global_basis.x * 0.25, 0.7)
 	_despawn()
 	_build_cord()
 	# тишина… и за спиной
