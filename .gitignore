@@ -1253,6 +1253,8 @@
 !/models/industrial_wall_lamp/textures/industrial_wall_lamp_diff_1k.jpg.import
 !/models/industrial_wall_lamp/textures/industrial_wall_lamp_nor_gl_1k.jpg
 !/models/industrial_wall_lamp/textures/industrial_wall_lamp_nor_gl_1k.jpg.import
+!/models/living/phone_body.glb
+!/models/living/phone_handset.glb
 !/models/living/portrait_frame.glb
 !/models/living/portrait_frame.glb.import
 !/models/living/servant_door_a.glb
@@ -1884,7 +1886,9 @@
 !/scripts/pause.gd
 !/scripts/pause.gd.uid
 !/scripts/phone_call.gd
+!/scripts/phone_call.gd.uid
 !/scripts/phone_hand.gd
+!/scripts/phone_hand.gd.uid
 !/scripts/player.gd
 !/scripts/player.gd.uid
 !/scripts/portrait_frames.gd
@@ -2149,5 +2153,7 @@
 !/voice/en/NUR_FOUND.ogg
 !/voice/en/NUR_FOUND.ogg.import
 !/voice/en/PHONE_01.ogg
+!/voice/en/PHONE_01.ogg.import
 !/voice/en/PHONE_03.ogg
+!/voice/en/PHONE_03.ogg.import
 /.godot/

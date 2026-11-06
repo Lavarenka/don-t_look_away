@@ -1,81 +1,112 @@
 extends Node
-## Катсцена «звонок» в зале: своя рука тянется к телефону, снимает трубку, подносит к уху.
-## В трубке — Аня (PHONE_01, звук «из трубки»). Кладёшь трубку — тишина… и тот же голос прямо за спиной:
+## Катсцена «звонок» в зале: своя левая рука тянется к телефону, снимает трубку, подносит к уху.
+## В трубке — Аня (PHONE_01, звук «из трубки»). Кладёшь трубку — тишина… и голос прямо за спиной:
 ## «Зачем ты положил трубку?» (PHONE_03). Управление возвращается: оборачиваешься — никого.
-## Тело игрока — Remy (Mixamo, как в зеркале), видна только левая рука: голова скрыта, правая держит фонарь.
-## Рука — TwoBoneIK3D к цели, пальцы сжимаются отдельным модификатором.
-## Откатить: PHONE_SCENE = false в haunts.gd — будет прежний короткий звонок.
+## Телефон — свой, советский дисковый (tools/blender/make_phone.py): корпус и трубка отдельно,
+## витой шнур между ними строится каждый кадр. Старая модель телефона прячется.
+## Тело игрока — Remy (Mixamo, как в зеркале): видна только левая рука (голова и правая рука скрыты).
+## Рука — TwoBoneIK3D к запястью, которое «привязано» к трубке; пальцы сжимаются модификатором.
+## Откатить: PHONE_SCENE = false в haunts.gd — прежний телефон и короткий звонок.
 
 const BODY := "res://models/player/remy.fbx"
-const EYE := 3.47               ## высота глаз Remy в её единицах (как в mirror.gd)
-const GRIP_BONES := ["Index", "Middle", "Ring", "Pinky"]
+const EYE := 3.47                       ## высота глаз Remy в её единицах (как в mirror.gd)
+const BODY_GLB := "res://models/living/phone_body.glb"
+const HANDSET_GLB := "res://models/living/phone_handset.glb"
+const REST := Vector3(0.0, 0.142, -0.03)        ## трубка на рычагах (в осях телефона)
+const CORD_START := Vector3(-0.1, 0.035, 0.02)   ## гнездо шнура на корпусе
+const CORD_END := Vector3(-0.088, -0.04, 0.0)   ## низ микрофонного стакана (в осях трубки)
+const EARPIECE := Vector3(0.088, -0.03, 0.0)    ## слуховой стакан (в осях трубки)
+const BODY_LAYER := 1 << 19                     ## тело игрока — свой слой и своя подсветка
 
 var L: Node
 var phone: Node3D
-var handset: Node3D             ## трубка — отдельный узел (вырезана из модели телефона)
-var _handset_home: Transform3D
-var _home_node: Node3D
+var handset: Node3D
+var cord: MeshInstance3D
 var body: Node3D
 var sk: Skeleton3D
 var target: Node3D
 var pole: Node3D
-var grip := 0.0                 ## 0 — ладонь раскрыта, 1 — сжата на трубке
-var _fingers: SkeletonModifier3D
+var grip := 0.0                         ## 0 — ладонь раскрыта, 1 — сжата на трубке
+var _wrist_local := Vector3.ZERO        ## где запястье относительно трубки, пока её держишь
+var _holding := false
+var _spill: OmniLight3D
 
 
-## Трубку отделяем от корпуса один раз: треугольники выше 12,5 см — это трубка (и верх шнура).
 func prepare(level: Node, ph: Node3D) -> void:
 	L = level
 	phone = ph
-	var mi := ph.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
-	var arr := mi.mesh.surface_get_arrays(0)
-	var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
-	var idx: PackedInt32Array = arr[Mesh.ARRAY_INDEX]
-	var lo := PackedInt32Array()
-	var hi := PackedInt32Array()
-	var c := Vector3.ZERO
-	var n := 0
-	for t in range(0, idx.size(), 3):
-		var ce: Vector3 = (v[idx[t]] + v[idx[t + 1]] + v[idx[t + 2]]) / 3.0
-		var dst := hi if ce.y > 0.125 else lo
-		dst.append(idx[t]); dst.append(idx[t + 1]); dst.append(idx[t + 2])
-		if ce.y > 0.125:
-			c += ce
-			n += 1
-	c /= maxf(n, 1)
-	var mat := mi.mesh.surface_get_material(0)
-	var a_lo := arr.duplicate()
-	a_lo[Mesh.ARRAY_INDEX] = lo
-	var a_hi := arr.duplicate()
-	a_hi[Mesh.ARRAY_INDEX] = hi
-	var m_lo := ArrayMesh.new()
-	m_lo.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, a_lo)
-	m_lo.surface_set_material(0, mat)
-	var m_hi := ArrayMesh.new()
-	m_hi.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, a_hi)
-	m_hi.surface_set_material(0, mat)
-	var hs := mi.duplicate() as MeshInstance3D       # копия сохраняет материалы-оверрайды
-	for ch in hs.get_children():
-		ch.free()
-	mi.mesh = m_lo
-	hs.mesh = m_hi
-	handset = Node3D.new()
-	handset.name = "Handset"
-	_home_node = mi.get_parent()
-	_home_node.add_child(handset)
-	handset.transform = mi.transform.translated_local(c)
-	handset.add_child(hs)
-	hs.transform = Transform3D(Basis(), -c)
-	_handset_home = handset.transform
+	for mi in ph.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).visible = false            # старая модель
+	var b: Node3D = load(BODY_GLB).instantiate()
+	ph.add_child(b)
+	handset = load(HANDSET_GLB).instantiate()
+	ph.add_child(handset)
+	handset.position = REST
+	cord = MeshInstance3D.new()
+	cord.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var cm := StandardMaterial3D.new()
+	cm.albedo_color = Color(0.03, 0.025, 0.022)
+	cm.roughness = 0.35
+	cord.material_override = cm
+	L.add_child(cord)
+	_build_cord()
 
 
-## Тело грузим заранее, пока звонит телефон, — без подвисания в начале сцены.
 func preload_body() -> void:
 	ResourceLoader.load_threaded_request(BODY)
 
 
-func handset_pos() -> Vector3:
-	return handset.global_position
+func _process(_d: float) -> void:
+	if handset and (_holding or is_instance_valid(body)):
+		_build_cord()
+	if _holding and is_instance_valid(target):
+		target.global_position = handset.global_transform * _wrist_local
+
+
+# ---------------- витой шнур ----------------
+## Ось шнура — провисающая кривая от гнезда до трубки, вокруг неё — спираль (витки), трубочка сечением 6 граней.
+func _build_cord() -> void:
+	var a: Vector3 = phone.global_transform * CORD_START
+	var b: Vector3 = handset.global_transform * CORD_END
+	var table_y: float = phone.global_position.y + 0.006
+	var dist := a.distance_to(b)
+	var sag: float = clampf(0.32 - dist * 0.45, 0.02, 0.3)       # короче расстояние — сильнее провис
+	var n := 240
+	var turns := 34.0
+	var r_coil := 0.0065
+	var r_tube := 0.0022
+	var pts: Array[Vector3] = []
+	for i in n + 1:
+		var t := float(i) / n
+		var p := a.lerp(b, t) + Vector3.DOWN * sag * sin(PI * t)
+		p.y = maxf(p.y, table_y + r_coil)
+		pts.append(p)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var prev_ring: Array = []
+	var up := Vector3.UP
+	for i in n + 1:
+		var t := float(i) / n
+		var tan: Vector3 = (pts[mini(i + 1, n)] - pts[maxi(i - 1, 0)]).normalized()
+		if absf(tan.dot(up)) > 0.95:
+			up = Vector3.RIGHT
+		var nx := tan.cross(up).normalized()
+		var ny := nx.cross(tan).normalized()
+		var ang := t * turns * TAU
+		var c: Vector3 = pts[i] + (nx * cos(ang) + ny * sin(ang)) * r_coil
+		var ring: Array = []
+		for k in 6:
+			var a2 := k * TAU / 6.0
+			var d := nx * cos(a2) + ny * sin(a2)
+			ring.append([c + d * r_tube, d])
+		if prev_ring.size() > 0:
+			for k in 6:
+				var k2 := (k + 1) % 6
+				for v in [prev_ring[k], ring[k], ring[k2], prev_ring[k], ring[k2], prev_ring[k2]]:
+					st.set_normal(v[1])
+					st.add_vertex(v[0])
+		prev_ring = ring
+	cord.mesh = st.commit()
 
 
 # ---------------- тело и рука ----------------
@@ -91,14 +122,25 @@ func _spawn_body() -> void:
 	for mi in body.find_children("*", "MeshInstance3D", true, false):
 		var m := mi as MeshInstance3D
 		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		m.layers = BODY_LAYER
 		if m.name in ["Hair", "Eyes", "Eyelashes"]:
 			m.visible = false
+	p.cam.cull_mask |= BODY_LAYER
+	# мягкий отсвет фонаря на руку (свет только для тела — комнату не трогает)
+	_spill = OmniLight3D.new()
+	_spill.light_color = Color(1.0, 0.9, 0.78)
+	_spill.light_energy = 0.8
+	_spill.omni_range = 1.4
+	_spill.light_cull_mask = BODY_LAYER
+	_spill.light_volumetric_fog_energy = 0.0
+	_spill.light_bake_mode = Light3D.BAKE_DISABLED
+	p.cam.add_child(_spill)
+	_spill.position = Vector3(0.15, 0.1, -0.1)
 	sk = body.get_node("Skeleton3D")
 	var ap: AnimationPlayer = body.get_node("AnimationPlayer")
 	ap.play("mixamo_com")
 	ap.seek(0.3, true)
 	ap.pause()
-	# цель и «локоть» для IK
 	target = Node3D.new()
 	target.top_level = true
 	L.add_child(target)
@@ -114,22 +156,15 @@ func _spawn_body() -> void:
 	sk.add_child(ik)
 	ik.set_target_node(0, ik.get_path_to(target))
 	ik.set_pole_node(0, ik.get_path_to(pole))
-	_fingers = preload("res://scripts/phone_hand.gd").new()
-	_fingers.call("setup", self)
-	sk.add_child(_fingers)
-	# старт руки — у бедра (где она сейчас по анимации)
+	var fingers: SkeletonModifier3D = preload("res://scripts/phone_hand.gd").new()
+	fingers.call("setup", self)
+	sk.add_child(fingers)
 	target.global_position = _bone_pos("mixamorig_LeftHand")
-	_update_pole()
+	pole.global_position = p.global_position + Vector3(0, 0.8, 0) - p.global_basis.x * 0.7 + p.global_basis.z * 0.15
 
 
 func _bone_pos(n: String) -> Vector3:
 	return sk.global_transform * sk.get_bone_global_pose(sk.find_bone(n)).origin
-
-
-func _update_pole() -> void:
-	# локоть — вниз и наружу (влево от игрока)
-	var p: Node3D = L.player
-	pole.global_position = p.global_position + Vector3(0, 0.9, 0) - p.global_basis.x * 0.6 + p.global_basis.z * 0.1
 
 
 func _move(to: Vector3, sec: float) -> void:
@@ -152,10 +187,26 @@ func _aim(at: Vector3, sec: float) -> void:
 	await tw.finished
 
 
-## Точка у левого уха — относительно камеры.
-func _ear() -> Vector3:
+## Где будет трубка у левого уха: слуховой стакан у уха, чашки к голове, микрофон — ко рту.
+func _ear_xf() -> Transform3D:
 	var cam: Camera3D = L.player.cam
-	return cam.global_position - cam.global_basis.x * 0.11 - cam.global_basis.y * 0.04 + cam.global_basis.z * 0.03
+	var cb := cam.global_basis
+	var x_axis: Vector3 = (cb.y * 0.92 + cb.z * 0.25 + cb.x * 0.15).normalized()   # к стакану у уха — вверх
+	var y_axis: Vector3 = -cb.x                                                    # чашки — к голове (вправо)
+	y_axis = (y_axis - x_axis * x_axis.dot(y_axis)).normalized()
+	var bas := Basis(x_axis, y_axis, x_axis.cross(y_axis))
+	var ear: Vector3 = cam.global_position - cb.x * 0.085 - cb.y * 0.03 + cb.z * 0.04
+	return Transform3D(bas, ear - bas * EARPIECE)
+
+
+func _handset_move(from: Transform3D, to: Transform3D, sec: float) -> void:
+	var tw := create_tween()
+	tw.tween_method(func(k: float):
+		var e := k * k * (3.0 - 2.0 * k)
+		var xf := from.interpolate_with(to, e)
+		xf.origin += Vector3.UP * 0.08 * sin(PI * e)          # дуга, а не прямая
+		handset.global_transform = xf, 0.0, 1.0, sec)
+	await tw.finished
 
 
 func _sub(key: String, sec: float) -> void:
@@ -199,31 +250,33 @@ func _play_phone(st: AudioStream, db := 0.0) -> AudioStreamPlayer:
 # ---------------- сама сцена ----------------
 func run() -> void:
 	var p: CharacterBody3D = L.player
+	var cam: Camera3D = p.cam
 	L.busy = true
 	p.frozen = true
-	var cam: Camera3D = p.cam
-	await _aim(handset_pos() + Vector3(0, -0.05, 0), 0.7)
+	await _aim(handset.global_position + Vector3(0, -0.06, 0), 0.7)
 	_spawn_body()
 	await get_tree().process_frame
-	# тянется к трубке
-	await _move(handset_pos() + p.global_basis.z * 0.02 + Vector3(0, 0.02, 0), 0.9)
-	var grip_tw := create_tween()
-	grip_tw.tween_property(self, "grip", 1.0, 0.18)
-	await grip_tw.finished
+	# тянется к трубке: запястье — над ручкой, чуть ближе к себе
+	var home: Transform3D = handset.global_transform
+	var toward: Vector3 = p.global_position - handset.global_position
+	toward.y = 0.0
+	toward = toward.normalized()
+	var grab: Vector3 = handset.global_position + toward * 0.075 + Vector3.UP * 0.035
+	await _move(grab, 1.0)
+	var g1 := create_tween()
+	g1.tween_property(self, "grip", 1.0, 0.2)
+	await g1.finished
 	L._sfx("click", -6.0, 0.8)
-	var hand := BoneAttachment3D.new()
-	hand.bone_name = "mixamorig_LeftHand"
-	sk.add_child(hand)
-	await get_tree().process_frame
-	handset.reparent(hand, true)
-	# подносит к уху, голова чуть клонится к трубке
+	_wrist_local = handset.global_transform.affine_inverse() * target.global_position
+	_holding = true
+	# поднимает к уху, голова чуть клонится к трубке
 	var tw := create_tween().set_parallel()
-	tw.tween_property(p.head, "rotation:x", 0.0, 0.9).set_trans(Tween.TRANS_SINE)
-	tw.tween_property(cam, "rotation:z", -0.08, 0.9).set_trans(Tween.TRANS_SINE)
-	await _move(_ear(), 0.9)
+	tw.tween_property(p.head, "rotation:x", -0.05, 1.0).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(cam, "rotation:z", 0.07, 1.0).set_trans(Tween.TRANS_SINE)
+	await _handset_move(home, _ear_xf(), 1.0)
 	# в трубке
-	var line := _play_phone(L._stream("tv_static"), -24.0)            # шорох линии
-	await get_tree().create_timer(1.0).timeout
+	var line := _play_phone(L._stream("tv_static"), -26.0)
+	await get_tree().create_timer(0.9).timeout
 	var v1: AudioStream = preload("res://scripts/settings.gd").voice("PHONE_01")
 	var d1 := 3.5
 	if v1:
@@ -238,17 +291,18 @@ func run() -> void:
 		line.queue_free()
 	# кладёт трубку
 	var tw2 := create_tween().set_parallel()
-	tw2.tween_property(cam, "rotation:z", 0.0, 0.8)
-	tw2.tween_property(p.head, "rotation:x", -0.55, 0.8).set_trans(Tween.TRANS_SINE)
-	var home: Vector3 = _home_node.global_transform * _handset_home.origin
-	await _move(home + Vector3(0, 0.02, 0), 0.8)
-	handset.reparent(_home_node, true)
-	handset.transform = _handset_home
+	tw2.tween_property(cam, "rotation:z", 0.0, 0.9)
+	tw2.tween_property(p.head, "rotation:x", -0.6, 0.9).set_trans(Tween.TRANS_SINE)
+	await _handset_move(handset.global_transform, home, 0.9)
+	_holding = false
+	handset.position = REST
+	handset.rotation = Vector3.ZERO
 	L._sfx("click", -4.0, 0.6)
 	var g2 := create_tween()
 	g2.tween_property(self, "grip", 0.0, 0.15)
-	await _move(_bone_rest_low(), 0.6)
+	await _move(p.global_position + Vector3(0, 0.8, 0) - p.global_basis.x * 0.25, 0.6)
 	_despawn()
+	_build_cord()
 	# тишина… и за спиной
 	await get_tree().create_timer(1.3).timeout
 	var fw: Vector3 = -cam.global_basis.z
@@ -284,11 +338,6 @@ func run() -> void:
 	L._sfx3d("breath_dark", cam.global_position - fw * 0.3, -6.0, 0.95)
 
 
-func _bone_rest_low() -> Vector3:
-	var p: Node3D = L.player
-	return p.global_position + Vector3(0, 0.85, 0) - p.global_basis.x * 0.25
-
-
 func _despawn() -> void:
 	if is_instance_valid(body):
 		body.queue_free()
@@ -296,3 +345,6 @@ func _despawn() -> void:
 		target.queue_free()
 	if is_instance_valid(pole):
 		pole.queue_free()
+	if is_instance_valid(_spill):
+		_spill.queue_free()
+	L.player.cam.cull_mask &= ~BODY_LAYER
