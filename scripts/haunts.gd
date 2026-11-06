@@ -26,9 +26,9 @@ var phone_state := ""          ## "" → "ringing" → "done"
 var phone_t := 0.0
 var living_t := 0.0            ## сколько секунд игрок провёл в зале
 var last_phase := ""
-## «За спиной» в прихожей: шаги и шёпот Ани прямо сзади. Откатить: BEHIND_HALL = false.
+## «За спиной» в зале (с телевизором): шаги и шёпот Ани прямо сзади. Откатить: BEHIND_HALL = false.
 const BEHIND_HALL := true
-var hall_t := 0.0             ## сколько секунд игрок провёл в прихожей после картины
+var hall_t := 0.0             ## сколько секунд игрок провёл в зале после граммофона
 
 
 func _ready() -> void:
@@ -169,10 +169,10 @@ func _process(delta: float) -> void:
 	if L.phase == "key" and not done.has("phone") and _free() and t - last_t > GAP:
 		_phone_start()
 	last_phase = L.phase
-	if BEHIND_HALL and not done.has("hall_behind") and done.has("hall_painting") and _in_hall() and _free() \
+	if BEHIND_HALL and not done.has("hall_behind") and done.has("gramophone") and _in_living() and _free() \
 			and armed.is_empty() and t - last_t > GAP:
 		hall_t += delta
-		if hall_t > 5.0:
+		if hall_t > 8.0:
 			_hall_behind()
 	_update_gramophone()
 	_update_phone(delta)
@@ -224,8 +224,8 @@ func _hall_behind() -> void:
 	fw.y = 0.0
 	fw = fw.normalized()
 	var back: Vector3 = _player() - fw * 1.1
-	back.x = clampf(back.x, -0.9, 0.9)
-	back.z = clampf(back.z, 0.45, 5.6)
+	back.x = clampf(back.x, -2.6, 2.6)
+	back.z = clampf(back.z, -5.6, -0.4)
 	back.y = 0.0
 	for s in ["step1", "step2", "step0"]:
 		_once3d(s, back + fw * 0.4 + Vector3(0, 0.05, 0), -14.0, 1.45)   # лёгкие, детские
