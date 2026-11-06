@@ -85,10 +85,10 @@ static func _centered(c: Control, y: float, w: float, h: float, bottom := false)
 # ---------------- 1. фитиль ----------------
 func _build_wick() -> void:
 	var t := _lbl(tr("MENU_11").to_upper().replace("…", ""), FN.ENGRAVE, 24, Color(0.78, 0.72, 0.62), 9)
-	_centered(t, -128, 700, 40, true)              # внизу, где был прежний экран загрузки
+	_centered(t, -178, 700, 40, true)              # внизу, где был прежний экран загрузки
 	add_child(t)
 	var line := Control.new()
-	_centered(line, -74, W1, 14, true)
+	_centered(line, -124, W1, 14, true)
 	add_child(line)
 	var bg := ColorRect.new()
 	bg.color = Color(0.2, 0.17, 0.15, 0.8)
@@ -115,7 +115,7 @@ func _build_wick() -> void:
 	_spark.material = sm
 	line.add_child(_spark)
 	_hint = _lbl(tr(hint_key), FN.HAND, 27, Color(0.72, 0.67, 0.58))
-	_centered(_hint, -46, 900, 50, true)
+	_centered(_hint, -96, 900, 50, true)
 	add_child(_hint)
 
 
