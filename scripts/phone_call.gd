@@ -340,7 +340,7 @@ func run() -> void:
 	var front: Vector3 = phone.global_basis.z
 	front.y = 0.0
 	front = front.normalized()
-	var spot: Vector3 = handset.global_position + front * 0.5
+	var spot: Vector3 = handset.global_position + front * 0.44
 	spot.y = p.global_position.y
 	var walk := create_tween()
 	walk.tween_property(p, "global_position", spot, clampf(p.global_position.distance_to(spot) * 0.7, 0.25, 1.2)).set_trans(Tween.TRANS_SINE)
@@ -360,7 +360,10 @@ func run() -> void:
 	var dir: Vector3 = (handset.global_position - shoulder)
 	dir.y *= 0.35
 	dir = dir.normalized()
-	var grab: Vector3 = handset.global_position - dir * 0.085 + Vector3.UP * 0.05
+	var grab: Vector3 = handset.global_position - dir * 0.07 + Vector3.UP * 0.045
+	# тянется и чуть наклоняется вперёд всем телом — плечо ближе к трубке
+	var lean := create_tween()
+	lean.tween_property(body, "global_position", body.global_position - p.global_basis.z * 0.14, 1.0).set_trans(Tween.TRANS_SINE)
 	await _move(grab, 1.0)
 	var g1 := create_tween()
 	g1.tween_property(self, "grip", 1.0, 0.2)
