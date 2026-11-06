@@ -179,8 +179,11 @@
 !/audio/tv_static.wav
 !/audio/tv_static.wav.import
 !/audio/tvshow_a.wav
+!/audio/tvshow_a.wav.import
 !/audio/tvshow_b.wav
+!/audio/tvshow_b.wav.import
 !/audio/tvshow_c.wav
+!/audio/tvshow_c.wav.import
 !/audio/vera_mb_broken.wav
 !/audio/vera_mb_broken.wav.import
 !/audio/vera_mb_full.wav
@@ -2123,6 +2126,9 @@
 !/video/memory_1986.ogv
 !/video/memory_1986.ogv.uid
 !/video/tvshow_a.ogv
+!/video/tvshow_a.ogv.uid
 !/video/tvshow_b.ogv
+!/video/tvshow_b.ogv.uid
 !/video/tvshow_c.ogv
+!/video/tvshow_c.ogv.uid
 /.godot/

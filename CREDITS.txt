@@ -75,3 +75,4 @@
 - Шрифты интерфейса и надписей (fonts/, все — SIL Open Font License 1.1, тексты лицензий в fonts/OFL_*.txt):
   PT Serif и PT Mono — ParaType; Marck Script — Denis Masharov; Caveat — Impallari Type.
 - Передачи Гостя на телевизоре (video/tvshow_*.ogv, audio/tvshow_*.wav) — свои: сцены собраны и отрендерены в Blender (tools/blender/make_tv_shows.py), музыка синтезирована (tools/gen_tv_music.py).
+- Голос Ани (voice/en/*.ogg) — ElevenLabs, ТЕСТОВЫЕ записи с бесплатного тарифа (некоммерческие!). Перед релизом перегенерировать на платной подписке. Обработка — tools/scary_voice.py.

@@ -170,12 +170,21 @@ static func apply_lang() -> void:
 
 ## Озвучка: если есть файл res://voice/<язык>/<ключ>.ogg (или .wav), вернуть его.
 ## Ключ — тот же, что у субтитра в lang/strings.csv.
+## Озвучка реплики: сначала на языке игры, иначе — английская (озвучка пока только английская,
+## русские игроки слышат её с русскими субтитрами). VOICE_FALLBACK_EN = false — без подмены.
+const VOICE_FALLBACK_EN := true
+
+
 static func voice(key: String) -> AudioStream:
 	var l := TranslationServer.get_locale().substr(0, 2)
-	for ext in ["ogg", "wav", "mp3"]:
-		var p := "res://voice/%s/%s.%s" % [l, key, ext]
-		if ResourceLoader.exists(p):
-			return load(p)
+	var langs := [l]
+	if VOICE_FALLBACK_EN and l != "en":
+		langs.append("en")
+	for lang in langs:
+		for ext in ["ogg", "wav", "mp3"]:
+			var p := "res://voice/%s/%s.%s" % [lang, key, ext]
+			if ResourceLoader.exists(p):
+				return load(p)
 	return null
 
 
