@@ -31,6 +31,7 @@ var still := 0.0
 var cooldown := 0.0
 var _lib: AnimationLibrary
 var _frame := 0
+var torch: MeshInstance3D   ## фонарик в руке отражения (в спальне Веры прячется — там в руке свеча)
 var _spill: OmniLight3D      ## подсветка тела игрока для зеркала (только тело, не туман)
 
 
@@ -161,7 +162,7 @@ func _setup_body() -> void:
 	var ba := BoneAttachment3D.new()
 	ba.bone_name = "mixamorig_RightHand"
 	sk.add_child(ba)
-	var torch := MeshInstance3D.new()
+	torch = MeshInstance3D.new()
 	var cyl := CylinderMesh.new()
 	cyl.top_radius = 0.06
 	cyl.bottom_radius = 0.05

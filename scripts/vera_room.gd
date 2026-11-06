@@ -42,6 +42,8 @@ var lit := false                     ## свеча горит
 var candle: Node3D                   ## свеча на тумбочке
 var matches: Node3D
 var held: Node3D                     ## свеча в руке
+var refl_candle: Node3D              ## та же свеча в руке отражения (видна только в зеркале)
+var refl_flame: MeshInstance3D
 const HELD_POS := Vector3(0.26, -0.3, -0.5)
 const HELD_FWD := Vector3(0.2, -0.25, -0.66)   ## Q / ПКМ — вытянул свечу вперёд (вместо осколка, он сломался)
 var push_hold := false
@@ -380,7 +382,8 @@ func _make_mirror() -> void:
 	mcam.size = GLASS_H
 	mcam.far = 20.0
 	mcam.current = true
-	mcam.cull_mask = (0xFFFFF | MIRROR_LAYER) & ~REAL_LAYER & ~HELD_LAYER & ~(1 << 1) & ~(1 << 2)
+	# слой 2 (1 << 1) — тело игрока из mirror.gd: в этом зеркале Миша тоже отражается; слой 3 — призраки чердака
+	mcam.cull_mask = (0xFFFFF | MIRROR_LAYER) & ~REAL_LAYER & ~HELD_LAYER & ~(1 << 2)
 	vp.add_child(mcam)
 	var we := L.get_node_or_null("WorldEnvironment") as WorldEnvironment
 	if we and we.environment:
@@ -459,6 +462,9 @@ var _lamp_t := 0.0
 
 func lights_out() -> void:
 	started = true
+	var mf := _refl()
+	if mf and mf.torch:
+		mf.torch.visible = false                 # фонарь погас насовсем — в отражении его тоже нет
 	for i in B.lamps.size():
 		_base[i] = (B.lamps[i] as OmniLight3D).light_energy
 	await get_tree().create_timer(0.8).timeout
@@ -721,6 +727,40 @@ func _make_held() -> void:
 	flame_light.shadow_bias = 0.05
 	held.add_child(flame_light)
 	flame_light.position = Vector3(0, 0.22, 0.02)
+	_make_refl_candle()
+
+
+## Тело игрока в отражении (из mirror.gd чердака — оно всегда при игроке, видно только зеркалам).
+func _refl() -> Node:
+	var a = L.get("attic")
+	if a == null:
+		return null
+	var mf = a.get("mirror_fx")
+	if mf == null or mf.get("body") == null or mf.get("sk") == null:
+		return null
+	return mf
+
+
+## Свеча в правой руке отражения — как настоящая в руке у игрока.
+func _make_refl_candle() -> void:
+	var mf := _refl()
+	if mf == null:
+		return
+	var ba := BoneAttachment3D.new()
+	ba.bone_name = "mixamorig_RightHand"
+	(mf.sk as Skeleton3D).add_child(ba)
+	refl_candle = _glb("res://models/bedroom/vera_candle.glb")
+	ba.add_child(refl_candle)
+	var k: float = (mf.body as Node3D).scale.x
+	refl_candle.scale = Vector3.ONE * 0.75 / maxf(k, 0.01)
+	refl_candle.position = Vector3(0, 0.06, 0.05) / maxf(k, 0.01)
+	for v in refl_candle.find_children("*", "GeometryInstance3D", true, false):
+		(v as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_set_layers(refl_candle, 1 << 1)
+	refl_flame = flame.duplicate() as MeshInstance3D
+	refl_flame.layers = 1 << 1
+	refl_candle.add_child(refl_flame)
+	refl_flame.position = flame.position
 
 
 func _update_flame(delta: float) -> void:
@@ -740,6 +780,10 @@ func _update_flame(delta: float) -> void:
 	flame_light.light_energy = 1.5 * f * g
 	flame.scale = Vector3(1.0, (0.85 + 0.2 * f) * maxf(g, 0.2), 1.0)
 	flame.visible = g > 0.1
+	if refl_candle:
+		refl_candle.visible = held.visible
+		refl_flame.scale = flame.scale
+		refl_flame.visible = flame.visible
 
 
 ## Q / правая кнопка — пока держишь, свеча вытянута вперёд (когда осколка уже нет).

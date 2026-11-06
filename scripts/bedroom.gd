@@ -17,6 +17,13 @@ const LAMPS := [
 	[Vector3(-15.68, Y2 + 1.3, -35.9), 0.5, 3.5, false],     # торшер в углу коридора
 ]
 
+## холодная подсветка темноты: [позиция, энергия, радиус] — спальня и Г-образный коридор
+const FILLS := [
+	[Vector3(-10.5, Y2 + 2.4, -31.5), 0.3, 9.0],
+	[Vector3(-8.0, Y2 + 2.3, -35.2), 0.22, 6.5],
+	[Vector3(-15.2, Y2 + 2.3, -33.0), 0.22, 6.0],
+]
+
 const VERA_TEST := false    ## ТЕСТ: Вера стоит в спальне и меняет позы (scripts/vera_showcase.gd)
 
 var L: Node
@@ -171,13 +178,17 @@ func _lights() -> void:
 		root.get_parent().add_child(o)
 		o.global_position = l[0]
 		lamps.append(o)
-	# еле заметный холодный свет, чтобы углы не проваливались в сплошную черноту
-	var fill := OmniLight3D.new()
-	fill.light_color = Color(0.45, 0.5, 0.7)
-	fill.light_energy = 0.18
-	fill.omni_range = 9.0
-	root.get_parent().add_child(fill)
-	fill.global_position = Vector3(-10.5, Y2 + 2.4, -31.5)
+	# еле заметный холодный свет, чтобы в темноте угадывались очертания: куда идти, где мебель
+	# (было 0.18 и только в спальне — в погасшей комнате не видно было, куда идти)
+	for f in FILLS:
+		var fill := OmniLight3D.new()
+		fill.light_color = Color(0.45, 0.5, 0.7)
+		fill.light_energy = f[1]
+		fill.omni_range = f[2]
+		fill.shadow_enabled = false
+		fill.light_specular = 0.1
+		root.get_parent().add_child(fill)
+		fill.global_position = f[0]
 
 
 ## Холл: E на запертой двери спальни. С ключом Веры — отпирается и открывается.
