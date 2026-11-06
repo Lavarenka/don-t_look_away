@@ -18,6 +18,9 @@ const FONT_TEXT := preload("res://fonts/Lora-Italic-Variable.ttf")
 var _btn_font: FontVariation
 var _haze_mat: ShaderMaterial
 var _loading: VBoxContainer
+## Экран загрузки: 0 — как был (полоска и совет), 1 — «фитиль», 2 — «кассета», 3 — «записка» (scripts/load_screen.gd)
+const LOAD_STYLE := 0
+var _ls = null
 var _bar: ProgressBar
 var _hint: Label
 var _loading_started := false
@@ -189,6 +192,20 @@ func _ready() -> void:
 	_hint = _label(HINTS[randi() % HINTS.size()], 18, Color(0.6, 0.57, 0.52))
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_loading.add_child(_hint)
+	var lst := int(OS.get_environment("MENU_LOAD")) if OS.has_environment("MENU_LOAD") else LOAD_STYLE   # для снимков
+	if lst > 0:
+		_ls = preload("res://scripts/load_screen.gd").new()
+		_ls.visible = false
+		add_child(_ls)
+		_ls.build(lst, HINTS[randi() % HINTS.size()])
+	if OS.has_environment("MENU_LOAD_PREVIEW"):     # снимок экрана загрузки без самой загрузки
+		_buttons.get_parent().visible = false
+		_bar.value = float(OS.get_environment("MENU_LOAD_PREVIEW"))
+		if _ls:
+			_ls.value = _bar.value
+			_ls.show_screen()
+		else:
+			_loading.visible = true
 
 	_drone = AudioStreamPlayer.new()
 	_drone.stream = load("res://audio/drone.wav")
@@ -733,7 +750,10 @@ func _start() -> void:
 		return
 	_loading_started = true
 	_buttons.get_parent().visible = false
-	_loading.visible = true
+	if _ls:
+		_ls.show_screen()
+	else:
+		_loading.visible = true
 	ResourceLoader.load_threaded_request(GAME_SCENE)
 	_load_t0 = Time.get_ticks_msec()
 
@@ -747,6 +767,8 @@ func _process(delta: float) -> void:
 	var st := ResourceLoader.load_threaded_get_status(GAME_SCENE, prog)
 	if prog.size() > 0:
 		_bar.value = lerp(_bar.value, float(prog[0]) * 100.0, 0.2)
+		if _ls:
+			_ls.value = _bar.value
 	if st == ResourceLoader.THREAD_LOAD_LOADED and _t_load > 1.2:
 		var scene: PackedScene = ResourceLoader.load_threaded_get(GAME_SCENE)
 		Engine.set_meta("load_scene_ms", Time.get_ticks_msec() - _load_t0)
@@ -754,4 +776,6 @@ func _process(delta: float) -> void:
 		get_tree().change_scene_to_packed(scene)
 	elif st == ResourceLoader.THREAD_LOAD_FAILED or st == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
 		_hint.text = tr("MENU_12")
+		if _ls:
+			_ls.fail(tr("MENU_12"))
 		_loading_started = false

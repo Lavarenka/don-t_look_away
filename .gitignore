@@ -1861,6 +1861,7 @@
 !/scripts/level.gd.uid
 !/scripts/living_furniture.gd
 !/scripts/living_furniture.gd.uid
+!/scripts/load_screen.gd
 !/scripts/mannequin.gd
 !/scripts/mannequin.gd.uid
 !/scripts/memory_video.gd
