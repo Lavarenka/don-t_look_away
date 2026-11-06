@@ -26,6 +26,9 @@ var phone_state := ""          ## "" → "ringing" → "done"
 var phone_t := 0.0
 var living_t := 0.0            ## сколько секунд игрок провёл в зале
 var last_phase := ""
+## «За спиной» в прихожей: шаги и шёпот Ани прямо сзади. Откатить: BEHIND_HALL = false.
+const BEHIND_HALL := true
+var hall_t := 0.0             ## сколько секунд игрок провёл в прихожей после картины
 
 
 func _ready() -> void:
@@ -166,6 +169,11 @@ func _process(delta: float) -> void:
 	if L.phase == "key" and not done.has("phone") and _free() and t - last_t > GAP:
 		_phone_start()
 	last_phase = L.phase
+	if BEHIND_HALL and not done.has("hall_behind") and done.has("hall_painting") and _in_hall() and _free() \
+			and armed.is_empty() and t - last_t > GAP:
+		hall_t += delta
+		if hall_t > 5.0:
+			_hall_behind()
 	_update_gramophone()
 	_update_phone(delta)
 
@@ -204,6 +212,54 @@ func _process(delta: float) -> void:
 		done[e.id] = true
 		last_t = t
 		e.act.call()
+
+
+# ---------------- за спиной ----------------
+## Детские шаги подкрадываются сзади, у самого уха — шёпот Ани (или смешок, пока нет озвучки).
+## Обернулся — никого, только фонарь дрогнул. Не обернулся — дыхание в затылок.
+func _hall_behind() -> void:
+	done["hall_behind"] = true
+	last_t = t
+	var fw: Vector3 = L.player.forward()
+	fw.y = 0.0
+	fw = fw.normalized()
+	var back: Vector3 = _player() - fw * 1.1
+	back.x = clampf(back.x, -0.9, 0.9)
+	back.z = clampf(back.z, 0.45, 5.6)
+	back.y = 0.0
+	for s in ["step1", "step2", "step0"]:
+		_once3d(s, back + fw * 0.4 + Vector3(0, 0.05, 0), -14.0, 1.45)   # лёгкие, детские
+		await _wait(0.42)
+		back += fw * 0.15
+	await _wait(0.6)
+	var head := back + Vector3(0, 1.15, 0)
+	var vo: AudioStream = preload("res://scripts/settings.gd").voice("HAUNT_10")
+	var dur := 2.5
+	if vo:
+		var a := AudioStreamPlayer3D.new()
+		a.stream = vo
+		a.volume_db = 3.0
+		a.unit_size = 2.0
+		L.add_child(a)
+		a.global_position = head
+		a.finished.connect(a.queue_free)
+		a.play()
+		dur = vo.get_length()
+		L.msg_label.text = tr("HAUNT_10")              # реплика — субтитр без второго, «плоского» голоса
+		L.msg_label.modulate.a = 1.0
+		L.msg_timer = dur
+	else:
+		_once3d("giggle", head, -4.0, 1.05)
+	_once3d("breath_dark", head, -10.0, 1.15)
+	var waited := 0.0
+	while waited < dur + 1.5:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+		if _looking(head, 0.75):
+			L.player.flicker = 0.35                       # обернулся — пусто, фонарь дрогнул
+			_once3d("whoosh", head, -14.0, 0.8)
+			return
+	_once3d("breath_dark", _player() + Vector3(0, 1.5, 0) - fw * 0.3, -6.0, 0.95)
 
 
 # ---------------- приманки и события ----------------
