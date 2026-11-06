@@ -76,6 +76,10 @@ var _handset_in_hand := Transform3D()
 var _lean := 0.0                ## насколько наклонился вперёд, м
 var _pole_k := 0.0              ## локоть: 0 — вниз-наружу (тянется к столу), 1 — наружу-вперёд (у уха)
 var _look_on := false
+var stand_side := 0.0           ## насколько встать правее трубки (левое плечо — напротив неё), м
+var grip_tilt := -0.2           ## наклон пальцев хвата: минус — костяшки ниже, кисть продолжает предплечье
+var grip_yaw := -0.5           ## пальцы наискось по ручке (рад): кисть по линии предплечья
+var stand_yaw := 0.0            ## доворот направления, откуда подходит (рад)
 var _look_pt := Vector3.ZERO
 
 
@@ -462,7 +466,7 @@ func _pole_pos() -> Vector3:
 func _grip_world(hx: Transform3D) -> Transform3D:
 	var cf := hx * _hc
 	var cb := cf.basis.orthonormalized()
-	var f := (cb * Vector3(0, -0.12, -1)).normalized()
+	var f := (cb * Vector3(0, -grip_tilt, -1).rotated(Vector3.UP, grip_yaw)).normalized()
 	var pn := (cb * Vector3.DOWN).normalized()
 	var mcp := cf * Vector3(0, _hh + 0.012, -_hd * 0.4)
 	return Transform3D(_frame(f, pn) * _frame(_f_local, _p_local).inverse(), mcp - f * _palm_len)
@@ -486,10 +490,10 @@ func _attach() -> void:
 
 ## Где встать перед телефоном: как можно ближе, но так, чтобы капсула игрока не входила в стол
 ## (иначе физика рывком выталкивает её назад в конце подхода).
-func _stand_spot(front: Vector3) -> Vector3:
+func _stand_spot(front: Vector3, shift := Vector3.ZERO) -> Vector3:
 	var p: CharacterBody3D = L.player
 	var y: float = p.global_position.y
-	var base: Vector3 = handset.global_position
+	var base: Vector3 = handset.global_position + shift
 	base.y = y
 	var col: CollisionShape3D = null
 	for c in p.get_children():
@@ -604,7 +608,14 @@ func run() -> void:
 	var front: Vector3 = phone.global_basis.z
 	front.y = 0.0
 	front = front.normalized()
-	var spot: Vector3 = _stand_spot(front)
+	# встаёт так, чтобы левое плечо было напротив ручки трубки вдоль пальцев хвата:
+	# рука идёт к трубке прямо, кисть не выворачивается в запястье
+	var cb := (handset.global_transform * _hc).basis.orthonormalized()
+	var fdir: Vector3 = cb * Vector3(0, 0, -1)
+	fdir.y = 0.0
+	var away: Vector3 = (-fdir).normalized().rotated(Vector3.UP, stand_yaw)
+	var right: Vector3 = (-away).cross(Vector3.UP).normalized()
+	var spot: Vector3 = _stand_spot(away, right * stand_side)
 	var walk := create_tween()
 	walk.tween_property(p, "global_position", spot, clampf(p.global_position.distance_to(spot) * 0.7, 0.25, 1.2)).set_trans(Tween.TRANS_SINE)
 	var look: Vector3 = handset.global_position - spot - Vector3(0, p.head.position.y, 0)
