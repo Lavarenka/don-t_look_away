@@ -26,13 +26,13 @@ var phone_state := ""          ## "" → "ringing" → "done"
 var phone_t := 0.0
 var living_t := 0.0            ## сколько секунд игрок провёл в зале
 var last_phase := ""
-## «За спиной» в зале (с телевизором): шаги и шёпот Ани прямо сзади. Откатить: BEHIND_HALL = false.
+## «За спиной» в детской, сразу как вошёл: шаги и шёпот Ани прямо сзади. Откатить: BEHIND_HALL = false.
 const BEHIND_HALL := true
 ## Звонок как катсцена: рука берёт трубку, Аня в трубке, потом — за спиной (scripts/phone_call.gd).
 ## false — прежний короткий звонок.
 const PHONE_SCENE := true
 var phone_scene: Node
-var hall_t := 0.0             ## сколько секунд игрок провёл в зале после граммофона
+var hall_t := 0.0             ## сколько секунд игрок провёл в детской
 
 
 func _ready() -> void:
@@ -67,7 +67,7 @@ func _ready() -> void:
 		_ev("bottles", func(): return L.phase == "corridor" and _player().z > -12.6 and _player().z < -9.0,
 			func(): return _pos("Bottle0") + Vector3(0, 0.15, 0), func(): _once3d("clink", _pos("Bottle0"), -14.0, 1.3), _bottles, 0.4, 5.0),
 		# детская
-		_ev("horse_rock", func(): return _in_nursery() and t > 0.0,
+		_ev("horse_rock", func(): return _in_nursery() and (done.has("hall_behind") or not BEHIND_HALL),
 			func(): return _pos("NHorse") + Vector3(0, 0.35, 0), func(): _once3d("creak", _pos("NHorse"), -12.0, 1.3), _horse_rock, 0.4, 5.0),
 		_ev("duck", func(): return _in_nursery() and done.has("horse_rock"),
 			func(): return _pos("NDuck") + Vector3(0, 0.08, 0), func(): _once3d("squeak", _pos("NDuck"), -16.0, 0.9), _duck, 0.35, 4.0),
@@ -173,10 +173,9 @@ func _process(delta: float) -> void:
 	if L.phase == "key" and not done.has("phone") and _free() and t - last_t > GAP:
 		_phone_start()
 	last_phase = L.phase
-	if BEHIND_HALL and not done.has("hall_behind") and done.has("gramophone") and _in_living() and _free() \
-			and armed.is_empty() and t - last_t > GAP:
+	if BEHIND_HALL and not done.has("hall_behind") and _in_nursery() and _free() and armed.is_empty():
 		hall_t += delta
-		if hall_t > 8.0:
+		if hall_t > 4.0:
 			_hall_behind()
 	_update_gramophone()
 	_update_phone(delta)
@@ -228,8 +227,8 @@ func _hall_behind() -> void:
 	fw.y = 0.0
 	fw = fw.normalized()
 	var back: Vector3 = _player() - fw * 1.1
-	back.x = clampf(back.x, -2.6, 2.6)
-	back.z = clampf(back.z, -5.6, -0.4)
+	back.x = clampf(back.x, -2.0, 2.0)
+	back.z = clampf(back.z, -23.6, -18.4)
 	back.y = 0.0
 	for s in ["step1", "step2", "step0"]:
 		_once3d(s, back + fw * 0.4 + Vector3(0, 0.05, 0), -14.0, 1.45)   # лёгкие, детские

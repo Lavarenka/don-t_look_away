@@ -831,7 +831,36 @@ func _prep_pass_ghost() -> void:
 	pass_g.ap.stop()
 
 
+## Аня проносится через проём зала: не идёт, а летит над полом — очень быстро, наклонившись вперёд,
+## полупрозрачная, со свистом. Откатить: DOORWAY_FLY = false — прежний проход шагом.
+const DOORWAY_FLY := true
 func _doorway_pass() -> void:
+	var g := pass_g
+	if not DOORWAY_FLY:
+		_doorway_walk()
+		return
+	var a := PASS_A + Vector3(0, 0.35, 0)
+	var b := PASS_B + Vector3(0, 0.3, 0)
+	g.global_position = a
+	g.rotation = Vector3(0.32, atan2(b.x - a.x, b.z - a.z), 0)      # наклон вперёд — летит
+	g.float_h = 0.0
+	g.set_ghostly(0.5)
+	g.play_from("idle", 1.0, 0.0)
+	g.visible = true
+	g.set_process(true)
+	pass_lamp.light_energy = 0.5
+	var dur := 0.45
+	var tw := create_tween()
+	tw.tween_property(g, "global_position", b, dur).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.parallel().tween_method(func(v: float): g.set_ghostly(v), 0.5, 0.95, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(pass_lamp, "light_energy", 0.0, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_callback(func(): g.visible = false; g.ap.stop(); g.set_process(false); g.rotation = Vector3.ZERO)
+	_sfx3d("whoosh", a.lerp(b, 0.5) + Vector3(0, 1.0, 0), -2.0, 1.25)
+	_sfx3d("whisper", b + Vector3(0, 1.2, 0), -12.0, 1.1)
+	player.flicker = 0.2
+
+
+func _doorway_walk() -> void:
 	var g := pass_g
 	g.global_position = PASS_A
 	g.rotation.y = atan2(PASS_B.x - PASS_A.x, PASS_B.z - PASS_A.z)
