@@ -476,6 +476,7 @@ func _hang_photo() -> void:
 ## Фотография повешена — скример и «зов» Веры (vera_call.gd): свет, свечи, падают картины,
 ## Вера на потолке зовёт к себе и в конце даёт шпильку.
 var call_seq: Node
+var safe: Node                       ## тайник за упавшей картиной (vera_safe.gd)
 func _on_photo_hung() -> void:
 	await get_tree().create_timer(1.2).timeout
 	call_seq = preload("res://scripts/vera_call.gd").new()
@@ -966,6 +967,7 @@ func target_ok(id: String) -> bool:
 		"v_photo": return photo_node.visible
 		"v_hang": return not photo_hung and L.inv.has("v_photo") and hang_mark != null
 		"v_pin": return call_seq != null and call_seq.stage == 3
+		"v_safe": return safe != null and safe.can_use()
 	if id.begins_with("v_tooth"):
 		return teeth[int(id.right(1)) - 1].visible
 	return false
@@ -1014,6 +1016,8 @@ func interact(id: String) -> void:
 			_hang_photo()
 		"v_pin":
 			call_seq.take_pin()
+		"v_safe":
+			safe.interact()
 	if id.begins_with("v_tooth"):
 		var t: Node3D = teeth[int(id.right(1)) - 1]
 		if L.inv.add(id, t):

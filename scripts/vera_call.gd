@@ -230,7 +230,8 @@ func _drop_pictures() -> void:
 	var keep := PackedInt32Array()
 	var mat_now := src.get_active_material(surf)
 	var sp: PhysicsDirectSpaceState3D = (L as Node3D).get_world_3d().direct_space_state
-	var n := 0
+	# какие островки висят на стенах
+	var hanging := []
 	for r in groups:
 		var g: PackedInt32Array = groups[r]
 		var ab := AABB(X * v[g[0]], Vector3.ZERO)
@@ -241,6 +242,22 @@ func _drop_pictures() -> void:
 		if low < 0.9 or minf(ab.size.x, ab.size.z) > 0.12 or ab.size.y > 1.6:
 			keep.append_array(g)
 			continue
+		hanging.append([g, ab])
+	# самая большая картина в самой спальне — за ней тайник с замком (vera_safe.gd)
+	var best := -1
+	var best_a := 0.0
+	for i in hanging.size():
+		var ab: AABB = hanging[i][1]
+		var c := ab.get_center()
+		if c.x > -14.2 and c.x < -5.2 and c.z > -34.0 and c.z < -27.3:
+			var a := ab.size.y * maxf(ab.size.x, ab.size.z)
+			if a > best_a:
+				best_a = a
+				best = i
+	var n := 0
+	for i in hanging.size():
+		var g: PackedInt32Array = hanging[i][0]
+		var ab: AABB = hanging[i][1]
 		var piece := MeshInstance3D.new()
 		var a2 := arr.duplicate()
 		a2[Mesh.ARRAY_INDEX] = g
@@ -255,12 +272,18 @@ func _drop_pictures() -> void:
 		var probe: Dictionary = sp.intersect_ray(PhysicsRayQueryParameters3D.create(c, c + nrm * 0.35))
 		if not probe.is_empty():
 			nrm = -nrm                          # там стена — падает в другую сторону
+		var safe: Node = null
+		if i == best:
+			var thick := minf(ab.size.x, ab.size.z)
+			safe = preload("res://scripts/vera_safe.gd").new()
+			safe.setup(L, R, c - nrm * thick * 0.5, nrm, Vector2(maxf(ab.size.x, ab.size.z), ab.size.y))
+			R.set("safe", safe)
 		var pivot := Node3D.new()
 		L.add_child(pivot)
 		pivot.global_position = Vector3(c.x, ab.position.y, c.z)
 		pivot.add_child(piece)
 		piece.global_transform = X
-		_fall(pivot, nrm, along_x, ab.position.y - Y2, 0.25 + n * 0.17 + randf() * 0.1)
+		_fall(pivot, nrm, along_x, ab.position.y - Y2, 0.25 + n * 0.17 + randf() * 0.1, safe)
 		n += 1
 	var a3 := arr.duplicate()
 	a3[Mesh.ARRAY_INDEX] = keep
@@ -279,7 +302,7 @@ func _drop_pictures() -> void:
 
 
 ## Рама срывается: чуть отходит от стены, падает и плашмя хлопается на пол лицом вниз.
-func _fall(pv: Node3D, nrm: Vector3, along_x: bool, h: float, delay: float) -> void:
+func _fall(pv: Node3D, nrm: Vector3, along_x: bool, h: float, delay: float, safe: Node = null) -> void:
 	await get_tree().create_timer(delay).timeout
 	var axis := Vector3.RIGHT if along_x else Vector3.BACK
 	# в какую сторону крутить, чтобы верх рамы ушёл от стены (по nrm)
@@ -291,6 +314,8 @@ func _fall(pv: Node3D, nrm: Vector3, along_x: bool, h: float, delay: float) -> v
 	tw.tween_property(pv, "global_position", pv.global_position + nrm * 0.12 + Vector3.DOWN * (h - 0.02), t).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tw.tween_property(pv, "basis", Basis(axis, sgn * (PI / 2 - 0.06)), t * 1.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	await tw.finished
+	if safe:
+		safe.reveal()
 	L._sfx3d("attic_thud", Vector3(pv.global_position.x, y0 - h, pv.global_position.z), -4.0, randf_range(0.9, 1.25), true)
 
 

@@ -1910,13 +1910,16 @@
 !/scripts/vera.gd
 !/scripts/vera.gd.uid
 !/scripts/vera_call.gd
+!/scripts/vera_call.gd.uid
 !/scripts/vera_ceiling.gd
+!/scripts/vera_ceiling.gd.uid
 !/scripts/vera_letter.gd
 !/scripts/vera_letter.gd.uid
 !/scripts/vera_portrait.gd
 !/scripts/vera_portrait.gd.uid
 !/scripts/vera_room.gd
 !/scripts/vera_room.gd.uid
+!/scripts/vera_safe.gd
 !/scripts/vera_showcase.gd
 !/scripts/vera_showcase.gd.uid
 !/scripts/vintage.gd

@@ -306,6 +306,9 @@ BR_LETTER,E — take the letter,E — взять письмо
 BR_PHOTO,E — take the photograph,E — взять фотографию
 BR_HANG,E — hang the photograph,E — повесить фотографию
 BR_PIN,E — take it,E — взять
+BR_SAFE,E — the lock,E — замок
+BR_SAFE_LOCK,Locked.,Заперто.
+LP_HELP,Mouse — move the pin · hold LMB — turn the lock · RMB — step back,Мышь — двигать шпильку · держи ЛКМ — поворачивать замок · ПКМ — отойти
 BR_OBJ_PIN,Something in this room is locked.,Что-то в этой комнате заперто.
 VERA_CALL1,"""Come here…""",«Иди сюда…»
 VERA_CALL2,"""Come to me…""",«Иди ко мне…»
