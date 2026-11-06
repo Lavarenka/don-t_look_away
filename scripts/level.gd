@@ -39,6 +39,15 @@ var exit_unlocked := false
 var tv_on := false
 var channel := 1
 var dwell := 0.0
+## Передачи Гостя: видео на его трёх каналах (по порядку лет на фото 1975 → 1976 → 1977), музыка — из телевизора.
+## Откатить: TV_SHOWS = false — на его каналах снова просто цветные пятна, как на остальных.
+const TV_SHOWS := true
+const TV_SHOW_VIDEO := ["res://video/tvshow_a.ogv", "res://video/tvshow_b.ogv", "res://video/tvshow_c.ogv"]
+const TV_SHOW_AUDIO := ["res://audio/tvshow_a.wav", "res://audio/tvshow_b.wav", "res://audio/tvshow_c.wav"]
+var tv_videos: Array[VideoStreamPlayer] = []
+var tv_music: AudioStreamPlayer3D
+var tv_show := -1            ## какая передача сейчас на экране (-1 — никакая)
+var tv_scare := false        ## во время скримера экран не трогаем
 var dwell_done := false
 var code_progress := 0
 var tv_found := []          ## какие «его» каналы уже найдены
@@ -259,6 +268,7 @@ func _ready() -> void:
 	tv_screen.material_override = tv_mat
 	tv_light.light_energy = 0.0
 	tv_label.visible = false
+	_setup_tv_shows()
 	targets = [
 		{"id": "note", "pos": $Note.global_position, "th": 0.4, "dist": 2.2},
 		{"id": "note2", "pos": $Note2.global_position, "th": 0.35, "dist": 2.0},
@@ -985,6 +995,51 @@ func _check_events() -> void:
 
 
 # ---------------- телевизор и Гость ----------------
+## Видео передач крутятся в невидимом SubViewport (только как текстура для экрана), звук — из самого телевизора.
+func _setup_tv_shows() -> void:
+	if not TV_SHOWS:
+		return
+	var holder := SubViewport.new()
+	holder.size = Vector2i(4, 4)
+	holder.disable_3d = true
+	add_child(holder)
+	for path in TV_SHOW_VIDEO:
+		var v := VideoStreamPlayer.new()
+		if ResourceLoader.exists(path):
+			v.stream = load(path)
+		v.loop = true
+		v.volume_db = -80.0                   # звук видео не нужен: музыка идёт отдельно, из телевизора
+		holder.add_child(v)
+		tv_videos.append(v)
+	tv_music = AudioStreamPlayer3D.new()
+	tv_music.volume_db = -6.0
+	tv_music.unit_size = 3.0
+	$TV.add_child(tv_music)
+	tv_music.finished.connect(func(): if tv_show >= 0: tv_music.play())
+
+
+## Включить передачу i (0..2) или выключить (-1).
+func _tv_set_show(i: int) -> void:
+	if not TV_SHOWS or i == tv_show:
+		return
+	tv_show = i
+	for k in tv_videos.size():
+		if k == i and tv_videos[k].stream:
+			tv_videos[k].play()
+		else:
+			tv_videos[k].stop()
+	if i >= 0:
+		tv_static.stop()
+		tv_music.stream = load(TV_SHOW_AUDIO[i]) if ResourceLoader.exists(TV_SHOW_AUDIO[i]) else null
+		if tv_music.stream:
+			tv_music.play()
+	else:
+		tv_music.stop()
+		_tv_img(null)
+		if tv_on and not tv_static.playing:
+			tv_static.play()
+
+
 func _tv_next() -> void:
 	if not tv_on:
 		_tv_power(true)
@@ -1007,6 +1062,7 @@ func _tv_power(on: bool) -> void:
 			phase = "hall"
 			_set_objective("LVL_22")
 	else:
+		_tv_set_show(-1)
 		tv_static.stop()
 		_tv_pic(Color(0.02, 0.02, 0.025))
 		_sfx("click", -4.0)
@@ -1025,16 +1081,26 @@ func _tv_img(tex: Texture2D) -> void:
 
 
 func _update_tv(delta: float) -> void:
-	if not tv_on:
+	if not tv_on or tv_scare:
 		return
 	dwell += delta
 	if dwell < 1.5:
+		_tv_set_show(-1)
 		var g := randf_range(0.25, 0.7)
 		_tv_pic(Color(g, g, g * 1.05), 1.0)
 		tv_light.light_energy = g * 1.5
 		return
-	_tv_pic(Color.from_hsv(channel / 9.0, 0.35, 0.55), 0.12)
-	tv_light.light_energy = 0.9
+	var si: int = CHANNEL_CODE.find(channel) if TV_SHOWS else -1
+	if si >= 0 and si < tv_videos.size() and tv_videos[si].stream:
+		# его передача: чёрно-белая запись 70-х и музыка
+		_tv_set_show(si)
+		_tv_img(tv_videos[si].get_video_texture())
+		_tv_pic(Color(0.62, 0.62, 0.6), 0.07)
+		tv_light.light_energy = 0.75 + 0.15 * sin(Time.get_ticks_msec() * 0.004)
+	else:
+		_tv_set_show(-1)
+		_tv_pic(Color.from_hsv(channel / 9.0, 0.35, 0.55), 0.12)
+		tv_light.light_energy = 0.9
 	if dwell_done:
 		return
 	dwell_done = true
@@ -1092,6 +1158,8 @@ func _update_guest(delta: float) -> void:
 
 func _solve_tv() -> void:
 	busy = true
+	tv_scare = true
+	_tv_set_show(-1)
 	guest.visible = true
 	guest_hidden_t = -1.0
 	_tv_pic(Color(0.8, 0.75, 0.7), 0.15)
@@ -1103,6 +1171,7 @@ func _solve_tv() -> void:
 	await get_tree().create_timer(0.9).timeout
 	_tv_img(null)
 	_tv_power(false)
+	tv_scare = false
 	guest.visible = false
 	_sfx("whisper", -8.0)
 	_sfx3d("door", $Servant.global_position, -6.0, 1.4)

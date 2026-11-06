@@ -74,3 +74,4 @@
 - Видеовставка «1986» (video/memory_1986.ogv) — отрендерена в игре: молодая Вера собрана в MakeHuman/MPFB (CC0), движения — Mixamo (Adobe, бесплатные анимации для игр).
 - Шрифты интерфейса и надписей (fonts/, все — SIL Open Font License 1.1, тексты лицензий в fonts/OFL_*.txt):
   PT Serif и PT Mono — ParaType; Marck Script — Denis Masharov; Caveat — Impallari Type.
+- Передачи Гостя на телевизоре (video/tvshow_*.ogv, audio/tvshow_*.wav) — свои: сцены собраны и отрендерены в Blender (tools/blender/make_tv_shows.py), музыка синтезирована (tools/gen_tv_music.py).

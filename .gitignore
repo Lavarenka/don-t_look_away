@@ -178,6 +178,9 @@
 !/audio/tinnitus.wav.import
 !/audio/tv_static.wav
 !/audio/tv_static.wav.import
+!/audio/tvshow_a.wav
+!/audio/tvshow_b.wav
+!/audio/tvshow_c.wav
 !/audio/vera_mb_broken.wav
 !/audio/vera_mb_broken.wav.import
 !/audio/vera_mb_full.wav
@@ -1862,6 +1865,7 @@
 !/scripts/living_furniture.gd
 !/scripts/living_furniture.gd.uid
 !/scripts/load_screen.gd
+!/scripts/load_screen.gd.uid
 !/scripts/mannequin.gd
 !/scripts/mannequin.gd.uid
 !/scripts/memory_video.gd
@@ -2118,4 +2122,7 @@
 !/trailer/raw_shots.txt
 !/video/memory_1986.ogv
 !/video/memory_1986.ogv.uid
+!/video/tvshow_a.ogv
+!/video/tvshow_b.ogv
+!/video/tvshow_c.ogv
 /.godot/
