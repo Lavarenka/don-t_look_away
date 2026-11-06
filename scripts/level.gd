@@ -518,6 +518,10 @@ func _say(t: String, sec := 3.5) -> void:
 	_voice(t)
 	msg_label.modulate.a = 1.0
 	msg_timer = sec
+	# есть озвучка — субтитр держится, пока звучит голос
+	var st := SETTINGS.voice(t)
+	if st:
+		msg_timer = maxf(sec, st.get_length() - 0.5)
 
 
 # ---------------- звук ----------------
