@@ -45,7 +45,7 @@ func prepare(level: Node, ph: Node3D) -> void:
 	cord = MeshInstance3D.new()
 	cord.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var cm := StandardMaterial3D.new()
-	cm.albedo_color = Color(0.03, 0.025, 0.022)
+	cm.albedo_color = Color(0.34, 0.035, 0.028)          # вишнёвый, как телефон
 	cm.roughness = 0.35
 	cord.material_override = cm
 	L.add_child(cord)
@@ -117,7 +117,8 @@ func _spawn_body() -> void:
 	var k: float = p.head.position.y / EYE
 	body.scale = Vector3(k, k, k)
 	L.add_child(body)
-	body.global_position = p.global_position
+	# тело чуть сзади и ниже глаз: грудь и плечи не лезут в кадр, когда смотришь вниз на телефон
+	body.global_position = p.global_position + p.global_basis.z * 0.16 - Vector3(0, 0.04, 0)
 	body.global_rotation = Vector3(0, p.global_rotation.y + PI, 0)
 	for mi in body.find_children("*", "MeshInstance3D", true, false):
 		var m := mi as MeshInstance3D
@@ -253,15 +254,31 @@ func run() -> void:
 	var cam: Camera3D = p.cam
 	L.busy = true
 	p.frozen = true
-	await _aim(handset.global_position + Vector3(0, -0.06, 0), 0.7)
+	# подходит вплотную к телефону — иначе рука не дотянется (стоять — перед телефоном, в 45 см)
+	var front: Vector3 = phone.global_basis.z
+	front.y = 0.0
+	front = front.normalized()
+	var spot: Vector3 = phone.global_position + front * 0.45
+	spot.y = p.global_position.y
+	var walk := create_tween()
+	walk.tween_property(p, "global_position", spot, clampf(p.global_position.distance_to(spot) * 0.7, 0.25, 1.2)).set_trans(Tween.TRANS_SINE)
+	# пока подходит — поворачивается к телефону; когда встал — смотрит на трубку
+	var look: Vector3 = handset.global_position - spot - Vector3(0, p.head.position.y, 0)
+	var tw0 := create_tween().set_parallel()
+	tw0.tween_property(p, "rotation:y", p.rotation.y + wrapf(atan2(-look.x, -look.z) - p.rotation.y, -PI, PI), 0.6).set_trans(Tween.TRANS_SINE)
+	tw0.tween_property(p.head, "rotation:x", clampf(atan2(look.y, Vector2(look.x, look.z).length()), -1.2, 1.0), 0.7).set_trans(Tween.TRANS_SINE)
+	await walk.finished
+	await _aim(handset.global_position + Vector3(0, -0.04, 0), 0.5)
 	_spawn_body()
 	await get_tree().process_frame
 	# тянется к трубке: запястье — над ручкой, чуть ближе к себе
 	var home: Transform3D = handset.global_transform
-	var toward: Vector3 = p.global_position - handset.global_position
-	toward.y = 0.0
-	toward = toward.normalized()
-	var grab: Vector3 = handset.global_position + toward * 0.075 + Vector3.UP * 0.035
+	# ладонь ложится на середину ручки сверху: запястье — на длину кисти ближе к плечу
+	var shoulder: Vector3 = _bone_pos("mixamorig_LeftArm")
+	var dir: Vector3 = (handset.global_position - shoulder)
+	dir.y *= 0.35
+	dir = dir.normalized()
+	var grab: Vector3 = handset.global_position - dir * 0.085 + Vector3.UP * 0.05
 	await _move(grab, 1.0)
 	var g1 := create_tween()
 	g1.tween_property(self, "grip", 1.0, 0.2)
