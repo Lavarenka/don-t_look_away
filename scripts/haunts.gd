@@ -28,6 +28,10 @@ var living_t := 0.0            ## сколько секунд игрок про�
 var last_phase := ""
 ## «За спиной» в зале (с телевизором): шаги и шёпот Ани прямо сзади. Откатить: BEHIND_HALL = false.
 const BEHIND_HALL := true
+## Звонок как катсцена: рука берёт трубку, Аня в трубке, потом — за спиной (scripts/phone_call.gd).
+## false — прежний короткий звонок.
+const PHONE_SCENE := true
+var phone_scene: Node
 var hall_t := 0.0             ## сколько секунд игрок провёл в зале после граммофона
 
 
@@ -371,6 +375,11 @@ func _phone_start() -> void:
 	phone_t = 0.0
 	ring = _snd3d("phone_ring", _pos("Phone") + Vector3(0, 0.1, 0), 0.0)
 	ring.play()
+	if PHONE_SCENE and phone_scene == null:
+		phone_scene = preload("res://scripts/phone_call.gd").new()
+		add_child(phone_scene)
+		phone_scene.prepare(L, L.get_node("Phone"))
+		phone_scene.preload_body()
 	L.targets.append({"id": "phone", "pos": _pos("Phone") + Vector3(0, 0.08, 0), "th": 0.4, "dist": 2.0})
 	L.extra_hints["phone"] = "HAUNT_03"
 
@@ -393,6 +402,9 @@ func interact(id: String) -> void:
 		phone_state = "done"
 		ring.stop()
 		L.extra_hints.erase("phone")
+		if phone_scene:
+			await phone_scene.run()
+			return
 		L.busy = true
 		_once3d("click", _pos("Phone"), -4.0)
 		await _wait(0.6)

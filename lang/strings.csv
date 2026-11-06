@@ -56,6 +56,8 @@ HAUNT_07,The clock struck three times and stopped.,Часы пробили тр�
 HAUNT_08,MISHA,Миша
 HAUNT_09,Someone on the line is laughing. Laughing like a madman.,В трубке кто-то хохочет. Хохочет как сумасшедший.
 HAUNT_10,"""Misha... don't turn around.""",«Миша… не оборачивайся.»
+PHONE_01,"""Misha... is that you? I can hear you breathing.""",«Миша… это ты? Я слышу, как ты дышишь.»
+PHONE_03,"""Why did you hang up?""",«Зачем ты положил трубку?»
 INTRO_01,Space — skip,Пробел — пропустить
 INTRO_02,"Sukhoy Log, Russia.\nOctober 2026",Сухой Лог.\nОктябрь 2026
 INTRO_03,"Voicemail: ""Mr. Kornev, hello. This is the notary in Sukhoy Log…""","Автоответчик: «Михаил Степанович, здравствуйте. Это нотариус из Сухого Лога…»"
