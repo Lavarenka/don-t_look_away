@@ -2,7 +2,7 @@ extends Node
 ## Катсцена «звонок» в зале: своя левая рука тянется к телефону, снимает трубку, подносит к уху.
 ## В трубке — Аня (PHONE_01, звук «из трубки»). Кладёшь трубку — тишина… и голос прямо за спиной:
 ## «Зачем ты положил трубку?» (PHONE_03). Управление возвращается: оборачиваешься — никого.
-## Телефон — свой, советский дисковый (tools/blender/make_phone.py): корпус и трубка отдельно,
+## Телефон — свой, кнопочный кремовый (tools/blender/make_phone_push.py): корпус и трубка отдельно,
 ## витой шнур между ними строится каждый кадр. Старая модель телефона прячется.
 ## Тело игрока — Remy (Mixamo, как в зеркале): видна только левая рука (голова и правая рука скрыты).
 ## Рука — TwoBoneIK3D к запястью, которое «привязано» к трубке; пальцы сжимаются модификатором.
@@ -12,10 +12,10 @@ const BODY := "res://models/player/remy.fbx"
 const EYE := 3.47                       ## высота глаз Remy в её единицах (как в mirror.gd)
 const BODY_GLB := "res://models/living/phone_body.glb"
 const HANDSET_GLB := "res://models/living/phone_handset.glb"
-const REST := Vector3(0.0, 0.142, -0.03)        ## трубка на рычагах (в осях телефона)
-const CORD_START := Vector3(-0.1, 0.035, 0.02)   ## гнездо шнура на корпусе
-const CORD_END := Vector3(-0.088, -0.04, 0.0)   ## низ микрофонного стакана (в осях трубки)
-const EARPIECE := Vector3(0.088, -0.03, 0.0)    ## слуховой стакан (в осях трубки)
+const REST := Vector3(0.0, 0.118, -0.035)       ## трубка на опорах (в осях телефона)
+const CORD_START := Vector3(-0.098, 0.03, 0.0)   ## гнездо шнура на корпусе
+const CORD_END := Vector3(-0.09, -0.036, 0.0)   ## низ микрофонного стакана (в осях трубки)
+const EARPIECE := Vector3(0.09, -0.03, 0.0)     ## слуховой стакан (в осях трубки)
 const BODY_LAYER := 1 << 19                     ## тело игрока — свой слой и своя подсветка
 
 var L: Node
@@ -45,7 +45,7 @@ func prepare(level: Node, ph: Node3D) -> void:
 	cord = MeshInstance3D.new()
 	cord.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var cm := StandardMaterial3D.new()
-	cm.albedo_color = Color(0.34, 0.035, 0.028)          # вишнёвый, как телефон
+	cm.albedo_color = Color(0.78, 0.75, 0.68)            # кремовый, как телефон
 	cm.roughness = 0.35
 	cord.material_override = cm
 	L.add_child(cord)
