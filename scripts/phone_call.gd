@@ -10,12 +10,12 @@ extends Node
 
 const BODY := "res://models/player/remy.fbx"
 const EYE := 3.47                       ## высота глаз Remy в её единицах (как в mirror.gd)
-const BODY_GLB := "res://models/living/phone_body.glb"
-const HANDSET_GLB := "res://models/living/phone_handset.glb"
-const REST := Vector3(0.0, 0.118, -0.035)       ## трубка на опорах (в осях телефона)
-const CORD_START := Vector3(-0.098, 0.03, 0.0)   ## гнездо шнура на корпусе
-const CORD_END := Vector3(-0.09, -0.036, 0.0)   ## низ микрофонного стакана (в осях трубки)
-const EARPIECE := Vector3(0.09, -0.03, 0.0)     ## слуховой стакан (в осях трубки)
+## Модель телефона — прежняя (models/vintage/phone.fbx). Она одним мешем, но из отдельных «островков»:
+## трубка (самый крупный остров сверху) и витой шнур (справа) — их отделяем при загрузке.
+var _rest_xf: Transform3D       ## трубка на рычагах (относительно родителя меша)
+var CORD_START: Vector3         ## гнездо шнура на корпусе (в осях телефона)
+var CORD_END: Vector3           ## куда шнур входит в трубку (в осях трубки)
+var EARPIECE: Vector3           ## слуховой стакан (в осях трубки)
 const BODY_LAYER := 1 << 19                     ## тело игрока — свой слой и своя подсветка
 
 var L: Node
@@ -35,21 +35,103 @@ var _spill: OmniLight3D
 func prepare(level: Node, ph: Node3D) -> void:
 	L = level
 	phone = ph
-	for mi in ph.find_children("*", "MeshInstance3D", true, false):
-		(mi as MeshInstance3D).visible = false            # старая модель
-	var b: Node3D = load(BODY_GLB).instantiate()
-	ph.add_child(b)
-	handset = load(HANDSET_GLB).instantiate()
-	ph.add_child(handset)
-	handset.position = REST
+	_split(ph.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D)
 	cord = MeshInstance3D.new()
 	cord.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	var cm := StandardMaterial3D.new()
-	cm.albedo_color = Color(0.78, 0.75, 0.68)            # кремовый, как телефон
-	cm.roughness = 0.35
-	cord.material_override = cm
+	cord.material_override = _cord_mat
 	L.add_child(cord)
 	_build_cord()
+
+
+var _cord_mat: Material
+
+
+## Разбор меша на острова (вершины, связанные треугольниками или совпадающие по месту).
+func _split(mi: MeshInstance3D) -> void:
+	var arr := mi.mesh.surface_get_arrays(0)
+	var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+	var idx: PackedInt32Array = arr[Mesh.ARRAY_INDEX]
+	var par := PackedInt32Array()
+	par.resize(v.size())
+	for i in v.size():
+		par[i] = i
+	var find := func(x: int) -> int:
+		while par[x] != x:
+			par[x] = par[par[x]]
+			x = par[x]
+		return x
+	var pos := {}
+	for i in v.size():
+		var key := Vector3i(roundi(v[i].x * 10000), roundi(v[i].y * 10000), roundi(v[i].z * 10000))
+		if pos.has(key):
+			var a: int = find.call(i)
+			var b: int = find.call(pos[key])
+			if a != b:
+				par[a] = b
+		else:
+			pos[key] = i
+	for t in range(0, idx.size(), 3):
+		for k in [1, 2]:
+			var a: int = find.call(idx[t])
+			var b: int = find.call(idx[t + k])
+			if a != b:
+				par[a] = b
+	var box := {}
+	var cnt := {}
+	for i in v.size():
+		var r: int = find.call(i)
+		box[r] = (box[r] as AABB).expand(v[i]) if box.has(r) else AABB(v[i], Vector3.ZERO)
+		cnt[r] = cnt.get(r, 0) + 1
+	# трубка — крупный остров, целиком выше середины корпуса; шнур — крупный остров с краю
+	var hs := -1
+	var cd := -1
+	for r in box:
+		var ab: AABB = box[r]
+		if cnt[r] < 300:
+			continue
+		if ab.size.x < 0.13 and ab.size.y > 0.08 and ab.position.x > 0.05:
+			cd = r
+		elif ab.size.x > 0.2 and (hs < 0 or ab.get_center().y > (box[hs] as AABB).get_center().y):
+			hs = r                                            # трубка — самый высокий крупный остров
+	var lo := PackedInt32Array()
+	var hi := PackedInt32Array()
+	for t in range(0, idx.size(), 3):
+		var r: int = find.call(idx[t])
+		var dst := hi if r == hs else lo
+		if r == cd:
+			continue                                          # свой шнур — живой, строится каждый кадр
+		dst.append(idx[t]); dst.append(idx[t + 1]); dst.append(idx[t + 2])
+	var c: Vector3 = (box[hs] as AABB).get_center()
+	# концы шнура и слуховой стакан
+	var cab: AABB = box[cd] if cd >= 0 else AABB(c + Vector3(0.12, -0.1, 0), Vector3.ZERO)
+	var hab: AABB = box[hs]
+	CORD_START = Vector3(cab.position.x + 0.02, cab.position.y + 0.025, cab.get_center().z)
+	CORD_END = Vector3(hab.end.x - 0.02, hab.position.y + 0.01, c.z) - c
+	EARPIECE = Vector3(hab.position.x + 0.03, hab.position.y + 0.012, c.z) - c
+	var mat := mi.get_active_material(0)
+	_cord_mat = mat
+	var a_lo := arr.duplicate()
+	a_lo[Mesh.ARRAY_INDEX] = lo
+	var a_hi := arr.duplicate()
+	a_hi[Mesh.ARRAY_INDEX] = hi
+	var m_lo := ArrayMesh.new()
+	m_lo.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, a_lo)
+	var m_hi := ArrayMesh.new()
+	m_hi.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, a_hi)
+	var hsm := mi.duplicate() as MeshInstance3D               # копия — те же материалы
+	for ch in hsm.get_children():
+		ch.free()
+	mi.mesh = m_lo
+	mi.set_surface_override_material(0, mat)
+	hsm.mesh = m_hi
+	hsm.set_surface_override_material(0, mat)
+	handset = Node3D.new()
+	handset.name = "Handset"
+	mi.get_parent().add_child(handset)
+	handset.transform = mi.transform * Transform3D(Basis(), c)
+	handset.add_child(hsm)
+	hsm.transform = Transform3D(Basis(), -c)
+	_rest_xf = handset.transform
 
 
 func preload_body() -> void:
@@ -66,7 +148,7 @@ func _process(_d: float) -> void:
 # ---------------- витой шнур ----------------
 ## Ось шнура — провисающая кривая от гнезда до трубки, вокруг неё — спираль (витки), трубочка сечением 6 граней.
 func _build_cord() -> void:
-	var a: Vector3 = phone.global_transform * CORD_START
+	var a: Vector3 = handset.get_parent().global_transform * CORD_START
 	var b: Vector3 = handset.global_transform * CORD_END
 	var table_y: float = phone.global_position.y + 0.006
 	var dist := a.distance_to(b)
@@ -118,7 +200,7 @@ func _spawn_body() -> void:
 	body.scale = Vector3(k, k, k)
 	L.add_child(body)
 	# тело чуть сзади и ниже глаз: грудь и плечи не лезут в кадр, когда смотришь вниз на телефон
-	body.global_position = p.global_position + p.global_basis.z * 0.16 - Vector3(0, 0.04, 0)
+	body.global_position = p.global_position + p.global_basis.z * 0.2 - Vector3(0, 0.05, 0)
 	body.global_rotation = Vector3(0, p.global_rotation.y + PI, 0)
 	for mi in body.find_children("*", "MeshInstance3D", true, false):
 		var m := mi as MeshInstance3D
@@ -192,7 +274,7 @@ func _aim(at: Vector3, sec: float) -> void:
 func _ear_xf() -> Transform3D:
 	var cam: Camera3D = L.player.cam
 	var cb := cam.global_basis
-	var x_axis: Vector3 = (cb.y * 0.92 + cb.z * 0.25 + cb.x * 0.15).normalized()   # к стакану у уха — вверх
+	var x_axis: Vector3 = (cb.y * 0.92 + cb.z * 0.25 + cb.x * 0.15).normalized() * signf(EARPIECE.x)   # к стакану у уха — вверх
 	var y_axis: Vector3 = -cb.x                                                    # чашки — к голове (вправо)
 	y_axis = (y_axis - x_axis * x_axis.dot(y_axis)).normalized()
 	var bas := Basis(x_axis, y_axis, x_axis.cross(y_axis))
@@ -254,11 +336,11 @@ func run() -> void:
 	var cam: Camera3D = p.cam
 	L.busy = true
 	p.frozen = true
-	# подходит вплотную к телефону — иначе рука не дотянется (стоять — перед телефоном, в 45 см)
+	# подходит вплотную к телефону — иначе рука не дотянется (стоять — в полуметре перед трубкой)
 	var front: Vector3 = phone.global_basis.z
 	front.y = 0.0
 	front = front.normalized()
-	var spot: Vector3 = phone.global_position + front * 0.45
+	var spot: Vector3 = handset.global_position + front * 0.5
 	spot.y = p.global_position.y
 	var walk := create_tween()
 	walk.tween_property(p, "global_position", spot, clampf(p.global_position.distance_to(spot) * 0.7, 0.25, 1.2)).set_trans(Tween.TRANS_SINE)
@@ -312,8 +394,7 @@ func run() -> void:
 	tw2.tween_property(p.head, "rotation:x", -0.6, 0.9).set_trans(Tween.TRANS_SINE)
 	await _handset_move(handset.global_transform, home, 0.9)
 	_holding = false
-	handset.position = REST
-	handset.rotation = Vector3.ZERO
+	handset.transform = _rest_xf
 	L._sfx("click", -4.0, 0.6)
 	var g2 := create_tween()
 	g2.tween_property(self, "grip", 0.0, 0.15)
