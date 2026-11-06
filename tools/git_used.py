@@ -49,6 +49,9 @@ for p in ALL:
             add(p)
     if re.match(r'models/forest/pine/pine\d\.glb$', p):
         add(p)
+    # озвучка: voice/<язык>/<КЛЮЧ>.ogg — игра ищет файл по ключу реплики (settings.voice)
+    if p.startswith('voice/') and p.endswith(('.ogg', '.wav', '.mp3', '.txt')):
+        add(p)
 
 while queue:
     p = queue.pop()

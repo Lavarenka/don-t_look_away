@@ -2131,4 +2131,9 @@
 !/video/tvshow_b.ogv.uid
 !/video/tvshow_c.ogv
 !/video/tvshow_c.ogv.uid
+!/voice/README.txt
+!/voice/en/HAUNT_05.ogg
+!/voice/en/INTRO_07.ogg
+!/voice/en/NUR_22.ogg
+!/voice/en/NUR_24.ogg
 /.godot/
