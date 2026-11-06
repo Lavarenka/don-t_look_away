@@ -31,6 +31,9 @@ var _wrist_local := Vector3.ZERO        ## где запястье относи�
 var _holding := false
 var _spill: OmniLight3D
 var _lean := 0.0                       ## насколько наклонился к телефону, м
+var hand_w := 0.0                       ## насколько кисть повёрнута «как надо» (0 — как вышло у IK)
+var hand_fwd := Vector3.FORWARD         ## куда смотрят пальцы (мир)
+var hand_palm := Vector3.DOWN           ## куда смотрит ладонь (мир)
 var _head0 := Vector3.ZERO
 
 
@@ -208,7 +211,7 @@ func _spawn_body() -> void:
 		var m := mi as MeshInstance3D
 		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		m.layers = BODY_LAYER
-		if m.name in ["Hair", "Eyes", "Eyelashes"]:
+		if m.name in ["Hair", "Eyes", "Eyelashes", "Tops", "Bottoms", "Shoes"]:   # видна только рука
 			m.visible = false
 	p.cam.cull_mask |= BODY_LAYER
 	# мягкий отсвет фонаря на руку (свет только для тела — комнату не трогает)
@@ -364,7 +367,7 @@ func run() -> void:
 	var dir: Vector3 = (handset.global_position - shoulder)
 	dir.y *= 0.35
 	dir = dir.normalized()
-	var grab: Vector3 = handset.global_position - dir * 0.07 + Vector3.UP * 0.045
+	var grab: Vector3 = handset.global_position - dir * 0.045 + Vector3.UP * 0.05
 	# тянется и чуть наклоняется вперёд всем телом — плечо ближе к трубке
 	# стол может не пустить близко (игрока выталкивает из мебели) — тогда наклоняется над ним:
 	# голова (камера) и тело уходят вперёд ровно настолько, чтобы рука дотянулась
@@ -373,11 +376,18 @@ func run() -> void:
 	fwd = fwd.normalized()
 	var shoulder0: Vector3 = _bone_pos("mixamorig_LeftArm")
 	var reach := Vector2(grab.x - shoulder0.x, grab.z - shoulder0.z).length()
-	_lean = clampf(reach - 0.36, 0.06, 0.45)
+	_lean = clampf(reach - 0.4, 0.08, 0.9)                 # рука ~0,5 м: остальное — наклон над мебелью
+	if OS.has_environment("PC_DEBUG"):
+		var arm := _bone_pos("mixamorig_LeftArm").distance_to(_bone_pos("mixamorig_LeftForeArm")) + _bone_pos("mixamorig_LeftForeArm").distance_to(_bone_pos("mixamorig_LeftHand"))
+		print("PCDBG reach=", reach, " lean=", _lean, " arm=", arm, " sh=", shoulder0, " grab=", grab, " hs=", handset.global_position)
 	_head0 = p.head.position
 	var lean := create_tween().set_parallel()
 	lean.tween_property(body, "global_position", body.global_position + fwd * _lean - Vector3(0, _lean * 0.3, 0), 1.0).set_trans(Tween.TRANS_SINE)
 	lean.tween_property(p.head, "position", _head0 + Vector3(0, -_lean * 0.3, -_lean), 1.0).set_trans(Tween.TRANS_SINE)
+	hand_fwd = (dir + Vector3.DOWN * 0.35).normalized()           # пальцы — вперёд и чуть вниз, ладонь — на ручку
+	hand_palm = Vector3.DOWN
+	var hw := create_tween()
+	hw.tween_property(self, "hand_w", 1.0, 0.8).set_delay(0.2)
 	await _move(grab, 1.0)
 	var g1 := create_tween()
 	g1.tween_property(self, "grip", 1.0, 0.2)
@@ -391,6 +401,13 @@ func run() -> void:
 	tw.tween_property(p.head, "position", _head0, 1.0).set_trans(Tween.TRANS_SINE)            # выпрямляется
 	tw.tween_property(body, "global_position", body.global_position - fwd * _lean + Vector3(0, _lean * 0.3, 0), 1.0).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(cam, "rotation:z", 0.07, 1.0).set_trans(Tween.TRANS_SINE)
+	var f0 := hand_fwd
+	var p0 := hand_palm
+	var hd := create_tween()
+	hd.tween_method(func(k: float):                        # у уха: ладонь — к голове, пальцы обхватывают ручку
+		var cb := cam.global_basis
+		hand_fwd = f0.slerp((-cb.z * 0.55 + cb.y * 0.55).normalized(), k)
+		hand_palm = p0.slerp(cb.x, k), 0.0, 1.0, 1.0)
 	await _handset_move(home, _ear_xf, 1.0)
 	# в трубке
 	var line := _play_phone(L._stream("tv_static"), -26.0)
@@ -413,12 +430,19 @@ func run() -> void:
 	tw2.tween_property(p.head, "rotation:x", -0.6, 0.9).set_trans(Tween.TRANS_SINE)
 	tw2.tween_property(p.head, "position", _head0 + Vector3(0, -_lean * 0.3, -_lean), 0.9).set_trans(Tween.TRANS_SINE)   # снова наклоняется к телефону
 	tw2.tween_property(body, "global_position", body.global_position + fwd * _lean - Vector3(0, _lean * 0.3, 0), 0.9).set_trans(Tween.TRANS_SINE)
+	var f1 := hand_fwd
+	var p1 := hand_palm
+	var hd2 := create_tween()
+	hd2.tween_method(func(k: float):
+		hand_fwd = f1.slerp(f0, k)
+		hand_palm = p1.slerp(p0, k), 0.0, 1.0, 0.9)
 	await _handset_move(handset.global_transform, home, 0.9)
 	_holding = false
 	handset.transform = _rest_xf
 	L._sfx("click", -4.0, 0.6)
-	var g2 := create_tween()
+	var g2 := create_tween().set_parallel()
 	g2.tween_property(self, "grip", 0.0, 0.15)
+	g2.tween_property(self, "hand_w", 0.0, 0.6).set_delay(0.15)
 	var back := create_tween().set_parallel()
 	back.tween_property(p.head, "position", _head0, 0.7).set_trans(Tween.TRANS_SINE)
 	back.tween_property(body, "global_position", body.global_position - fwd * _lean + Vector3(0, _lean * 0.3, 0), 0.7).set_trans(Tween.TRANS_SINE)
