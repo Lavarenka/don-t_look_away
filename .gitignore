@@ -197,14 +197,19 @@
 !/audio/whoosh.wav
 !/audio/whoosh.wav.import
 !/fonts/Caveat-Variable.ttf
+!/fonts/Caveat-Variable.ttf.import
 !/fonts/CormorantSC-Light.ttf
 !/fonts/CormorantSC-Light.ttf.import
 !/fonts/Lora-Italic-Variable.ttf
 !/fonts/Lora-Italic-Variable.ttf.import
 !/fonts/MarckScript-Regular.ttf
+!/fonts/MarckScript-Regular.ttf.import
 !/fonts/PTMono-Regular.ttf
+!/fonts/PTMono-Regular.ttf.import
 !/fonts/PTSerif-Italic.ttf
+!/fonts/PTSerif-Italic.ttf.import
 !/fonts/PTSerif-Regular.ttf
+!/fonts/PTSerif-Regular.ttf.import
 !/fonts/RubikWetPaint-Regular.ttf
 !/fonts/RubikWetPaint-Regular.ttf.import
 !/lang/strings.csv
@@ -1831,6 +1836,7 @@
 !/scripts/floor2.gd
 !/scripts/floor2.gd.uid
 !/scripts/fonts.gd
+!/scripts/fonts.gd.uid
 !/scripts/fps_counter.gd
 !/scripts/fps_counter.gd.uid
 !/scripts/furniture.gd
@@ -1896,6 +1902,7 @@
 !/scripts/vintage.gd
 !/scripts/vintage.gd.uid
 !/scripts/wall_text.gd
+!/scripts/wall_text.gd.uid
 !/shaders/aged_wood.gdshader
 !/shaders/aged_wood.gdshader.uid
 !/shaders/candle_flame.gdshader

@@ -146,7 +146,9 @@ func _localize_scene() -> void:
 		if d and preload("res://scripts/wall_text.gd").ENABLED:
 			d.position.x = signf(d.position.x) * 1.098
 			d.size.y = 0.2
-			d.texture_orm = preload("res://scripts/wall_text.gd").matte(0.85)
+			d.texture_orm = preload("res://scripts/wall_text.gd").matte(0.45)   # кровь чуть блестит в луче фонаря
+			d.texture_emission = d.texture_albedo                  # еле заметно «тлеет» красным: видна и в полутьме
+			d.emission_energy = 0.12
 			d.upper_fade = 0.3
 			d.lower_fade = 0.3
 	if not TranslationServer.get_locale().begins_with("en"):
@@ -155,6 +157,8 @@ func _localize_scene() -> void:
 		var d := get_node_or_null(n) as Decal
 		if d and d.texture_albedo:
 			d.texture_albedo = load(d.texture_albedo.resource_path.replace(".png", "_en.png"))
+			if d.texture_emission:
+				d.texture_emission = d.texture_albedo
 	for i in 5:
 		var s := get_node_or_null("Drawing%d" % (i + 1)) as Sprite3D
 		if s and s.texture:
@@ -438,13 +442,13 @@ func _build_hud() -> void:
 	sb.set_content_margin_all(28)
 	note_panel.add_theme_stylebox_override("panel", sb)
 	note_panel.set_anchors_preset(Control.PRESET_CENTER)
-	note_panel.position = Vector2(-260, -230)
-	note_panel.size = Vector2(520, 460)
+	note_panel.position = Vector2(-300, -230)
+	note_panel.size = Vector2(600, 460)
 	note_label = _label(19, Color(0.17, 0.13, 0.09))
 	FONTS.set_font(note_label, FONTS.HAND, 1.35)          # записки — от руки
 	note_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0))
 	note_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-	note_label.custom_minimum_size = Vector2(464, 0)
+	note_label.custom_minimum_size = Vector2(544, 0)
 	note_panel.add_child(note_label)
 	note_panel.visible = false
 	hud.add_child(note_panel)
@@ -712,9 +716,31 @@ func _interact() -> void:
 			furn.interact(t)
 
 
+## Записка целиком помещается на экран: шрифт уменьшается под длинный текст, лист — по центру.
+func _fit_note() -> void:
+	var f: Font = note_label.get_theme_font("font")
+	var w: float = note_label.custom_minimum_size.x
+	var maxh := 560.0                                   # экран 720 по высоте, поля листа — 56
+	var sz := 25 if FONTS.ENABLED else 19
+	var h := 0.0
+	while true:
+		h = f.get_multiline_string_size(note_label.text, HORIZONTAL_ALIGNMENT_LEFT, w, sz).y * 1.08   # интервал Label чуть больше
+		if h <= maxh or sz <= 14:
+			break
+		sz -= 1
+	note_label.add_theme_font_size_override("font_size", sz)
+	# лист привязан к центру экрана: отступы от центра, высота — по тексту
+	var ph: float = maxf(h + 56.0, 200.0)
+	note_panel.offset_left = -300.0
+	note_panel.offset_right = 300.0
+	note_panel.offset_top = -ph * 0.5
+	note_panel.offset_bottom = ph * 0.5
+
+
 func _show_note(text: String) -> void:
 	inv.add_note(text)
 	note_label.text = tr(text)
+	_fit_note()
 	_sfx("page", -6.0)
 	_voice(text)
 	note_panel.visible = true
