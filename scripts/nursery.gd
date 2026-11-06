@@ -26,6 +26,10 @@ var solved := false
 var seen := {}
 var viewer: TextureRect
 var bed_scare_done := false
+## Под кроватью: true — катсцена «рука» (тянешься к рисунку, из темноты хватает детская рука,
+## scripts/bed_grab.gd); false — прежние «глаза» в щели.
+const BED_GRAB := true
+var bed_grab: Node
 var toys := ["NBear", "NDuck", "NHorse", "NElephant", "NRockChair"]
 var wound := false            ## шкатулка заведена ключиком (ключик спрятан за портретом в коридоре)
 
@@ -400,8 +404,15 @@ func _under_bed() -> void:
 	var base_y := head.position.y
 	# присел у кровати и заглянул в щель под ней
 	var eyes: Node3D = L.get_node("BedEyes")
+	var drawing: Node3D = L.get_node("Drawing5")
+	var into: Vector3 = L.get_node("NBedCol").global_position - drawing.global_position
+	into.y = 0.0
+	into = into.normalized()
+	if BED_GRAB:
+		ResourceLoader.load_threaded_request(preload("res://scripts/fp_arm.gd").BODY)
 	var spot := Vector3(0.25, p.global_position.y, -22.55)
-	var to := eyes.global_position - (spot + Vector3(0, 0.45, 0))
+	var look_at_: Vector3 = drawing.global_position + into * 0.1 if BED_GRAB else eyes.global_position
+	var to := look_at_ - (spot + Vector3(0, 0.45, 0))
 	var yaw := atan2(-to.x, -to.z)
 	var pitch := atan2(to.y, Vector2(to.x, to.z).length())
 	var tw := create_tween().set_parallel()
@@ -411,12 +422,18 @@ func _under_bed() -> void:
 	tw.tween_property(head, "rotation:x", pitch, 0.6)
 	await tw.finished
 	L._sfx("creak", -16.0, 1.6)
-	await get_tree().create_timer(1.0).timeout
-	eyes.visible = true
-	L._sfx("whisper", 0.0, 1.3)
-	L._say("NUR_22", 2.5)
-	await get_tree().create_timer(1.3).timeout
-	eyes.visible = false
+	if BED_GRAB:
+		await get_tree().create_timer(0.4).timeout
+		bed_grab = preload("res://scripts/bed_grab.gd").new()
+		add_child(bed_grab)
+		await bed_grab.run(L, drawing, into, base_y)
+	else:
+		await get_tree().create_timer(1.0).timeout
+		eyes.visible = true
+		L._sfx("whisper", 0.0, 1.3)
+		L._say("NUR_22", 2.5)
+		await get_tree().create_timer(1.3).timeout
+		eyes.visible = false
 	p.flicker = 0.4
 	# встаёт — а она уже стоит прямо перед ним
 	var tw2 := create_tween().set_parallel()

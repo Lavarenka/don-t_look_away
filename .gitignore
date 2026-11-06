@@ -1823,6 +1823,7 @@
 !/scripts/attic.gd.uid
 !/scripts/bathroom.gd
 !/scripts/bathroom.gd.uid
+!/scripts/bed_grab.gd
 !/scripts/bedroom.gd
 !/scripts/bedroom.gd.uid
 !/scripts/creature.gd
@@ -1843,6 +1844,7 @@
 !/scripts/floor2.gd.uid
 !/scripts/fonts.gd
 !/scripts/fonts.gd.uid
+!/scripts/fp_arm.gd
 !/scripts/fps_counter.gd
 !/scripts/fps_counter.gd.uid
 !/scripts/furniture.gd
@@ -1929,6 +1931,7 @@
 !/shaders/dress.gdshader.uid
 !/shaders/fog.gdshader
 !/shaders/fog.gdshader.uid
+!/shaders/ghost_arm.gdshader
 !/shaders/glass.gdshader
 !/shaders/glass.gdshader.uid
 !/shaders/glass_eye.gdshader
