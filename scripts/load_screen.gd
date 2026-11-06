@@ -73,8 +73,9 @@ static func _lbl(text: String, font: Font, sz: int, col: Color, spacing := 0) ->
 	return l
 
 
-static func _centered(c: Control, y: float, w: float, h: float) -> void:
-	c.set_anchors_preset(Control.PRESET_CENTER)
+## y от центра экрана; bottom = true — от нижнего края (как прежний экран загрузки).
+static func _centered(c: Control, y: float, w: float, h: float, bottom := false) -> void:
+	c.set_anchors_preset(Control.PRESET_CENTER_BOTTOM if bottom else Control.PRESET_CENTER)
 	c.offset_left = -w * 0.5
 	c.offset_right = w * 0.5
 	c.offset_top = y
@@ -84,10 +85,10 @@ static func _centered(c: Control, y: float, w: float, h: float) -> void:
 # ---------------- 1. фитиль ----------------
 func _build_wick() -> void:
 	var t := _lbl(tr("MENU_11").to_upper().replace("…", ""), FN.ENGRAVE, 24, Color(0.78, 0.72, 0.62), 9)
-	_centered(t, 40, 700, 40)
+	_centered(t, -178, 700, 40, true)              # внизу, где был прежний экран загрузки
 	add_child(t)
 	var line := Control.new()
-	_centered(line, 100, W1, 14)
+	_centered(line, -124, W1, 14, true)
 	add_child(line)
 	var bg := ColorRect.new()
 	bg.color = Color(0.2, 0.17, 0.15, 0.8)
@@ -114,7 +115,7 @@ func _build_wick() -> void:
 	_spark.material = sm
 	line.add_child(_spark)
 	_hint = _lbl(tr(hint_key), FN.HAND, 27, Color(0.72, 0.67, 0.58))
-	_centered(_hint, 130, 900, 50)
+	_centered(_hint, -96, 900, 50, true)
 	add_child(_hint)
 
 

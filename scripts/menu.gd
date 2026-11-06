@@ -19,7 +19,7 @@ var _btn_font: FontVariation
 var _haze_mat: ShaderMaterial
 var _loading: VBoxContainer
 ## Экран загрузки: 0 — как был (полоска и совет), 1 — «фитиль», 2 — «кассета», 3 — «записка» (scripts/load_screen.gd)
-const LOAD_STYLE := 0
+const LOAD_STYLE := 1
 var _ls = null
 var _bar: ProgressBar
 var _hint: Label
