@@ -473,9 +473,14 @@ func _hang_photo() -> void:
 	_on_photo_hung()
 
 
-## Фотография повешена. Что будет дальше — ещё придумаем.
+## Фотография повешена — скример и «зов» Веры (vera_call.gd): свет, свечи, падают картины,
+## Вера на потолке зовёт к себе и в конце даёт шпильку.
+var call_seq: Node
 func _on_photo_hung() -> void:
-	pass
+	await get_tree().create_timer(1.2).timeout
+	call_seq = preload("res://scripts/vera_call.gd").new()
+	add_child(call_seq)
+	call_seq.start(L, self)
 
 
 ## Шкаф открылся — картины в коридоре (и вся живопись модели спальни) становятся жуткими:
@@ -960,6 +965,7 @@ func target_ok(id: String) -> bool:
 		"v_letter": return letter_node.visible
 		"v_photo": return photo_node.visible
 		"v_hang": return not photo_hung and L.inv.has("v_photo") and hang_mark != null
+		"v_pin": return call_seq != null and call_seq.stage == 3
 	if id.begins_with("v_tooth"):
 		return teeth[int(id.right(1)) - 1].visible
 	return false
@@ -1006,6 +1012,8 @@ func interact(id: String) -> void:
 				L._sfx("pickup", -6.0, 0.9, true)
 		"v_hang":
 			_hang_photo()
+		"v_pin":
+			call_seq.take_pin()
 	if id.begins_with("v_tooth"):
 		var t: Node3D = teeth[int(id.right(1)) - 1]
 		if L.inv.add(id, t):

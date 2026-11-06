@@ -142,6 +142,8 @@
 !/audio/page.wav.import
 !/audio/phone_call.wav
 !/audio/phone_call.wav.import
+!/audio/phone_laugh.wav
+!/audio/phone_laugh.wav.import
 !/audio/phone_ring.wav
 !/audio/phone_ring.wav.import
 !/audio/pickup.wav
@@ -1907,6 +1909,8 @@
 !/scripts/trailer.gd.uid
 !/scripts/vera.gd
 !/scripts/vera.gd.uid
+!/scripts/vera_call.gd
+!/scripts/vera_ceiling.gd
 !/scripts/vera_letter.gd
 !/scripts/vera_letter.gd.uid
 !/scripts/vera_portrait.gd
@@ -1964,6 +1968,7 @@
 !/textures/attic_photo.png
 !/textures/attic_photo.png.import
 !/textures/bedroom_pictures_creepy.png
+!/textures/bedroom_pictures_creepy.png.import
 !/textures/cobweb.png
 !/textures/cobweb.png.import
 !/textures/decal_ne_smotri.png
@@ -2093,6 +2098,7 @@
 !/textures/vanity_drawer.jpg
 !/textures/vanity_drawer.jpg.import
 !/textures/vera_photo.png
+!/textures/vera_photo.png.import
 !/textures/wallpaper/cobweb_corner.png
 !/textures/wallpaper/cobweb_corner.png.import
 !/textures/wallpaper/crack.png

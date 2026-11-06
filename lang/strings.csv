@@ -305,8 +305,16 @@ BR_WARD_LOCK,It won't open.,Не открывается.
 BR_LETTER,E — take the letter,E — взять письмо
 BR_PHOTO,E — take the photograph,E — взять фотографию
 BR_HANG,E — hang the photograph,E — повесить фотографию
+BR_PIN,E — take it,E — взять
+BR_OBJ_PIN,Something in this room is locked.,Что-то в этой комнате заперто.
+VERA_CALL1,"""Come here…""",«Иди сюда…»
+VERA_CALL2,"""Come to me…""",«Иди ко мне…»
+VERA_CALL3,"""Mishenka… come to me…""",«Мишенька… иди ко мне…»
+VERA_TAKE,"""Take it…""",«Возьми…»
 INV_DOLLEYE,Glass eye,Стеклянный глаз
 INV_DOLLEYE_D,Blue and cold. It rolled out of the music box.,"Голубой, холодный. Выкатился из шкатулки."
 INV_VPHOTO,Photograph,Фотография
+INV_HAIRPIN,Hairpin,Шпилька
+INV_HAIRPIN_D,"Grandma's hairpin, bent in half. Cold.","Бабушкина шпилька, согнутая пополам. Холодная."
 INV_VPHOTO_D,"An old photo in a frame. This very corridor, 1986.","Старая фотография в рамке. Этот самый коридор, 1986 год."
 INV_N_VERA,Vera's letter,Письмо Веры
