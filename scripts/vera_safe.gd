@@ -480,7 +480,7 @@ func _scare() -> void:
 ## они только переезжают на место, без подгрузок и рывков.
 const REMY := "res://models/player/remy.fbx"
 const MASK := "res://models/ghosts/ghost_mask.glb"
-const SOUNDS := ["door", "scream_demon", "sting", "attic_thud", "breath_dark", "scratch", "whisper_harsh",
+const SOUNDS := ["door", "scream_cabinet", "sting", "attic_thud", "breath_dark", "scratch", "whisper_harsh",
 	"thump", "scream", "drag", "drone", "giggle"]
 var _prepared := false
 var _warm := false
@@ -570,15 +570,14 @@ func _arms_ending() -> void:
 	plate.visible = false
 	create_tween().tween_property(cam, "fov", 74.0, 0.4)
 	L._sfx3d("door", pp, 4.0, 0.62, true)
-	L._sfx("scream_demon", 0.0, 0.8, true)
-	L._sfx("sting", 0.0, 0.65, true)
+	L._sfx("scream_cabinet", 3.0, 1.0, true)          # рёв из маски-скримера: ниже, грязнее, с эхом
 	if L.get("red_flash"):
 		L.red_flash.color.a = 0.45
 		create_tween().tween_property(L.red_flash, "color:a", 0.0, 1.0)
 	# Мишу отбрасывает: камера летит назад и вниз, на пол, с завалом набок
 	var sp: PhysicsDirectSpaceState3D = (L as Node3D).get_world_3d().direct_space_state
 	# пол — там, где стоят ноги игрока (луч вниз мог попасть в комод под картиной)
-	var out := hole + normal * 1.7
+	var out := hole + normal * 2.4                     # отлетает далеко, почти к дивану
 	var floor_y: float = L.player.global_position.y
 	var hit: Dictionary = sp.intersect_ray(PhysicsRayQueryParameters3D.create(Vector3(out.x, floor_y + 0.5, out.z), Vector3(out.x, floor_y - 0.5, out.z)))
 	if not hit.is_empty():
@@ -645,7 +644,7 @@ func _arms_ending() -> void:
 	_make_mash()
 	_pull_on = true
 	var t := 0.0
-	var ctrl: Vector3 = hole + normal * 0.9 + Vector3.DOWN * 0.6
+	var ctrl: Vector3 = hole + normal * 1.2 + Vector3.DOWN * 0.7
 	var end: Vector3 = hole + normal * 0.06
 	var drag_t := 0.0
 	while _pull_p < 1.0:
@@ -989,7 +988,11 @@ class _LongArms extends SkeletonModifier3D:
 			var sv := n.cross(Vector3.UP).normalized()
 			var reach := (target - hole).dot(n)
 			var sgn := signf((target - hole).dot(sv))
-			E = hole + n * clampf(reach * 0.55, 0.05, 0.7) + Vector3.UP * 0.04 + sv * sgn * 0.12
+			var bent := hole + n * clampf(reach * 0.5, 0.05, 0.8) + sv * sgn * 0.06
+			var straight := sh.lerp(target, 0.5)
+			# далеко — локоть выносится над комодом; ближе — рука плавно выпрямляется (без излома)
+			E = bent.lerp(straight, clampf((1.3 - reach) / 0.8, 0.0, 1.0))
+			E = E.lerp(straight, 0.35)
 		# плечо → локоть
 		var fr := sk.get_bone_rest(fo)
 		var hr := sk.get_bone_rest(ha)
