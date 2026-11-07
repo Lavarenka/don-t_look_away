@@ -209,7 +209,7 @@ func _start() -> void:
 	cam = Camera3D.new()
 	cam.fov = 42.0
 	cam.near = 0.01
-	cam.cull_mask = _old_cam.cull_mask              # как у игрока: его тело для зеркал (слой 2) не видно
+	cam.cull_mask = _old_cam.cull_mask & ~(1 << 12)  # как у игрока (тело для зеркал не видно) и без свечи в руке — она у игрока, не тут
 	L.add_child(cam)
 	var pp := plate_pos()
 	cam.global_position = pp + normal * 0.2 + Vector3.DOWN * 0.03
@@ -479,7 +479,7 @@ func _scare() -> void:
 ## они только переезжают на место, без подгрузок и рывков.
 const REMY := "res://models/player/remy.fbx"
 const MASK := "res://models/ghosts/ghost_mask.glb"
-const SOUNDS := ["door", "scream_cabinet", "sting", "attic_thud", "breath_dark", "scratch", "whisper_harsh",
+const SOUNDS := ["door", "scream_cabinet", "cabinet_riser", "cabinet_final", "sting", "attic_thud", "breath_dark", "scratch", "whisper_harsh",
 	"thump", "scream", "drag", "drone", "giggle"]
 var _prepared := false
 var _warm := false
@@ -560,19 +560,24 @@ func _arms_ending() -> void:
 	var hole := _hole
 	var pp := plate_pos()
 	help.visible = false
-	await get_tree().create_timer(0.3).timeout
-	# дверцы — с грохотом настежь
+	var held = R.get("held")
+	if held is Node3D:
+		(held as Node3D).visible = false                 # свеча Миши выпала — её свет тоже
+	# без паузы: дверцы — с грохотом настежь, всё сразу на полную
 	for lf in leaves:
 		var sg: float = (lf.get_child(0) as Node3D).get_meta("sgn", 1.0)
 		create_tween().tween_property(lf, "rotation:y", sg * 2.0, 0.07).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	pick.visible = false
 	plate.visible = false
 	create_tween().tween_property(cam, "fov", 74.0, 0.4)
-	L._sfx3d("door", pp, 4.0, 0.62, true)
-	L._sfx("scream_cabinet", 3.0, 1.0, true)          # рёв из маски-скримера: ниже, грязнее, с эхом
+	L._sfx3d("door", pp, 6.0, 0.55, true)
+	L._sfx("scream_cabinet", 6.0, 1.0, true)          # удар + многослойный крик — с первой миллисекунды
 	if L.get("red_flash"):
-		L.red_flash.color.a = 0.45
-		create_tween().tween_property(L.red_flash, "color:a", 0.0, 1.0)
+		L.red_flash.color = Color(1, 1, 1, 0.9)       # белая вспышка → кровавый
+		var fl := create_tween()
+		fl.tween_property(L.red_flash, "color", Color(0.6, 0, 0, 0.55), 0.08)
+		fl.tween_property(L.red_flash, "color:a", 0.0, 1.0)
+	mask.visible = true
 	# Мишу отбрасывает: камера летит назад и вниз, на пол, с завалом набок
 	var sp: PhysicsDirectSpaceState3D = (L as Node3D).get_world_3d().direct_space_state
 	# пол — там, где стоят ноги игрока (луч вниз мог попасть в комод под картиной)
@@ -592,8 +597,18 @@ func _arms_ending() -> void:
 		var vk := k * k
 		cam.global_position = Vector3(lerpf(c0.x, fall.x, hk), lerpf(c0.y, fall.y, vk), lerpf(c0.z, fall.z, hk))
 		_look(cam, hole, 0.4 * k)
+		# пока падаешь — маска на кадр-два прямо перед глазами (вспышки, как сбой)
+		var flash := (k > 0.12 and k < 0.2) or (k > 0.5 and k < 0.56)
+		if flash:
+			var b := cam.global_basis
+			var mp: Vector3 = cam.global_position - b.z * 0.42 + b.y * -0.12
+			var to := (cam.global_position - mp).normalized()
+			mask.global_transform = Transform3D(Basis(Vector3.UP.cross(to).normalized(), Vector3.UP, to).orthonormalized().scaled(Vector3.ONE * 1.3), mp)
+		else:
+			_place_mask(-0.4)
 	L._sfx3d("attic_thud", fall, 2.0, 0.7, true)
-	L._sfx("breath_dark", -2.0, 1.15, true)
+	L._sfx("breath_dark", 0.0, 1.15, true)
+	L._sfx("cabinet_riser", 0.0, 1.0, true)           # гул ползёт вверх, сердце всё чаще — до самого конца
 	lamp.light_energy = 0.0                            # свеча выпала из руки
 	cold = OmniLight3D.new()                           # мертвенный холодный свет у лица
 	cold.light_color = Color(0.62, 0.7, 0.9)
@@ -668,8 +683,21 @@ func _arms_ending() -> void:
 		if drag_t < 0.0:
 			drag_t = randf_range(0.5, 0.9)
 			L._sfx3d("drag", cam.global_position, -4.0, randf_range(0.7, 0.9), true)
-	# затянуло — чернота, тишина, заставка
+	# у самых дверец: маска бросается в лицо — визг — обрыв
 	_pull_on = false
+	L._sfx("cabinet_final", 8.0, 1.0, true)
+	var m0 := mask.global_position
+	var lt := 0.0
+	while lt < 0.22:
+		await get_tree().process_frame
+		lt += get_process_delta_time()
+		var b2 := cam.global_basis
+		var tgt: Vector3 = cam.global_position - b2.z * 0.22 + b2.y * -0.1
+		var mp := m0.lerp(tgt, _ease_jerk(lt / 0.22))
+		var to := (cam.global_position - mp).normalized()
+		mask.global_transform = Transform3D(Basis(Vector3.UP.cross(to).normalized(), Vector3.UP, to).orthonormalized().scaled(Vector3.ONE * 1.3), mp)
+		cam.global_position += Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)) * 0.02
+	# затянуло — чернота, тишина, заставка
 	black.color.a = 1.0
 	L._say("", 0.1)
 	for a2 in L.find_children("*", "AudioStreamPlayer", true, false) + L.find_children("*", "AudioStreamPlayer3D", true, false):
@@ -779,7 +807,7 @@ func _spawn_arms(hole: Vector3) -> void:
 	var S := sk.global_transform
 	var ls: Vector3 = S * sk.get_bone_global_rest(sk.find_bone("mixamorig_LeftArm")).origin
 	var rs: Vector3 = S * sk.get_bone_global_rest(sk.find_bone("mixamorig_RightArm")).origin
-	arms_vera.global_position += (hole - normal * 0.4 + Vector3.DOWN * 0.03) - (ls + rs) * 0.5
+	arms_vera.global_position += (hole - normal * 0.9 + Vector3.DOWN * 0.05) - (ls + rs) * 0.5   # плечи глубоко — руки сходятся к середине проёма
 	# длинные тёмные ногти
 	var nm := StandardMaterial3D.new()
 	nm.albedo_color = Color(0.16, 0.13, 0.09)
@@ -989,11 +1017,8 @@ class _LongArms extends SkeletonModifier3D:
 			var sv := n.cross(Vector3.UP).normalized()
 			var reach := (target - hole).dot(n)
 			var sgn := signf((target - hole).dot(sv))
-			var bent := hole + n * clampf(reach * 0.5, 0.05, 0.8) + sv * sgn * 0.06
-			var straight := sh.lerp(target, 0.5)
-			# далеко — локоть выносится над комодом; ближе — рука плавно выпрямляется (без излома)
-			E = bent.lerp(straight, clampf((1.3 - reach) / 0.8, 0.0, 1.0))
-			E = E.lerp(straight, 0.35)
+			# рука прямая: из глубины тайника через середину проёма — к Мише (он далеко на полу, над комодом проходит)
+			E = sh.lerp(target, 0.5)
 		# плечо → локоть
 		var fr := sk.get_bone_rest(fo)
 		var hr := sk.get_bone_rest(ha)
@@ -1013,7 +1038,7 @@ class _LongArms extends SkeletonModifier3D:
 		var par := sk.get_bone_parent(up)
 		var pg := sk.get_bone_global_pose(par).basis.orthonormalized() if par >= 0 else Basis()
 		sk.set_bone_pose_rotation(up, Quaternion((pg.inverse() * nb).orthonormalized()))
-		const THIN := 0.5
+		const THIN := 0.65
 		var s1 := maxf(to_e.length() / maxf(len_u, 0.01), 0.3)
 		sk.set_bone_pose_scale(up, Vector3(THIN, s1, THIN))
 		# локоть → кисть (с учётом растянутого плеча)
@@ -1028,7 +1053,7 @@ class _LongArms extends SkeletonModifier3D:
 		sk.set_bone_pose_rotation(fo, R)
 		var seg := (P * (R * hr.origin)).length()
 		var s2 := maxf(to_h.length() / maxf(seg, 0.001), 0.2)
-		const THIN_F := 0.5
+		const THIN_F := 0.65
 		sk.set_bone_pose_scale(fo, Vector3(THIN_F, s2, THIN_F))
 		# кисть: обычной длины, чуть тоньше (костлявая)
 		# компенсируем сужение и растяжение, которые кисть унаследовала от плеча и предплечья
