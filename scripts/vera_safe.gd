@@ -978,30 +978,60 @@ class _LongArms extends SkeletonModifier3D:
 		sk.set_bone_pose_rotation(fo, sk.get_bone_rest(fo).basis.get_rotation_quaternion())
 		sk.set_bone_pose_rotation(ha, sk.get_bone_rest(ha).basis.get_rotation_quaternion())
 		var S := sk.global_transform
+		var Si := S.affine_inverse()
 		var ug := sk.get_bone_global_pose(up)
 		var sh: Vector3 = S * ug.origin
-		var to_s: Vector3 = S.affine_inverse().basis * (target - sh)
-		var len0: float = (ug.basis.orthonormalized() * v).length()
-		var cur_dir: Vector3 = (ug.basis.orthonormalized() * v).normalized()
-		if to_s.length() < 0.001:
+		# локоть: рука выходит из тайника вперёд над комодом и только потом опускается к Мише
+		var E := target
+		if owner_safe:
+			var hole: Vector3 = owner_safe.get("_hole")
+			var n: Vector3 = owner_safe.get("normal")
+			var sv := n.cross(Vector3.UP).normalized()
+			var reach := (target - hole).dot(n)
+			var sgn := signf((target - hole).dot(sv))
+			E = hole + n * clampf(reach * 0.55, 0.05, 0.7) + Vector3.UP * 0.04 + sv * sgn * 0.12
+		# плечо → локоть
+		var fr := sk.get_bone_rest(fo)
+		var hr := sk.get_bone_rest(ha)
+		var to_e: Vector3 = Si.basis * (E - sh)
+		if to_e.length() < 0.001:
 			return
-		var want_dir := to_s.normalized()
-		var nb := Basis(Quaternion(cur_dir, want_dir)) * ug.basis.orthonormalized()
+		var ub := ug.basis.orthonormalized()
+		var len_u: float = (ub * fr.origin).length()
+		var want_dir := to_e.normalized()
+		var nb := Basis(Quaternion((ub * fr.origin).normalized(), want_dir)) * ub
 		var palm_now: Vector3 = nb * (d[5] as Vector3)
-		var palm_want: Vector3 = S.affine_inverse().basis * palm_down
+		var palm_want: Vector3 = Si.basis * palm_down
 		var a := palm_now - want_dir * want_dir.dot(palm_now)
 		var b := palm_want - want_dir * want_dir.dot(palm_want)
 		if a.length() > 0.001 and b.length() > 0.001:
-			var ang := a.normalized().signed_angle_to(b.normalized(), want_dir)
-			nb = Basis(want_dir, ang) * nb
+			nb = Basis(want_dir, a.normalized().signed_angle_to(b.normalized(), want_dir)) * nb
 		var par := sk.get_bone_parent(up)
 		var pg := sk.get_bone_global_pose(par).basis.orthonormalized() if par >= 0 else Basis()
 		sk.set_bone_pose_rotation(up, Quaternion((pg.inverse() * nb).orthonormalized()))
-		var s := maxf(to_s.length() / maxf(len0, 0.01), 0.6)
 		const THIN := 0.5
-		sk.set_bone_pose_scale(up, Vector3(THIN, s, THIN))
-		# кисть: длина — как была, толщина — чуть тоньше обычной (костлявая)
-		sk.set_bone_pose_scale(ha, Vector3(0.82 / THIN, 1.05 / s, 0.82 / THIN))
+		var s1 := maxf(to_e.length() / maxf(len_u, 0.01), 0.3)
+		sk.set_bone_pose_scale(up, Vector3(THIN, s1, THIN))
+		# локоть → кисть (с учётом растянутого плеча)
+		var fg := sk.get_bone_global_pose(fo)
+		var P: Basis = sk.get_bone_global_pose(up).basis            # с масштабом
+		var to_h: Vector3 = (Si * target) - fg.origin
+		if to_h.length() < 0.001:
+			return
+		var want_l := (P.inverse() * to_h).normalized()
+		var hdir := hr.origin.normalized()
+		var R := Quaternion(hdir, want_l)
+		sk.set_bone_pose_rotation(fo, R)
+		var seg := (P * (R * hr.origin)).length()
+		var s2 := maxf(to_h.length() / maxf(seg, 0.001), 0.2)
+		const THIN_F := 0.5
+		sk.set_bone_pose_scale(fo, Vector3(THIN_F, s2, THIN_F))
+		# кисть: обычной длины, чуть тоньше (костлявая)
+		# компенсируем сужение и растяжение, которые кисть унаследовала от плеча и предплечья
+		var inh: Basis = sk.get_bone_global_pose(fo).basis * sk.get_bone_rest(ha).basis
+		var sc := inh.get_scale()
+		var want_k: float = 0.82 * (ub * fr.origin).length() / maxf(len_u, 0.001)
+		sk.set_bone_pose_scale(ha, Vector3(0.82 / maxf(sc.x, 0.01), 1.0 / maxf(sc.y, 0.01), 0.82 / maxf(sc.z, 0.01)) * (ug.basis.get_scale().x))
 		for f in d[6]:
 			sk.set_bone_pose_scale(f, Vector3(0.8, 1.4, 0.8))      # длинные тонкие пальцы
 		for f in d[3]:
