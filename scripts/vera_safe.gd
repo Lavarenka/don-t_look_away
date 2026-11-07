@@ -209,6 +209,7 @@ func _start() -> void:
 	cam = Camera3D.new()
 	cam.fov = 42.0
 	cam.near = 0.01
+	cam.cull_mask = _old_cam.cull_mask              # как у игрока: его тело для зеркал (слой 2) не видно
 	L.add_child(cam)
 	var pp := plate_pos()
 	cam.global_position = pp + normal * 0.2 + Vector3.DOWN * 0.03
@@ -320,9 +321,7 @@ func _input(e: InputEvent) -> void:
 	if _pull_on:
 		var hit: bool = (e is InputEventKey and e.pressed and not e.echo and e.physical_keycode in [KEY_E, KEY_SPACE, KEY_F]) \
 			or (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT)
-		if hit:
-			_struggle()
-		return
+		return                                        # вырывается сам — ввод не нужен
 	if _busy:
 		return
 	if e is InputEventMouseMotion:
@@ -641,8 +640,8 @@ func _arms_ending() -> void:
 	me_body.visible = true
 	await _shake(0.3, 0.03)
 	L._say("VERA_PULL", 3.0)
-	_make_mash()
 	_pull_on = true
+	var fight_t := 0.4
 	var t := 0.0
 	var ctrl: Vector3 = hole + normal * 1.2 + Vector3.DOWN * 0.7
 	var end: Vector3 = hole + normal * 0.06
@@ -661,14 +660,16 @@ func _arms_ending() -> void:
 		cam.global_position = pos
 		_look(cam, hole + Vector3.DOWN * 0.05, 0.4 * (1.0 - e) + sin(t * 9.0) * 0.035)
 		_place_mask(0.09 + 0.025 * sin(t * 2.3))
-		mash.modulate.a = 0.55 + 0.45 * sin(t * 10.0)
+		fight_t -= dt
+		if fight_t < 0.0:                               # сам дёргается, пытается вырваться
+			fight_t = randf_range(0.3, 0.75)
+			_struggle()
 		drag_t -= dt
 		if drag_t < 0.0:
 			drag_t = randf_range(0.5, 0.9)
 			L._sfx3d("drag", cam.global_position, -4.0, randf_range(0.7, 0.9), true)
 	# затянуло — чернота, тишина, заставка
 	_pull_on = false
-	mash.visible = false
 	black.color.a = 1.0
 	L._say("", 0.1)
 	for a2 in L.find_children("*", "AudioStreamPlayer", true, false) + L.find_children("*", "AudioStreamPlayer3D", true, false):
