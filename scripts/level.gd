@@ -1525,6 +1525,15 @@ func jump_chapter(n: int) -> void:
 			inv.add("bedkey", null, false)
 			player.teleport(Vector3(-3.4, -3.35, -35.5), PI / 2)
 			_set_objective("B_OBJ4")
+		7:      # ТЕСТ: спальня бабушки, последний этап — тайник за картиной, шпилька в кармане
+			_cheat_corridor()
+			events["nursery_open"] = true
+			exit_door.rotation.y = 0.0
+			floor2.enter_direct()
+			bath.skip_solved()
+			bedroom.unlocked = true
+			player.teleport(Vector3(-6.3, -3.35, -35.5), PI / 2)    # в коридор спальни — дверь захлопнется
+			bedroom.vroom.cheat_safe()
 
 ## Чит для теста: F9 — сразу в коридор со свечами.
 func _cheat_corridor() -> void:

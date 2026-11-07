@@ -174,6 +174,10 @@ func plate_pos() -> Vector3:
 
 ## Картина упала — тайник виден: цель для E.
 func reveal() -> void:
+	if ARMS_ENDING:                                   # модели финала грузятся в фоне, пока игрок идёт к замку
+		for r in [REMY, MASK]:
+			ResourceLoader.load_threaded_request(r)
+		_warm = true
 	R._target("v_safe", plate_pos(), "BR_SAFE", 0.35, 1.8)
 	for t in L.targets:
 		if t.get("id") == "v_safe":
@@ -219,8 +223,6 @@ func _start() -> void:
 	black.color.a = 1.0
 	cam.make_current()
 	_make_pick()
-	if ARMS_ENDING and not _scared:
-		_prepare_ending()                         # пока экран чёрный: модели, звуки, материалы
 	_new_sweet()
 	_turn = 0.0
 	_ang = 0.0
@@ -342,6 +344,11 @@ func _input(e: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
+	# фоновая подготовка финала: по одному куску за кадр, когда модели догрузились (не во время мини-игры)
+	if _warm and _prep_step < 4 and not _on:
+		if ResourceLoader.load_threaded_get_status(REMY) == ResourceLoader.THREAD_LOAD_LOADED \
+				and ResourceLoader.load_threaded_get_status(MASK) == ResourceLoader.THREAD_LOAD_LOADED:
+			_prep_next()
 	if _me_on:
 		_update_me()
 	if not _on or not is_instance_valid(pick):
@@ -476,6 +483,9 @@ const MASK := "res://models/ghosts/ghost_mask.glb"
 const SOUNDS := ["door", "scream_demon", "sting", "attic_thud", "breath_dark", "scratch", "whisper_harsh",
 	"thump", "scream", "drag", "drone", "giggle"]
 var _prepared := false
+var _warm := false
+var _prep_step := 0
+var arms_light: OmniLight3D
 var _hole := Vector3.ZERO
 var mask: Node3D
 var me_body: Node3D              ## руки Миши (Remy без головы)
@@ -492,21 +502,31 @@ var cold: OmniLight3D
 
 
 func _prepare_ending() -> void:
-	if _prepared:
-		return
-	_prepared = true
+	while _prep_step < 4:
+		_prep_next()
+
+
+## Один шаг подготовки: звуки → руки → маска → свои руки. Всё спрятано до финала.
+func _prep_next() -> void:
 	_hole = global_position + normal * 0.01
-	for n in SOUNDS:
-		L._stream(n)                                   # в кэш заранее
-	_spawn_arms(_hole)
-	# маска — за стеной (не видна), выползет из темноты между рук
-	mask = (load(MASK) as PackedScene).instantiate()
-	L.add_child(mask)
-	mask.scale = Vector3.ONE * 1.3
-	for mi in mask.find_children("*", "MeshInstance3D", true, false):
-		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_place_mask(-0.4)
-	_spawn_me()
+	match _prep_step:
+		0:
+			for n in SOUNDS:
+				L._stream(n)
+		1:
+			_spawn_arms(_hole)
+		2:
+			mask = (load(MASK) as PackedScene).instantiate()
+			L.add_child(mask)
+			mask.scale = Vector3.ONE * 1.3
+			mask.visible = false
+			for mi in mask.find_children("*", "MeshInstance3D", true, false):
+				(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			_place_mask(-0.4)
+		3:
+			_spawn_me()
+	_prep_step += 1
+	_prepared = _prep_step >= 4
 
 
 ## Маска в проёме: лицом в комнату, out — на сколько лицо выступает из стены (м; меньше 0 — в темноте).
@@ -566,6 +586,9 @@ func _arms_ending() -> void:
 	cold.position = Vector3(0.0, 0.25, 0.1)
 	await _shake(0.45, 0.025)
 	# из темноты медленно выплывает маска — и смотрит
+	arms_light.visible = true
+	_place_mask(-0.12)
+	mask.visible = true
 	L._sfx3d("whisper_harsh", hole, 0.0, 0.7, true)
 	var mt := 0.0
 	while mt < 1.1:
@@ -575,8 +598,12 @@ func _arms_ending() -> void:
 	# руки — рывком из темноты, прямо за плечи
 	L._sfx3d("scratch", hole, 0.0, 0.7, true)
 	var grab_t := 0.0
-	var start_l: Vector3 = hole - normal * 0.05 + Vector3.LEFT * 0.08
-	var start_r: Vector3 = hole - normal * 0.05 + Vector3.RIGHT * 0.08
+	var start_l: Vector3 = hole + normal * 0.15 + Vector3.LEFT * 0.08
+	var start_r: Vector3 = hole + normal * 0.15 + Vector3.RIGHT * 0.08
+	arms_mod.set("target_l", start_l)
+	arms_mod.set("target_r", start_r)
+	await get_tree().process_frame
+	arms_vera.visible = true
 	while grab_t < 0.42:
 		await get_tree().process_frame
 		grab_t += get_process_delta_time()
@@ -723,9 +750,10 @@ func _spawn_arms(hole: Vector3) -> void:
 	var sk: Skeleton3D = arms_vera.get_node("Skeleton3D")
 	var b := Basis(Vector3.UP.cross(normal).normalized(), Vector3.UP, normal)      # лицом в комнату
 	arms_vera.global_transform = Transform3D(b.scaled(Vector3(k, k, k)), hole)
+	arms_vera.visible = false
 	arms_mod = _LongArms.new()
-	arms_mod.set("target_l", hole - normal * 0.05)
-	arms_mod.set("target_r", hole - normal * 0.05)
+	arms_mod.set("target_l", hole + normal * 0.15)
+	arms_mod.set("target_r", hole + normal * 0.15)
 	arms_mod.set("owner_safe", self)
 	sk.add_child(arms_mod)
 	var S := sk.global_transform
@@ -758,18 +786,20 @@ func _spawn_arms(hole: Vector3) -> void:
 			nail.position = Vector3(0, cm.height * 0.35, 0)
 			nail.rotation.x = 0.35                     # загнуты, как когти
 	# холодный отсвет из тайника — на руки и маску
-	var gl := OmniLight3D.new()
-	gl.light_color = Color(0.6, 0.7, 1.0)
-	gl.light_energy = 0.9
-	gl.omni_range = 2.6
-	gl.shadow_enabled = false
-	L.add_child(gl)
-	gl.global_position = hole + normal * 0.35 + Vector3.DOWN * 0.3
+	arms_light = OmniLight3D.new()
+	arms_light.light_color = Color(0.6, 0.7, 1.0)
+	arms_light.light_energy = 0.9
+	arms_light.omni_range = 2.6
+	arms_light.shadow_enabled = false
+	arms_light.visible = false
+	L.add_child(arms_light)
+	arms_light.global_position = hole + normal * 0.35 + Vector3.DOWN * 0.3
 
 
 ## Свои руки Миши: Remy без головы, тело — за камерой; кисти вцепляются в её руки чуть выше запястий.
 func _spawn_me() -> void:
 	me_body = (load(REMY) as PackedScene).instantiate()
+	me_body.visible = false
 	L.add_child(me_body)
 	me_body.scale = Vector3.ONE * _me_k
 	for mi in me_body.find_children("*", "MeshInstance3D", true, false):

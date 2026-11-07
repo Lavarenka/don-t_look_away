@@ -473,6 +473,34 @@ func _hang_photo() -> void:
 	_on_photo_hung()
 
 
+## ТЕСТ (глава 7 в меню): сразу последний этап — свеча в руке, фото повешено, картины упали,
+## шпилька в кармане; игрок стоит перед тайником.
+func cheat_safe() -> void:
+	while not started:
+		await get_tree().process_frame
+	await get_tree().create_timer(1.0).timeout
+	if held == null:
+		_make_held()
+	lit = true
+	_path_stop()
+	photo_hung = true
+	ward_open = true
+	_creepy_pictures()
+	call_seq = preload("res://scripts/vera_call.gd").new()
+	add_child(call_seq)
+	call_seq.L = L
+	call_seq.R = self
+	call_seq.stage = 4
+	call_seq._drop_pictures()
+	L.inv.add("v_hairpin", null, false)
+	await get_tree().create_timer(2.5).timeout
+	if safe:
+		var at: Vector3 = safe.plate_pos() + safe.normal * 1.1
+		var d: Vector3 = -safe.normal
+		L.player.teleport(Vector3(at.x, Y2 + 0.05, at.z), atan2(-d.x, -d.z))
+	L._set_objective("BR_OBJ_PIN")
+
+
 ## Фотография повешена — скример и «зов» Веры (vera_call.gd): свет, свечи, падают картины,
 ## Вера на потолке зовёт к себе и в конце даёт шпильку.
 var call_seq: Node
