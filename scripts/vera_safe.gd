@@ -219,6 +219,8 @@ func _start() -> void:
 	black.color.a = 1.0
 	cam.make_current()
 	_make_pick()
+	if ARMS_ENDING and not _scared:
+		_prepare_ending()                         # пока экран чёрный: модели, звуки, материалы
 	_new_sweet()
 	_turn = 0.0
 	_ang = 0.0
@@ -340,6 +342,8 @@ func _input(e: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
+	if _me_on:
+		_update_me()
 	if not _on or not is_instance_valid(pick):
 		return
 	var arm := pick.get_node("Arm") as Node3D
@@ -464,79 +468,138 @@ func _scare() -> void:
 
 
 # ---------------------------------------------------------------- финал: руки из тайника
+## Всё тяжёлое (модели, звуки) готовится заранее — когда начинается мини-игра, за чёрной шторкой;
+## руки, маска и свои руки Миши стоят «за стеной» и уже рисуются (материалы собраны) — в скримере
+## они только переезжают на место, без подгрузок и рывков.
+const REMY := "res://models/player/remy.fbx"
+const MASK := "res://models/ghosts/ghost_mask.glb"
+const SOUNDS := ["door", "scream_demon", "sting", "attic_thud", "breath_dark", "scratch", "whisper_harsh",
+	"thump", "scream", "drag", "drone", "giggle"]
+var _prepared := false
+var _hole := Vector3.ZERO
+var mask: Node3D
+var me_body: Node3D              ## руки Миши (Remy без головы)
+var me_sk: Skeleton3D
+var _me_head_local := Vector3.ZERO
+var _me_k := 0.46
+var _me_t: Array[Node3D] = []    ## цели кистей Миши: [левая, правая]
+var _me_p: Array[Node3D] = []
+var _me_mod: SkeletonModifier3D
+var _me_on := false
+var _yank := 0.0                 ## рывок «отдираю руки» — гаснет
+var _mask_out := 0.0             ## насколько маска вылезла из темноты (м)
+var cold: OmniLight3D
+
+
+func _prepare_ending() -> void:
+	if _prepared:
+		return
+	_prepared = true
+	_hole = global_position + normal * 0.01
+	for n in SOUNDS:
+		L._stream(n)                                   # в кэш заранее
+	_spawn_arms(_hole)
+	# маска — за стеной (не видна), выползет из темноты между рук
+	mask = (load(MASK) as PackedScene).instantiate()
+	L.add_child(mask)
+	mask.scale = Vector3.ONE * 1.3
+	for mi in mask.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_place_mask(-0.4)
+	_spawn_me()
+
+
+## Маска в проёме: лицом в комнату, out — на сколько лицо выступает из стены (м; меньше 0 — в темноте).
+func _place_mask(out: float) -> void:
+	var b := Basis(Vector3.UP.cross(normal).normalized(), Vector3.UP, normal)
+	var c := _hole + Vector3.DOWN * 0.15 + normal * (out - 0.065 * 1.3)
+	if is_instance_valid(cam):
+		var to := (cam.global_position - c).normalized()
+		to = (to + normal * 2.0).normalized()           # чуть доворачивается к тебе
+		b = Basis(Vector3.UP.cross(to).normalized(), Vector3.UP, to).orthonormalized()
+	mask.global_transform = Transform3D(b.scaled(Vector3.ONE * 1.3), c)
+
+
 func _arms_ending() -> void:
+	_prepare_ending()
+	var hole := _hole
 	var pp := plate_pos()
-	var hole: Vector3 = global_position + normal * 0.01
 	help.visible = false
-	await get_tree().create_timer(0.35).timeout
+	await get_tree().create_timer(0.3).timeout
 	# дверцы — с грохотом настежь
 	for lf in leaves:
 		var sg: float = (lf.get_child(0) as Node3D).get_meta("sgn", 1.0)
 		create_tween().tween_property(lf, "rotation:y", sg * 2.0, 0.07).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	pick.visible = false
 	plate.visible = false
-	create_tween().tween_property(cam, "fov", 72.0, 0.4)
+	create_tween().tween_property(cam, "fov", 74.0, 0.4)
 	L._sfx3d("door", pp, 4.0, 0.62, true)
 	L._sfx("scream_demon", 0.0, 0.8, true)
 	L._sfx("sting", 0.0, 0.65, true)
 	if L.get("red_flash"):
 		L.red_flash.color.a = 0.45
 		create_tween().tween_property(L.red_flash, "color:a", 0.0, 1.0)
-	_spawn_arms(hole)
 	# Мишу отбрасывает: камера летит назад и вниз, на пол, с завалом набок
 	var sp: PhysicsDirectSpaceState3D = (L as Node3D).get_world_3d().direct_space_state
-	var out := hole + normal * 1.25
+	var out := hole + normal * 1.2
 	var hit: Dictionary = sp.intersect_ray(PhysicsRayQueryParameters3D.create(out, out + Vector3.DOWN * 3.0))
 	var floor_y: float = hit.position.y if not hit.is_empty() else hole.y - 1.75
-	var fall := Vector3(out.x, floor_y + 0.42, out.z)
+	var fall := Vector3(out.x, floor_y + 0.45, out.z)
 	var c0 := cam.global_position
 	var fall_t := 0.0
 	while fall_t < 0.5:
 		await get_tree().process_frame
 		fall_t += get_process_delta_time()
 		var k := minf(fall_t / 0.5, 1.0)
-		var hk := 1.0 - pow(1.0 - k, 3.0)                  # назад — сразу, рывком
-		var vk := k * k                                    # вниз — с ускорением
-		var pos := Vector3(lerpf(c0.x, fall.x, hk), lerpf(c0.y, fall.y, vk), lerpf(c0.z, fall.z, hk))
-		cam.global_position = pos
-		_look(cam, hole, 0.45 * k)
+		var hk := 1.0 - pow(1.0 - k, 3.0)
+		var vk := k * k
+		cam.global_position = Vector3(lerpf(c0.x, fall.x, hk), lerpf(c0.y, fall.y, vk), lerpf(c0.z, fall.z, hk))
+		_look(cam, hole, 0.4 * k)
 	L._sfx3d("attic_thud", fall, 2.0, 0.7, true)
 	L._sfx("breath_dark", -2.0, 1.15, true)
 	lamp.light_energy = 0.0                            # свеча выпала из руки
-	var cold := OmniLight3D.new()                      # мертвенный холодный свет — на руки у лица
+	cold = OmniLight3D.new()                           # мертвенный холодный свет у лица
 	cold.light_color = Color(0.62, 0.7, 0.9)
-	cold.light_energy = 0.35
-	cold.omni_range = 1.2
+	cold.light_energy = 0.4
+	cold.omni_range = 1.4
 	cam.add_child(cold)
 	cold.position = Vector3(0.0, 0.25, 0.1)
 	await _shake(0.45, 0.025)
-	await get_tree().create_timer(0.7).timeout
-	# из темноты — руки
-	L._sfx3d("scratch", hole, 0.0, 0.7, true)
+	# из темноты медленно выплывает маска — и смотрит
 	L._sfx3d("whisper_harsh", hole, 0.0, 0.7, true)
+	var mt := 0.0
+	while mt < 1.1:
+		await get_tree().process_frame
+		mt += get_process_delta_time()
+		_place_mask(lerpf(-0.12, 0.08, _smooth(minf(mt / 1.1, 1.0))))
+	# руки — рывком из темноты, прямо за плечи
+	L._sfx3d("scratch", hole, 0.0, 0.7, true)
 	var grab_t := 0.0
-	var start_l: Vector3 = hole - normal * 0.05 + Vector3.LEFT * 0.05
-	var start_r: Vector3 = hole - normal * 0.05 + Vector3.RIGHT * 0.05
-	arms_vera.visible = true
-	while grab_t < 0.55:
+	var start_l: Vector3 = hole - normal * 0.05 + Vector3.LEFT * 0.08
+	var start_r: Vector3 = hole - normal * 0.05 + Vector3.RIGHT * 0.08
+	while grab_t < 0.42:
 		await get_tree().process_frame
 		grab_t += get_process_delta_time()
-		var k := _ease_jerk(grab_t / 0.55)
+		var k := _ease_jerk(grab_t / 0.42)
 		var g := _grab_points()
 		arms_mod.set("target_l", start_l.lerp(g[0], k))
 		arms_mod.set("target_r", start_r.lerp(g[1], k))
+		arms_mod.set("grip", 0.0)
 	arms_mod.set("follow", true)
-	create_tween().tween_property(arms_mod, "grip", 1.0, 0.12)
+	create_tween().tween_property(arms_mod, "grip", 1.0, 0.1)
 	L._sfx("thump", 0.0, 0.8, true)
 	L._sfx("scream", -6.0, 0.55, true)
-	await _shake(0.35, 0.03)
-	# тащат к себе; можно вырываться
+	L._sfx3d("giggle", hole, -4.0, 0.55, true)
+	# свои руки — вцепляются в её запястья и пытаются отодрать
+	_me_on = true
+	me_body.visible = true
+	await _shake(0.3, 0.03)
 	L._say("VERA_PULL", 3.0)
 	_make_mash()
 	_pull_on = true
 	var t := 0.0
-	var ctrl: Vector3 = hole + normal * 0.55 + Vector3.DOWN * 0.2
-	var end: Vector3 = hole + normal * 0.03
+	var ctrl: Vector3 = hole + normal * 0.6 + Vector3.DOWN * 0.15
+	var end: Vector3 = hole + normal * 0.06
 	var drag_t := 0.0
 	while _pull_p < 1.0:
 		await get_tree().process_frame
@@ -544,12 +607,14 @@ func _arms_ending() -> void:
 		t += dt
 		_pull_p = minf(_pull_p + (0.05 + 0.045 * t) * dt, 1.0)       # всё сильнее
 		_resist = move_toward(_resist, 0.0, dt * 0.5)
+		_yank = move_toward(_yank, 0.0, dt * 4.0)
 		var e := _pull_p
 		var pos := fall.lerp(ctrl, e).lerp(ctrl.lerp(end, e), e)
 		pos += normal * _resist
-		pos += Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)) * 0.006
+		pos += Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)) * 0.005
 		cam.global_position = pos
-		_look(cam, hole, 0.45 * (1.0 - e) + sin(t * 9.0) * 0.04)
+		_look(cam, hole + Vector3.DOWN * 0.05, 0.4 * (1.0 - e) + sin(t * 9.0) * 0.035)
+		_place_mask(0.09 + 0.025 * sin(t * 2.3))
 		mash.modulate.a = 0.55 + 0.45 * sin(t * 10.0)
 		drag_t -= dt
 		if drag_t < 0.0:
@@ -560,11 +625,15 @@ func _arms_ending() -> void:
 	mash.visible = false
 	black.color.a = 1.0
 	L._say("", 0.1)
-	for a in L.find_children("*", "AudioStreamPlayer", true, false) + L.find_children("*", "AudioStreamPlayer3D", true, false):
-		a.stop()
+	for a2 in L.find_children("*", "AudioStreamPlayer", true, false) + L.find_children("*", "AudioStreamPlayer3D", true, false):
+		a2.stop()
 	await get_tree().create_timer(1.8).timeout
 	await _title_card()
 	get_tree().change_scene_to_file(MENU)
+
+
+static func _smooth(k: float) -> float:
+	return k * k * (3.0 - 2.0 * k)
 
 
 static func _ease_jerk(k: float) -> float:
@@ -572,14 +641,14 @@ static func _ease_jerk(k: float) -> float:
 	return 1.0 - pow(1.0 - k, 4.0)
 
 
-## Куда хватают руки: перед камерой, внизу слева и справа (плечи/грудь Миши).
+## Куда хватают руки: за плечи Миши (кисти — у самых краёв кадра, внизу).
 func _grab_points() -> Array:
 	var b := cam.global_basis
 	var o := cam.global_position
-	return [o + b * Vector3(-0.15, -0.1, -0.34), o + b * Vector3(0.15, -0.1, -0.34)]
+	var y := 0.02 * _yank
+	return [o + b * Vector3(-0.16, -0.19 + y, -0.24), o + b * Vector3(0.16, -0.19 + y, -0.24)]
 
 
-## Повернуть камеру на точку с креном roll.
 static func _look(c: Camera3D, at: Vector3, roll: float) -> void:
 	c.look_at(at, Vector3.UP)
 	c.rotate_object_local(Vector3.BACK, roll)
@@ -595,10 +664,11 @@ func _shake(sec: float, amp: float) -> void:
 	cam.global_position = base
 
 
-## Вырываешься: рывок назад, руки держат — но затягивание на миг сбивается.
+## Вырываешься: дёргаешь её руки от себя — затягивание на миг сбивается.
 func _struggle() -> void:
 	_pull_p = maxf(_pull_p - 0.03, 0.0)
 	_resist = minf(_resist + 0.05, 0.18)
+	_yank = 1.0
 	L._sfx3d("thump", cam.global_position, -14.0, randf_range(1.2, 1.5), true)
 
 
@@ -617,15 +687,15 @@ func _make_mash() -> void:
 	ui.add_child(mash)
 
 
-## Руки из тайника: тело (Remy, бледная «призрачная» кожа) — за стеной, плечи — позади дверец;
-## видны только руки — тонкие, страшно длинные, темнеют к тайнику (выходят из темноты).
+## Руки из тайника: тело (Remy, мёртвая серая кожа) — за стеной, плечи — позади дверец.
+## Видны только руки — тонкие, костлявые, страшно длинные; длинные пальцы с тёмными ногтями.
 var arms_mat: ShaderMaterial
 func _spawn_arms(hole: Vector3) -> void:
-	arms_vera = (load("res://models/player/remy.fbx") as PackedScene).instantiate()
+	arms_vera = (load(REMY) as PackedScene).instantiate()
 	var k: float = L.player.head.position.y / 3.47 if L.player.head.position.y > 1.0 else 1.6 / 3.47
+	_me_k = k
 	arms_vera.scale = Vector3(k, k, k)
 	L.add_child(arms_vera)
-	arms_vera.visible = false
 	var tex: Texture2D = null
 	for mi in arms_vera.find_children("*", "MeshInstance3D", true, false):
 		var m := mi as MeshInstance3D
@@ -640,9 +710,10 @@ func _spawn_arms(hole: Vector3) -> void:
 	arms_mat.shader = preload("res://shaders/ghost_arm.gdshader")
 	if tex:
 		arms_mat.set_shader_parameter("skin", tex)
-	arms_mat.set_shader_parameter("fade0", 0.45)
+	arms_mat.set_shader_parameter("fade0", 0.5)
 	arms_mat.set_shader_parameter("fade1", 1.9)
-	arms_mat.set_shader_parameter("tint", Color(0.72, 0.74, 0.78))
+	arms_mat.set_shader_parameter("tint", Color(0.6, 0.62, 0.6))
+	arms_mat.set_shader_parameter("dead", 1.0)
 	for mi in arms_vera.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).material_override = arms_mat
 	var ap: AnimationPlayer = arms_vera.get_node("AnimationPlayer")
@@ -657,13 +728,36 @@ func _spawn_arms(hole: Vector3) -> void:
 	arms_mod.set("target_r", hole - normal * 0.05)
 	arms_mod.set("owner_safe", self)
 	sk.add_child(arms_mod)
-	# плечи — в 40 см за стеной, по центру тайника
 	var S := sk.global_transform
 	var ls: Vector3 = S * sk.get_bone_global_rest(sk.find_bone("mixamorig_LeftArm")).origin
 	var rs: Vector3 = S * sk.get_bone_global_rest(sk.find_bone("mixamorig_RightArm")).origin
-	var mid := (ls + rs) * 0.5
-	arms_vera.global_position += (hole - normal * 0.4 + Vector3.DOWN * 0.03) - mid
-	# холодный отсвет из тайника — на руки
+	arms_vera.global_position += (hole - normal * 0.4 + Vector3.DOWN * 0.03) - (ls + rs) * 0.5
+	# длинные тёмные ногти
+	var nm := StandardMaterial3D.new()
+	nm.albedo_color = Color(0.16, 0.13, 0.09)
+	nm.roughness = 0.3
+	nm.metallic = 0.1
+	for side in ["Left", "Right"]:
+		for g in ["Thumb", "Index", "Middle", "Ring", "Pinky"]:
+			var bn := "mixamorig_%sHand%s4" % [side, g]
+			if sk.find_bone(bn) < 0:
+				continue
+			var ba := BoneAttachment3D.new()
+			ba.bone_name = bn
+			sk.add_child(ba)
+			var nail := MeshInstance3D.new()
+			var cm := CylinderMesh.new()
+			cm.top_radius = 0.0
+			cm.bottom_radius = 0.0045 / k
+			cm.height = 0.032 / k
+			cm.radial_segments = 6
+			nail.mesh = cm
+			nail.material_override = nm
+			nail.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			ba.add_child(nail)
+			nail.position = Vector3(0, cm.height * 0.35, 0)
+			nail.rotation.x = 0.35                     # загнуты, как когти
+	# холодный отсвет из тайника — на руки и маску
 	var gl := OmniLight3D.new()
 	gl.light_color = Color(0.6, 0.7, 1.0)
 	gl.light_energy = 0.9
@@ -671,6 +765,70 @@ func _spawn_arms(hole: Vector3) -> void:
 	gl.shadow_enabled = false
 	L.add_child(gl)
 	gl.global_position = hole + normal * 0.35 + Vector3.DOWN * 0.3
+
+
+## Свои руки Миши: Remy без головы, тело — за камерой; кисти вцепляются в её руки чуть выше запястий.
+func _spawn_me() -> void:
+	me_body = (load(REMY) as PackedScene).instantiate()
+	L.add_child(me_body)
+	me_body.scale = Vector3.ONE * _me_k
+	for mi in me_body.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if m.name in ["Hair", "Eyes", "Eyelashes", "Bottoms", "Shoes"]:
+			m.visible = false
+	var ap: AnimationPlayer = me_body.get_node("AnimationPlayer")
+	ap.play("mixamo_com")
+	ap.seek(0.3, true)
+	ap.pause()
+	me_sk = me_body.get_node("Skeleton3D")
+	# где голова — в осях тела (тело переставляется за камерой каждый кадр)
+	var hw: Vector3 = me_sk.global_transform * me_sk.get_bone_global_rest(me_sk.find_bone("mixamorig_Head")).origin
+	_me_head_local = me_body.global_transform.affine_inverse() * hw
+	me_body.global_position = _hole - normal * 1.5             # пока — за стеной (рисуется, но не видно)
+	for side in ["Left", "Right"]:
+		var t := Node3D.new()
+		t.top_level = true
+		L.add_child(t)
+		t.global_position = _hole - normal * 1.0
+		var po := Node3D.new()
+		po.top_level = true
+		L.add_child(po)
+		var ik := TwoBoneIK3D.new()
+		ik.setting_count = 1
+		ik.set_root_bone_name(0, "mixamorig_%sArm" % side)
+		ik.set_middle_bone_name(0, "mixamorig_%sForeArm" % side)
+		ik.set_end_bone_name(0, "mixamorig_%sHand" % side)
+		me_sk.add_child(ik)
+		ik.set_target_node(0, ik.get_path_to(t))
+		ik.set_pole_node(0, ik.get_path_to(po))
+		_me_t.append(t)
+		_me_p.append(po)
+	_me_mod = _MeGrip.new()
+	_me_mod.set("owner_safe", self)
+	me_sk.add_child(_me_mod)
+
+
+## Каждый кадр: тело Миши — под камерой, его кисти — на её предплечьях; рывок — к себе.
+func _update_me() -> void:
+	if not _me_on or not is_instance_valid(me_body) or not is_instance_valid(cam):
+		return
+	var b := cam.global_basis.orthonormalized()
+	var bb := Basis(-b.x, b.y, -b.z) * Basis.from_scale(Vector3.ONE * _me_k)
+	var want_head := cam.global_position + b * Vector3(0, -0.06, 0.12)
+	me_body.global_transform = Transform3D(bb, want_head - bb * _me_head_local)
+	var gsk: Skeleton3D = arms_vera.get_node("Skeleton3D")
+	var S := gsk.global_transform
+	# левая кисть Миши — на той её руке, что слева в кадре (её правая), и наоборот
+	var pairs := [["Right", 0], ["Left", 1]]
+	for pr in pairs:
+		var hand: Vector3 = S * gsk.get_bone_global_pose(gsk.find_bone("mixamorig_%sHand" % pr[0])).origin
+		var fore: Vector3 = S * gsk.get_bone_global_pose(gsk.find_bone("mixamorig_%sForeArm" % pr[0])).origin
+		var p := hand.lerp(fore, 0.42)
+		p += b.z * 0.05 * _yank                            # рывок — к себе
+		_me_t[pr[1]].global_position = p
+		var sx := -1.0 if pr[1] == 0 else 1.0
+		_me_p[pr[1]].global_position = cam.global_position + b * Vector3(sx * 0.7, -0.45, 0.05)
 
 
 ## Чёрный экран — название игры, мерцает, гаснет.
@@ -693,16 +851,47 @@ func _title_card() -> void:
 	await get_tree().create_timer(0.5).timeout
 
 
-## Длинные руки: плечо смотрит на цель, предплечье и кисть — прямо, кость плеча вытягивается так,
-## чтобы кисть доставала до цели (рука тонкая и длинная, кисть — обычная). Пальцы — grip.
+## Руки Миши: голова скрыта, пальцы сжаты на её руках, при рывке — белеют от усилия (дрожат).
+class _MeGrip extends SkeletonModifier3D:
+	var owner_safe: Node
+	var _f := []
+	var _head := -1
+
+	func _process_modification() -> void:
+		var sk := get_skeleton()
+		if sk == null:
+			return
+		if _head < 0:
+			_head = sk.find_bone("mixamorig_Head")
+			for side in ["Left", "Right"]:
+				for g in ["Index", "Middle", "Ring", "Pinky"]:
+					for k in [1, 2, 3]:
+						var f := sk.find_bone("mixamorig_%sHand%s%d" % [side, g, k])
+						if f >= 0:
+							_f.append([f, k])
+				for k in [1, 2, 3]:
+					var f := sk.find_bone("mixamorig_%sHandThumb%d" % [side, k])
+					if f >= 0:
+						_f.append([f, 0])
+		sk.set_bone_pose_scale(_head, Vector3.ONE * 0.001)
+		var y: float = owner_safe.get("_yank") if owner_safe else 0.0
+		for e in _f:
+			var r := sk.get_bone_pose_rotation(e[0])
+			var a: float = (0.45 if e[1] == 0 else 0.95) + randf_range(-0.04, 0.04) * (1.0 + y * 3.0)
+			sk.set_bone_pose_rotation(e[0], r * Quaternion(Vector3.RIGHT, a))
+
+
+## Длинные руки: плечо смотрит на цель, предплечье и кисть — прямо, рука вытягивается до цели;
+## тонкие (кость сужена), пальцы длинные и костлявые, подёргиваются. Кисть доворачивается ладонью вниз.
 class _LongArms extends SkeletonModifier3D:
 	var target_l := Vector3.ZERO
 	var target_r := Vector3.ZERO
 	var follow := false          ## держит: цели — за камерой
 	var grip := 0.0
-	var palm_down := Vector3.DOWN ## куда смотрят ладони (мир)
+	var palm_down := Vector3.DOWN
 	var owner_safe: Node
 	var _b := {}
+	var _t := 0.0
 
 	func _arm(sk: Skeleton3D, side: String, target: Vector3) -> void:
 		if not _b.has(side):
@@ -710,16 +899,17 @@ class _LongArms extends SkeletonModifier3D:
 			var fo := sk.find_bone("mixamorig_%sForeArm" % side)
 			var ha := sk.find_bone("mixamorig_%sHand" % side)
 			var fingers := []
-			for g in ["Index", "Middle", "Ring", "Pinky"]:
+			var roots := []
+			for g in ["Index", "Middle", "Ring", "Pinky", "Thumb"]:
 				for k in [1, 2, 3]:
 					var f := sk.find_bone("mixamorig_%sHand%s%d" % [side, g, k])
 					if f >= 0:
 						fingers.append(f)
-			# длина руки в покое и направление «плечо → кисть» в осях кости плеча (рука прямая)
+						if k == 1:
+							roots.append(f)
 			var fr := sk.get_bone_rest(fo)
 			var hr := sk.get_bone_rest(ha)
 			var v := fr.origin + fr.basis * hr.origin
-			# куда смотрит ладонь — тоже в осях плеча (по положению пальцев в покое)
 			var hg := sk.get_bone_global_rest(ha)
 			var ug0 := sk.get_bone_global_rest(up)
 			var mid1 := sk.get_bone_global_rest(sk.find_bone("mixamorig_%sHandMiddle1" % side)).origin
@@ -729,7 +919,7 @@ class _LongArms extends SkeletonModifier3D:
 			var lat := (ind - pin).normalized()
 			var palm := fdir.cross(lat)
 			var palm_up := (ug0.basis.orthonormalized().inverse() * palm).normalized()
-			_b[side] = [up, fo, ha, fingers, v, palm_up]
+			_b[side] = [up, fo, ha, fingers, v, palm_up, roots]
 		var d: Array = _b[side]
 		var up: int = d[0]
 		var fo: int = d[1]
@@ -740,14 +930,13 @@ class _LongArms extends SkeletonModifier3D:
 		var S := sk.global_transform
 		var ug := sk.get_bone_global_pose(up)
 		var sh: Vector3 = S * ug.origin
-		var to_s: Vector3 = S.affine_inverse().basis * (target - sh)          # в осях скелета
+		var to_s: Vector3 = S.affine_inverse().basis * (target - sh)
 		var len0: float = (ug.basis.orthonormalized() * v).length()
 		var cur_dir: Vector3 = (ug.basis.orthonormalized() * v).normalized()
 		if to_s.length() < 0.001:
 			return
 		var want_dir := to_s.normalized()
 		var nb := Basis(Quaternion(cur_dir, want_dir)) * ug.basis.orthonormalized()
-		# доворот вокруг руки: ладонь — вниз и к нам (хватает за плечи сверху)
 		var palm_now: Vector3 = nb * (d[5] as Vector3)
 		var palm_want: Vector3 = S.affine_inverse().basis * palm_down
 		var a := palm_now - want_dir * want_dir.dot(palm_now)
@@ -759,21 +948,26 @@ class _LongArms extends SkeletonModifier3D:
 		var pg := sk.get_bone_global_pose(par).basis.orthonormalized() if par >= 0 else Basis()
 		sk.set_bone_pose_rotation(up, Quaternion((pg.inverse() * nb).orthonormalized()))
 		var s := maxf(to_s.length() / maxf(len0, 0.01), 0.6)
-		sk.set_bone_pose_scale(up, Vector3(1, s, 1))
-		sk.set_bone_pose_scale(ha, Vector3(1, 1.0 / s, 1))
+		const THIN := 0.74
+		sk.set_bone_pose_scale(up, Vector3(THIN, s, THIN))
+		# кисть: длина — как была, толщина — чуть тоньше обычной (костлявая)
+		sk.set_bone_pose_scale(ha, Vector3(0.82 / THIN, 1.05 / s, 0.82 / THIN))
+		for f in d[6]:
+			sk.set_bone_pose_scale(f, Vector3(0.8, 1.4, 0.8))      # длинные тонкие пальцы
 		for f in d[3]:
 			var r := sk.get_bone_pose_rotation(f)
-			sk.set_bone_pose_rotation(f, r * Quaternion(Vector3.RIGHT, (0.35 + 0.75 * grip)))
+			var tw := sin(_t * 23.0 + f * 1.7) * 0.06              # подёргиваются
+			sk.set_bone_pose_rotation(f, r * Quaternion(Vector3.RIGHT, 0.2 + 0.85 * grip + tw))
 
 	func _process_modification() -> void:
 		var sk := get_skeleton()
 		if sk == null:
 			return
+		_t += 1.0 / 60.0
 		if follow and owner_safe:
 			var g: Array = owner_safe.call("_grab_points")
 			target_l = g[0]
 			target_r = g[1]
-		# стоит лицом к нам: её левая рука — справа от нас
 		_arm(sk, "Left", target_r)
 		_arm(sk, "Right", target_l)
 		if owner_safe and owner_safe.get("arms_mat"):

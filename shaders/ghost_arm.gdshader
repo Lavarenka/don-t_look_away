@@ -9,6 +9,7 @@ uniform vec3 wrist2 = vec3(1e6);      // второе запястье (руки
 uniform float fade0 = 0.12;           // до этого расстояния — видно полностью
 uniform float fade1 = 0.27;           // дальше — ничего
 uniform vec3 tint : source_color = vec3(0.95, 1.0, 1.08);
+uniform float dead = 0.0;             // 1 — мёртвая кожа: серая, в синих прожилках, складки темнее, влажный блеск
 
 varying vec3 wpos;
 
@@ -27,8 +28,15 @@ void fragment() {
 	// грязь и синеватые прожилки — чуть неровный тон
 	float n = fract(sin(dot(floor(UV * 180.0), vec2(12.9898, 78.233))) * 43758.5453);
 	c *= 0.9 + 0.1 * n;
+	if (dead > 0.0) {
+		float lum = dot(c, vec3(0.33));
+		c = mix(c, vec3(lum) * vec3(0.78, 0.8, 0.76), dead);
+		c = mix(c, c * c * 1.8, 0.35 * dead);                       // складки и тени — глубже
+		float vein = smoothstep(0.93, 1.0, sin(UV.x * 410.0 + sin(UV.y * 97.0) * 3.0) * sin(UV.y * 260.0 + UV.x * 40.0));
+		c = mix(c, vec3(0.16, 0.2, 0.3), vein * 0.45 * dead);
+	}
 	float k = smoothstep(fade0, fade1, d);
 	ALBEDO = c * (1.0 - k) * (1.0 - k);
-	ROUGHNESS = 0.6;
+	ROUGHNESS = mix(0.6, 0.38, dead);
 	SPECULAR = 0.35 * (1.0 - k);
 }
