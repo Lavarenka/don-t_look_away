@@ -486,6 +486,7 @@ var _prepared := false
 var _warm := false
 var _prep_step := 0
 var arms_light: OmniLight3D
+var mask_light: OmniLight3D
 var _hole := Vector3.ZERO
 var mask: Node3D
 var me_body: Node3D              ## руки Миши (Remy без головы)
@@ -521,7 +522,22 @@ func _prep_next() -> void:
 			mask.scale = Vector3.ONE * 1.3
 			mask.visible = false
 			for mi in mask.find_children("*", "MeshInstance3D", true, false):
-				(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				var m := mi as MeshInstance3D
+				m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				for i in m.mesh.get_surface_count():
+					var mat := m.get_active_material(i)
+					if mat is BaseMaterial3D:
+						var d := mat.duplicate() as BaseMaterial3D
+						d.albedo_color = Color(0.8, 0.68, 0.58)       # нездоровая желтовато-серая кожа
+						d.roughness = 0.45                             # чуть влажная
+						m.set_surface_override_material(i, d)
+			mask_light = OmniLight3D.new()                     # снизу — тусклый кроваво-красный
+			mask_light.light_color = Color(0.8, 0.22, 0.15)
+			mask_light.light_energy = 0.75
+			mask_light.omni_range = 0.42
+			mask_light.visible = false
+			L.add_child(mask_light)
+			mask_light.global_position = _hole + normal * 0.16 + Vector3.DOWN * 0.27
 			_place_mask(-0.4)
 		3:
 			_spawn_me()
@@ -561,10 +577,13 @@ func _arms_ending() -> void:
 		create_tween().tween_property(L.red_flash, "color:a", 0.0, 1.0)
 	# Мишу отбрасывает: камера летит назад и вниз, на пол, с завалом набок
 	var sp: PhysicsDirectSpaceState3D = (L as Node3D).get_world_3d().direct_space_state
-	var out := hole + normal * 1.2
-	var hit: Dictionary = sp.intersect_ray(PhysicsRayQueryParameters3D.create(out, out + Vector3.DOWN * 3.0))
-	var floor_y: float = hit.position.y if not hit.is_empty() else hole.y - 1.75
-	var fall := Vector3(out.x, floor_y + 0.45, out.z)
+	# пол — там, где стоят ноги игрока (луч вниз мог попасть в комод под картиной)
+	var out := hole + normal * 1.7
+	var floor_y: float = L.player.global_position.y
+	var hit: Dictionary = sp.intersect_ray(PhysicsRayQueryParameters3D.create(Vector3(out.x, floor_y + 0.5, out.z), Vector3(out.x, floor_y - 0.5, out.z)))
+	if not hit.is_empty():
+		floor_y = hit.position.y
+	var fall := Vector3(out.x, floor_y + 0.3, out.z)
 	var c0 := cam.global_position
 	var fall_t := 0.0
 	while fall_t < 0.5:
@@ -587,6 +606,7 @@ func _arms_ending() -> void:
 	await _shake(0.45, 0.025)
 	# из темноты медленно выплывает маска — и смотрит
 	arms_light.visible = true
+	mask_light.visible = true
 	_place_mask(-0.12)
 	mask.visible = true
 	L._sfx3d("whisper_harsh", hole, 0.0, 0.7, true)
@@ -625,7 +645,7 @@ func _arms_ending() -> void:
 	_make_mash()
 	_pull_on = true
 	var t := 0.0
-	var ctrl: Vector3 = hole + normal * 0.6 + Vector3.DOWN * 0.15
+	var ctrl: Vector3 = hole + normal * 0.9 + Vector3.DOWN * 0.6
 	var end: Vector3 = hole + normal * 0.06
 	var drag_t := 0.0
 	while _pull_p < 1.0:
@@ -673,7 +693,7 @@ func _grab_points() -> Array:
 	var b := cam.global_basis
 	var o := cam.global_position
 	var y := 0.02 * _yank
-	return [o + b * Vector3(-0.16, -0.19 + y, -0.24), o + b * Vector3(0.16, -0.19 + y, -0.24)]
+	return [o + b * Vector3(-0.27, -0.25 + y, -0.2), o + b * Vector3(0.27, -0.25 + y, -0.2)]
 
 
 static func _look(c: Camera3D, at: Vector3, roll: float) -> void:
@@ -787,8 +807,8 @@ func _spawn_arms(hole: Vector3) -> void:
 			nail.rotation.x = 0.35                     # загнуты, как когти
 	# холодный отсвет из тайника — на руки и маску
 	arms_light = OmniLight3D.new()
-	arms_light.light_color = Color(0.6, 0.7, 1.0)
-	arms_light.light_energy = 0.9
+	arms_light.light_color = Color(0.55, 0.6, 0.75)
+	arms_light.light_energy = 0.6
 	arms_light.omni_range = 2.6
 	arms_light.shadow_enabled = false
 	arms_light.visible = false
@@ -854,7 +874,7 @@ func _update_me() -> void:
 	for pr in pairs:
 		var hand: Vector3 = S * gsk.get_bone_global_pose(gsk.find_bone("mixamorig_%sHand" % pr[0])).origin
 		var fore: Vector3 = S * gsk.get_bone_global_pose(gsk.find_bone("mixamorig_%sForeArm" % pr[0])).origin
-		var p := hand.lerp(fore, 0.42)
+		var p := hand.lerp(fore, 0.3)
 		p += b.z * 0.05 * _yank                            # рывок — к себе
 		_me_t[pr[1]].global_position = p
 		var sx := -1.0 if pr[1] == 0 else 1.0
@@ -978,7 +998,7 @@ class _LongArms extends SkeletonModifier3D:
 		var pg := sk.get_bone_global_pose(par).basis.orthonormalized() if par >= 0 else Basis()
 		sk.set_bone_pose_rotation(up, Quaternion((pg.inverse() * nb).orthonormalized()))
 		var s := maxf(to_s.length() / maxf(len0, 0.01), 0.6)
-		const THIN := 0.74
+		const THIN := 0.5
 		sk.set_bone_pose_scale(up, Vector3(THIN, s, THIN))
 		# кисть: длина — как была, толщина — чуть тоньше обычной (костлявая)
 		sk.set_bone_pose_scale(ha, Vector3(0.82 / THIN, 1.05 / s, 0.82 / THIN))
