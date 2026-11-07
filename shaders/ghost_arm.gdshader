@@ -9,6 +9,8 @@ uniform vec3 wrist2 = vec3(1e6);      // второе запястье (руки
 uniform float fade0 = 0.12;           // до этого расстояния — видно полностью
 uniform float fade1 = 0.27;           // дальше — ничего
 uniform vec3 tint : source_color = vec3(0.95, 1.0, 1.08);
+uniform vec3 hole_at = vec3(1e6);     // руки из тайника (vera_safe.gd): темнеют к проёму — выходят из темноты, ничего не отрезается
+uniform float hole_r = 0.0;           // > 0 — режим «из проёма»: радиус, на котором рука выходит из черноты
 uniform float dead = 0.0;             // 1 — мёртвая кожа: серая, в синих прожилках, складки темнее, влажный блеск
 
 varying vec3 wpos;
@@ -18,9 +20,15 @@ void vertex() {
 }
 
 void fragment() {
-	float d = min(distance(wpos, wrist), distance(wpos, wrist2));
-	if (d > fade1) {
-		discard;
+	float k;
+	if (hole_r > 0.0) {
+		k = 1.0 - smoothstep(0.03, hole_r, distance(wpos, hole_at));
+	} else {
+		float d = min(distance(wpos, wrist), distance(wpos, wrist2));
+		if (d > fade1) {
+			discard;
+		}
+		k = smoothstep(fade0, fade1, d);
 	}
 	vec3 c = texture(skin, UV).rgb;
 	float g = dot(c, vec3(0.3, 0.59, 0.11));
@@ -35,7 +43,6 @@ void fragment() {
 		float vein = smoothstep(0.93, 1.0, sin(UV.x * 410.0 + sin(UV.y * 97.0) * 3.0) * sin(UV.y * 260.0 + UV.x * 40.0));
 		c = mix(c, vec3(0.16, 0.2, 0.3), vein * 0.45 * dead);
 	}
-	float k = smoothstep(fade0, fade1, d);
 	ALBEDO = c * (1.0 - k) * (1.0 - k);
 	ROUGHNESS = mix(0.6, 0.38, dead);
 	SPECULAR = 0.35 * (1.0 - k);
