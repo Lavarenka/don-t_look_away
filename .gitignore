@@ -30,11 +30,13 @@
 !/audio/breath_dark_3.wav.import
 !/audio/buzz.wav
 !/audio/buzz.wav.import
+!/audio/cabinet_bang.wav
 !/audio/cabinet_final.wav
 !/audio/cabinet_final.wav.import
 !/audio/cabinet_riser.wav
 !/audio/cabinet_riser.wav.import
 !/audio/cabinet_strain.wav
+!/audio/cabinet_strain.wav.import
 !/audio/click.wav
 !/audio/click.wav.import
 !/audio/clink.wav
@@ -2044,6 +2046,7 @@
 !/textures/fabric/drape_nursery_albedo.png.import
 !/textures/fabric/tulle.png
 !/textures/fabric/tulle.png.import
+!/textures/flash_vera.png
 !/textures/fog_base.png
 !/textures/fog_base.png.import
 !/textures/fog_base_en.png

@@ -310,6 +310,7 @@ BR_PIN,E — take it,E — взять
 BR_SAFE,E — the lock,E — замок
 BR_SAFE_LOCK,Locked.,Заперто.
 LP_MASH,Mash E — break free!,Жми E — вырывайся!
+VERA_END,"""Welcome home, Mishenka…""",«Вот ты и дома, Мишенька…»
 VERA_PULL,"""Come to me… to Grandma…""",«Ко мне… к бабушке…»
 LP_HELP,Mouse — move the pin · hold LMB — turn the lock · RMB — step back,Мышь — двигать шпильку · держи ЛКМ — поворачивать замок · ПКМ — отойти
 BR_OBJ_PIN,Something in this room is locked.,Что-то в этой комнате заперто.

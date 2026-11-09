@@ -12,16 +12,26 @@ extends Node3D
 ##   Чернота. Дверцы снова закрыты, шпилька в замке — второй штифт.
 ## Открыл — дверцы распахиваются, внутри темно (что там — дальше придумаем: _on_open()).
 ##
-## ARMS_ENDING (сейчас включено) — вместо скримера выше финал главы: посреди мини-игры дверцы с грохотом
-##   распахиваются, Мишу отбрасывает, он падает на пол. Из темноты тайника вытягиваются две страшно длинные
-##   руки (руки Веры, тело — за стеной), хватают его и тащат в тайник. Можно сопротивляться (быстро жать
-##   E / ЛКМ / пробел) — затягивает медленнее, но всё равно затягивает. Чернота — и заставка игры.
+## ARMS_ENDING (сейчас включено) — вместо скримера выше финал главы: руки из тайника затаскивают Мишу внутрь.
+## MIDPICK_SCARE (сейчас включено) — как именно:
+##   * пока ковыряешь замок — изнутри тихие звуки (скрежет, дыхание), дверцы иногда чуть выгибаются;
+##   * первый штифт открылся — обманка: тишина, изнутри удар всем телом, дверцы выгибаются, замок держит;
+##     потом медленно когтями по дверце. Второй штифт;
+##   * посреди второго штифта, в случайный миг (или через несколько секунд, если тянешь), замок сам щёлкает
+##     изнутри — и дверцы настежь, маска прямо в лицо, крик, кадр-вспышка. Миша отшатывается, маска за ним,
+##     руки из темноты — в плечи; Миша хватается за них, дважды пытается отодрать — рывок, маска в лицо,
+##     чернота, шёпот у уха, название игры.
+##   false — прежний финал: после первого штифта, Мишу отбрасывает на пол, руки тащат с пола (_arms_ending_old).
+## Всё для финала грузится в фоне заранее и один раз рисуется под чёрной шторкой в начале мини-игры (_prewarm) —
+## в скримере ничего не подгружается.
 
 const PINS := 2
 const TOL := 0.1            ## «нужное место» шпильки: ± рад — открывается полностью
 const SOFT := 0.6           ## дальше этого от нужного места замок не поворачивается совсем
 const TURN := 1.3           ## на сколько поворачивается личинка, рад
 const ARMS_ENDING := true   ## false — прежний скример (Вера бросается в лицо) и мини-игра до конца
+const MIDPICK_SCARE := true ## true — обманка после 1-го штифта и скример посреди 2-го; false — прежний финал (после 1-го)
+const FLASH_TEX := "res://textures/flash_vera.png"
 const MENU := "res://scenes/menu.tscn"
 
 var L: Node
@@ -221,9 +231,11 @@ func _start() -> void:
 	black.color.a = 1.0
 	cam.make_current()
 	_make_pick()
-	_new_sweet()
 	_turn = 0.0
 	_ang = 0.0
+	_new_sweet()
+	if ARMS_ENDING and not _scared:
+		await _prewarm()                              # пока экран чёрный — финал рисуется один раз заранее
 	create_tween().tween_property(black, "color:a", 0.0, 0.35)
 	L._sfx3d("click", pp, -6.0, 1.3, true)
 	await get_tree().create_timer(0.35).timeout
@@ -316,8 +328,6 @@ func _input(e: InputEvent) -> void:
 		return
 	get_viewport().set_input_as_handled()
 	if _pull_on:
-		var hit: bool = (e is InputEventKey and e.pressed and not e.echo and e.physical_keycode in [KEY_E, KEY_SPACE, KEY_F]) \
-			or (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT)
 		return                                        # вырывается сам — ввод не нужен
 	if _busy:
 		return
@@ -341,7 +351,7 @@ func _input(e: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	# фоновая подготовка финала: по одному куску за кадр, когда модели догрузились (не во время мини-игры)
-	if _warm and _prep_step < 4 and not _on:
+	if _warm and _prep_step < 4 and (not _on or _busy) and not _scared:
 		if ResourceLoader.load_threaded_get_status(REMY) == ResourceLoader.THREAD_LOAD_LOADED \
 				and ResourceLoader.load_threaded_get_status(MASK) == ResourceLoader.THREAD_LOAD_LOADED:
 			_prep_next()
@@ -351,6 +361,14 @@ func _process(delta: float) -> void:
 		if arms_mod:                                   # её ладони — к Мише (вниз и к камере), когти — в него
 			var cb := cam.global_basis
 			arms_mod.set("palm_down", (-cb.y * 0.6 + cb.z * 0.8).normalized())
+	if _twitch:
+		_twitch_t -= delta
+		if _twitch_t <= 0.0:
+			_twitch_t = randf_range(0.2, 0.7)
+			_mask_tilt_to = Vector2(randf_range(-0.5, 0.5), randf_range(-0.25, 0.25))
+		_mask_tilt = _mask_tilt.move_toward(_mask_tilt_to, delta * 14.0)
+	if _mask_live and is_instance_valid(mask):
+		_place_mask(_mask_out)
 	if _me_on:
 		_update_me()
 	if not _on or not is_instance_valid(pick):
@@ -372,6 +390,17 @@ func _process(delta: float) -> void:
 		if _rattle_t < 0.0:
 			_rattle_t = 0.09
 			L._sfx3d("click", plate_pos(), -14.0, randf_range(0.5, 0.75), true)
+	if ARMS_ENDING and MIDPICK_SCARE and not _scared:
+		_dread(delta)
+		if _armed:
+			_late_t -= delta
+			if (_hold and _turn >= _scare_at) or _late_t <= 0.0:
+				_armed = false
+				_scared = true
+				_busy = true
+				_hold = false
+				_arms_ending()
+				return
 	if _turn >= 0.999:
 		_pin_done()
 
@@ -381,13 +410,20 @@ func _pin_done() -> void:
 	_hold = false
 	_pins_done += 1
 	L._sfx3d("click", plate_pos(), -2.0, 0.9, true)
+	if ARMS_ENDING and MIDPICK_SCARE and not _scared:
+		if _pins_done == 1:
+			_fakeout()
+		else:                                         # на всякий случай: второй штифт не должен успеть открыться
+			_scared = true
+			_arms_ending()
+		return
 	if _pins_done >= PINS:
 		_open()
 		return
 	if not _scared:
 		_scared = true
 		if ARMS_ENDING:
-			_arms_ending()
+			_arms_ending_old()
 		else:
 			_scare()
 		return
@@ -483,7 +519,7 @@ func _scare() -> void:
 const REMY := "res://models/player/remy.fbx"
 const MASK := "res://models/ghosts/ghost_mask.glb"
 const SOUNDS := ["door", "scream_cabinet", "cabinet_riser", "cabinet_final", "sting", "attic_thud", "breath_dark", "scratch", "whisper_harsh",
-	"thump", "scream", "drag", "drone", "giggle", "cabinet_strain"]
+	"thump", "scream", "drag", "drone", "giggle", "cabinet_strain", "cabinet_bang", "heartbeat", "whisper_old", "creak", "click"]
 var _prepared := false
 var _warm := false
 var _prep_step := 0
@@ -517,6 +553,22 @@ var _ctrl := Vector3.ZERO
 var _end := Vector3.ZERO
 var _tt := 0.0
 var _lunging := false
+# скример посреди второго штифта
+var _armed := false              ## второй штифт: скример ждёт своего мига
+var _scare_at := 0.5             ## на каком повороте личинки (0..1) он случится
+var _late_t := 6.0               ## …или через столько секунд работы с замком
+var _dread_t := 4.0              ## тихие звуки изнутри, пока ковыряешь замок
+var _breath_t := 2.0
+var _twitch := false             ## маска дёргается: резкие наклоны, мелкая дрожь
+var _mask_tilt := Vector2.ZERO
+var _mask_tilt_to := Vector2.ZERO
+var _twitch_t := 0.0
+var _mask_live := false          ## маска ставится в проём каждый кадр (_mask_out)
+var _roll0 := 0.4
+var _back := Vector3.ZERO
+var flash_rect: TextureRect
+var _flash_tex: Texture2D
+var _breathe_tw: Array[Tween] = []
 
 
 func _prepare_ending() -> void:
@@ -531,6 +583,7 @@ func _prep_next() -> void:
 		0:
 			for n in SOUNDS:
 				L._stream(n)
+			_flash_tex = load(FLASH_TEX)
 		1:
 			_spawn_arms(_hole)
 		2:
@@ -570,10 +623,331 @@ func _place_mask(out: float) -> void:
 		var to := (cam.global_position - c).normalized()
 		to = (to + normal * 2.0).normalized()           # чуть доворачивается к тебе
 		b = Basis(Vector3.UP.cross(to).normalized(), Vector3.UP, to).orthonormalized()
+	if _twitch:                                      # дёргается: резкие наклоны головы, мелкая дрожь
+		b = b * Basis(Vector3.BACK, _mask_tilt.x) * Basis(Vector3.UP, _mask_tilt.y)
+		c += Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)) * 0.0025
 	mask.global_transform = Transform3D(b.scaled(Vector3.ONE * 1.3), c)
+	if mask_light:
+		mask_light.global_position = c + normal * 0.12 + Vector3.DOWN * 0.1
 
 
+## Новый финал (MIDPICK_SCARE): посреди второго штифта, в случайный миг, без предупреждения.
+## Замок сам щёлкает изнутри — и в ту же долю секунды дверцы настежь, маска прямо в лицо (во весь кадр),
+## крик, вспышка, кадр-вспышка с лицом Веры. Миша отшатывается — маска высовывается за ним; по бокам от
+## неё из темноты — руки, прямо в плечи. Миша хватается за них, дважды пытается отодрать — и рывок к ней,
+## маска бросается в лицо — чернота. Тишина. Шёпот у самого уха — и название игры.
 func _arms_ending() -> void:
+	_prepare_ending()
+	var hole := _hole
+	var pp := plate_pos()
+	help.visible = false
+	var held = R.get("held")
+	if held is Node3D:
+		(held as Node3D).visible = false                 # свеча Миши выпала — её свет тоже
+	_kill_breathe()
+	# 0) замок открывается изнутри сам: личинка щёлкает до упора, шпильку выталкивает наружу
+	L._sfx3d("click", pp, 4.0, 0.55, true)
+	var t0 := create_tween().set_parallel()
+	t0.tween_property(core, "rotation:z", -TURN, 0.08).set_trans(Tween.TRANS_QUAD)
+	t0.tween_property(pick, "position:z", 0.03, 0.08)
+	t0.tween_property(self, "_ang", _ang - 0.9, 0.08)
+	await get_tree().create_timer(0.2).timeout
+	# 1) настежь — и она в лицо
+	for lf in leaves:
+		var sg: float = (lf.get_child(0) as Node3D).get_meta("sgn", 1.0)
+		create_tween().tween_property(lf, "rotation:y", sg * 2.0, 0.06).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	pick.visible = false
+	plate.visible = false
+	lamp.light_energy = 0.0                            # свеча выпала из руки
+	cold = OmniLight3D.new()                           # мертвенный холодный свет у лица
+	cold.light_color = Color(0.62, 0.7, 0.9)
+	cold.light_energy = 0.45
+	cold.omni_range = 1.4
+	cam.add_child(cold)
+	cold.position = Vector3(0.0, 0.25, 0.1)
+	_twitch = true
+	_mask_out = 0.09                                   # лицо — в десяти сантиметрах от глаз
+	_mask_live = true
+	_place_mask(_mask_out)
+	mask.visible = true
+	mask_light.visible = true
+	arms_light.visible = true
+	L._sfx3d("door", pp, 6.0, 0.55, true)
+	L._sfx("scream_cabinet", 6.0, 1.0, true)          # удар + многослойный крик — с первой миллисекунды
+	L._sfx("cabinet_riser", 0.0, 1.15, true)          # под всем этим — гул и сердце всё чаще
+	if L.get("red_flash"):
+		L.red_flash.color = Color(1, 1, 1, 0.7)       # белая вспышка → кровавый
+		var fl := create_tween()
+		fl.tween_property(L.red_flash, "color", Color(0.6, 0, 0, 0.35), 0.06)
+		fl.tween_property(L.red_flash, "color:a", 0.0, 0.8)
+	cam.fov = 82.0                                     # удар по глазам: картинка «выпрыгивает»
+	create_tween().tween_property(cam, "fov", 68.0, 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_subliminal(2, 0.06)
+	# 2) Миша отшатывается — а она высовывается за ним
+	_roll0 = 0.16
+	var c0 := cam.global_position
+	_back = hole + normal * 0.78 + Vector3.DOWN * 0.32
+	create_tween().tween_property(self, "_mask_out", 0.24, 0.38).set_trans(Tween.TRANS_SINE)
+	var t := 0.0
+	while t < 0.38:
+		await get_tree().process_frame
+		t += get_process_delta_time()
+		var ek := 1.0 - pow(1.0 - minf(t / 0.38, 1.0), 3.0)
+		cam.global_position = c0.lerp(_back, ek)
+		_look(cam, hole + Vector3.DOWN * 0.05, _roll0 * ek)
+	_subliminal(1, 0.0)
+	# 3) по бокам от неё из темноты — руки, прямо в плечи
+	_anchor_arms()
+	var sv := normal.cross(Vector3.UP).normalized()       # из комнаты — влево в кадре
+	var start_l: Vector3 = hole + normal * 0.12 + sv * 0.1
+	var start_r: Vector3 = hole + normal * 0.12 - sv * 0.1
+	arms_mod.set("target_l", start_l)
+	arms_mod.set("target_r", start_r)
+	arms_mod.set("grip", 0.0)
+	L._sfx3d("scratch", hole, 4.0, 0.7, true)
+	await get_tree().process_frame
+	arms_vera.visible = true
+	_fall = cam.global_position
+	_ctrl = hole + normal * 0.42 + Vector3.DOWN * 0.12
+	_end = hole + normal * 0.24
+	_e = 0.0
+	_cam_live = true
+	create_tween().tween_property(self, "_mask_out", 0.07, 0.35).set_trans(Tween.TRANS_SINE)   # сама — обратно в темноту, между рук
+	var gt := 0.0
+	while gt < 0.16:
+		await get_tree().process_frame
+		gt += get_process_delta_time()
+		var k := _ease_jerk(gt / 0.16)
+		var g := _grab_points()
+		arms_mod.set("target_l", start_l.lerp(g[0], k))
+		arms_mod.set("target_r", start_r.lerp(g[1], k))
+	arms_mod.set("follow", true)
+	create_tween().tween_property(arms_mod, "grip", 1.0, 0.07)
+	L._sfx("thump", 4.0, 0.7, true)
+	L._sfx3d("giggle", hole, 0.0, 0.5, true)
+	create_tween().tween_property(self, "_e", 0.08, 0.09).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	L._say("VERA_PULL", 2.4)
+	# 4) Миша хватается за её руки
+	_me_on = true
+	_update_me()
+	me_body.visible = true
+	_me_mod.set("grip", 0.1)
+	L._sfx("breath_dark", 2.0, 1.4, true)
+	var tw := create_tween().set_parallel()
+	tw.tween_property(self, "_me_reach", 1.0, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_me_mod, "orient", 1.0, 0.18)
+	tw.tween_property(_me_mod, "grip", 1.0, 0.1).set_delay(0.16)
+	await tw.finished
+	# 5) дважды отдирает её руки — и дважды она дёргает его ближе
+	for i in 2:
+		L._sfx("cabinet_strain", 3.0, 1.0 + 0.12 * i, true)
+		var tp := create_tween().set_parallel()
+		tp.tween_property(self, "_pull", 1.0, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tp.tween_property(self, "_tilt", 0.08, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tp.tween_property(self, "_strain", 1.0, 0.12)
+		await get_tree().create_timer(0.3).timeout
+		L._sfx("thump", 3.0, 0.6 + 0.12 * i, true)
+		L._sfx3d("whisper_harsh", hole, 0.0, 0.85, true)
+		var ty := create_tween().set_parallel()
+		ty.tween_property(self, "_pull", 0.0, 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		ty.tween_property(self, "_tilt", -0.04, 0.08)
+		ty.tween_property(self, "_strain", 0.0, 0.08)
+		ty.tween_property(self, "_e", _e + 0.13, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		await get_tree().create_timer(0.14).timeout
+		create_tween().tween_property(self, "_tilt", 0.0, 0.15)
+	# 6) рывок — к ней, лицо во весь экран; и она бросается навстречу
+	_pull_on = true
+	L._sfx("drag", 6.0, 0.7, true)
+	var e0 := _e
+	var ft := 0.0
+	while ft < 0.4:
+		await get_tree().process_frame
+		ft += get_process_delta_time()
+		var k := minf(ft / 0.4, 1.0)
+		_e = lerpf(e0, 1.0, k * k)                        # разгоняется
+	_twitch = false
+	_subliminal(2, 0.07)
+	await _lunge()
+	# 7) чернота; визг обрывается сам. тишина. шёпот у самого уха — и название игры
+	_cam_live = false
+	_mask_live = false
+	black.color.a = 1.0
+	L._say("", 0.1)
+	var shriek: AudioStream = L._stream("cabinet_final")
+	for a2 in L.find_children("*", "AudioStreamPlayer", true, false) + L.find_children("*", "AudioStreamPlayer3D", true, false):
+		if a2.get("stream") != shriek:
+			a2.stop()
+	await get_tree().create_timer(2.2).timeout         # визг обрывается — и долгая тишина
+	L._sfx("whisper_old", 4.0, 0.85, true)
+	_end_line("VERA_END", 2.4)
+	await get_tree().create_timer(3.2).timeout
+	await _title_card()
+	get_tree().change_scene_to_file(MENU)
+
+
+## Обманка после первого штифта: тишина — и изнутри удар всем телом; дверцы выгибаются, замок держит.
+## Потом тихо, когти медленно по дверце изнутри. Второй штифт — скример будет где-то посреди него.
+func _fakeout() -> void:
+	var pp := plate_pos()
+	help.visible = false
+	_kill_breathe()
+	await get_tree().create_timer(0.55).timeout
+	L._sfx3d("cabinet_bang", pp - normal * 0.1, 6.0, 1.0, true)
+	for lf in leaves:
+		var sg: float = (lf.get_child(0) as Node3D).get_meta("sgn", 1.0)
+		var tl := create_tween()
+		tl.tween_property(lf, "rotation:y", sg * 0.11, 0.05).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tl.tween_property(lf, "rotation:y", 0.0, 0.14).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	var tj := create_tween().set_parallel()
+	tj.tween_property(core, "rotation:z", 0.0, 0.07)
+	tj.tween_property(self, "_ang", clampf(_ang + randf_range(-0.7, 0.7), -1.3, 1.3), 0.07)
+	var c0 := cam.global_position
+	var tb := create_tween()                               # отдёрнулся
+	tb.tween_property(cam, "global_position", c0 + normal * 0.06, 0.05).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tb.tween_property(cam, "global_position", c0, 0.45).set_trans(Tween.TRANS_SINE)
+	await tb.finished
+	await _shake(0.2, 0.006)
+	await get_tree().create_timer(1.6).timeout
+	L._sfx3d("scratch", pp - normal * 0.12 + Vector3.DOWN * 0.05, -9.0, 0.45, true)   # когти медленно по дверце изнутри
+	await get_tree().create_timer(1.6).timeout
+	# второй штифт
+	_turn = 0.0
+	core.rotation.z = 0.0
+	_new_sweet()
+	help.visible = true
+	_armed = true
+	_scare_at = randf_range(0.3, 0.72)
+	_late_t = randf_range(5.0, 8.5)
+	_breath_t = 0.8
+	_dread_t = randf_range(2.0, 3.0)
+	L._sfx("heartbeat", -10.0, 1.1, true)
+	_busy = false
+
+
+## Пока ковыряешь замок — изнутри тихие звуки; на втором штифте Миша дышит всё чаще.
+func _dread(delta: float) -> void:
+	_dread_t -= delta
+	_breath_t -= delta
+	if _armed and _breath_t <= 0.0:
+		_breath_t = randf_range(1.6, 2.4)
+		L._sfx("breath_dark", -17.0, 1.3, true)
+	if _dread_t > 0.0:
+		return
+	_dread_t = randf_range(2.5, 4.5) if _armed else randf_range(3.5, 6.0)
+	var sv := normal.cross(Vector3.UP).normalized()
+	var inside: Vector3 = global_position - normal * 0.2 + sv * randf_range(-0.12, 0.12)
+	match randi() % 3:
+		0:
+			L._sfx3d("scratch", inside, -20.0, randf_range(0.5, 0.65), true)
+		1:
+			L._sfx3d("breath_dark", inside, -22.0, 0.75, true)
+		_:
+			_doors_breathe()
+
+
+## Дверцы чуть выгибаются наружу — будто изнутри на них навалились — и обратно.
+func _doors_breathe() -> void:
+	_kill_breathe()
+	L._sfx3d("creak", plate_pos(), -18.0, 1.5, true)
+	for lf in leaves:
+		var sg: float = (lf.get_child(0) as Node3D).get_meta("sgn", 1.0)
+		var tl := create_tween()
+		_breathe_tw.append(tl)
+		tl.tween_property(lf, "rotation:y", sg * 0.035, 0.3).set_trans(Tween.TRANS_SINE)
+		tl.tween_property(lf, "rotation:y", 0.0, 0.45).set_trans(Tween.TRANS_SINE)
+
+
+func _kill_breathe() -> void:
+	for tw in _breathe_tw:
+		if tw and tw.is_valid():
+			tw.kill()
+	_breathe_tw.clear()
+	for lf in leaves:
+		lf.rotation.y = 0.0
+
+
+## Кадр-вспышка: лицо Веры (негатив, кроваво-красное) на frames кадров, через delay секунд.
+func _subliminal(frames: int, delay: float) -> void:
+	if delay > 0.0:
+		await get_tree().create_timer(delay).timeout
+	if not is_instance_valid(flash_rect):
+		return
+	flash_rect.visible = true
+	for i in frames:
+		await RenderingServer.frame_post_draw
+	flash_rect.visible = false
+
+
+func _make_flash() -> void:
+	if _flash_tex == null:
+		_flash_tex = load(FLASH_TEX)
+	flash_rect = TextureRect.new()
+	flash_rect.texture = _flash_tex
+	flash_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	flash_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	flash_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	flash_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flash_rect.visible = false
+	ui.add_child(flash_rect)
+	ui.move_child(flash_rect, 0)                           # под чёрной шторкой
+
+
+## Строчка в темноте (поверх чёрного экрана).
+func _end_line(key: String, sec: float) -> void:
+	var l := Label.new()
+	l.text = tr(key)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	l.offset_left = -520
+	l.offset_right = 520
+	l.offset_top = -150
+	l.offset_bottom = -100
+	l.add_theme_font_size_override("font_size", 26)
+	l.add_theme_color_override("font_color", Color(0.8, 0.76, 0.7))
+	preload("res://scripts/fonts.gd").subtitle(l)
+	l.modulate.a = 0.0
+	ui.add_child(l)
+	var tw := create_tween()
+	tw.tween_property(l, "modulate:a", 1.0, 0.4)
+	tw.tween_interval(sec)
+	tw.tween_property(l, "modulate:a", 0.0, 0.6)
+	tw.tween_callback(l.queue_free)
+
+
+## Под чёрной шторкой (начало мини-игры): всё, что появится в финале, один раз рисуется перед камерой —
+## шейдеры и текстуры собираются заранее, в скримере ничего не подгружается и не подтормаживает.
+func _prewarm() -> void:
+	_prepare_ending()
+	if not is_instance_valid(flash_rect):
+		_make_flash()
+	var mt := mask.global_transform
+	var bt := me_body.global_transform
+	_mask_at(cam.global_position - cam.global_basis.z * 0.45)
+	mask.visible = true
+	mask_light.visible = true
+	arms_light.visible = true
+	arms_vera.visible = true
+	_me_on = true
+	_me_reach = 1.0
+	_update_me()
+	me_body.visible = true
+	flash_rect.visible = true
+	for i in 3:
+		await RenderingServer.frame_post_draw
+	flash_rect.visible = false
+	mask.visible = false
+	mask_light.visible = false
+	arms_light.visible = false
+	arms_vera.visible = false
+	me_body.visible = false
+	_me_on = false
+	_me_reach = 0.0
+	mask.global_transform = mt
+	me_body.global_transform = bt
+
+
+## Прежний финал (MIDPICK_SCARE = false): сразу после первого штифта, Мишу отбрасывает на пол, руки тащат с пола.
+func _arms_ending_old() -> void:
 	_prepare_ending()
 	var hole := _hole
 	var pp := plate_pos()
@@ -733,9 +1107,18 @@ func _arms_ending() -> void:
 	get_tree().change_scene_to_file(MENU)
 
 
-## Маска бросается в лицо с визгом.
+## Маска бросается в лицо с визгом: из проёма — вплотную к камере.
 func _lunge() -> void:
 	_lunging = true
+	if _mask_live:
+		L._sfx("cabinet_final", 8.0, 1.0, true)
+		var d := (cam.global_position - _hole).dot(normal)
+		var tw := create_tween()
+		tw.tween_property(self, "_mask_out", d - 0.035, 0.09).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		await tw.finished
+		await get_tree().create_timer(0.05).timeout       # лицо во весь экран — и всё
+		_lunging = false
+		return
 	L._sfx("cabinet_final", 8.0, 1.0, true)
 	var m0 := mask.global_position
 	var lt := 0.0
@@ -758,7 +1141,7 @@ func _mask_at(p: Vector3) -> void:
 func _cam_at() -> void:
 	var e := _e
 	cam.global_position = _fall.lerp(_ctrl, e).lerp(_ctrl.lerp(_end, e), e)
-	_look(cam, _hole + Vector3.DOWN * 0.05, 0.4 * (1.0 - e))
+	_look(cam, _hole + Vector3.DOWN * 0.05, _roll0 * (1.0 - e))
 	cam.rotate_object_local(Vector3.RIGHT, _tilt)
 
 
@@ -788,13 +1171,24 @@ func _grab_points() -> Array:
 	var o := cam.global_position
 	var pl := _pull
 	var tr := Vector3(sin(_tt * 41.0), sin(_tt * 37.0 + 1.0), 0.0) * 0.005 * _strain
-	return [o + b * (Vector3(-0.23 - 0.07 * pl, -0.19 + 0.01 * pl, -0.3 - 0.05 * pl) + tr),
-		o + b * (Vector3(0.23 + 0.07 * pl, -0.19 + 0.01 * pl, -0.3 - 0.05 * pl) - tr)]
+	var zf := clampf((o - _hole).dot(normal) - 0.06, 0.1, 0.3)      # вплотную к проёму — не уходят в стену
+	return [o + b * (Vector3(-0.23 - 0.07 * pl, -0.19 + 0.01 * pl, -zf - 0.05 * pl) + tr),
+		o + b * (Vector3(0.23 + 0.07 * pl, -0.19 + 0.01 * pl, -zf - 0.05 * pl) - tr)]
 
 
 static func _look(c: Camera3D, at: Vector3, roll: float) -> void:
 	c.look_at(at, Vector3.UP)
 	c.rotate_object_local(Vector3.BACK, roll)
+
+
+func _shake(sec: float, amp: float) -> void:
+	var t := 0.0
+	var base := cam.global_position
+	while t < sec:
+		await get_tree().process_frame
+		t += get_process_delta_time()
+		cam.global_position = base + Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)) * amp * (1.0 - t / sec)
+	cam.global_position = base
 
 
 ## Руки из тайника: тело (Remy, мёртвая серая кожа) — за стеной, плечи — позади дверец.
