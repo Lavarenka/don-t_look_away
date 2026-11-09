@@ -308,11 +308,13 @@ BR_PHOTO,E — take the photograph,E — взять фотографию
 BR_HANG,E — hang the photograph,E — повесить фотографию
 BR_PIN,E — take it,E — взять
 BR_SAFE,E — the lock,E — замок
+BR_SAFE3,E — the locks,E — замки
 BR_SAFE_LOCK,Locked.,Заперто.
 LP_MASH,Mash E — break free!,Жми E — вырывайся!
 VERA_END,"""Welcome home, Mishenka…""",«Вот ты и дома, Мишенька…»
 VERA_PULL,"""Come to me… to Grandma…""",«Ко мне… к бабушке…»
 LP_HELP,Mouse — move the pin · hold LMB — turn the lock · RMB — step back,Мышь — двигать шпильку · держи ЛКМ — поворачивать замок · ПКМ — отойти
+LP_HELP2,Mouse — move the pin · hear a click — LMB · RMB — step back,Мышь — води шпилькой · услышишь щелчок — ЛКМ · ПКМ — отойти
 BR_OBJ_PIN,Something in this room is locked.,Что-то в этой комнате заперто.
 VERA_CALL1,"""Come here…""",«Иди сюда…»
 VERA_CALL2,"""Come to me…""",«Иди ко мне…»

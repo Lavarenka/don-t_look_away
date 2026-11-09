@@ -11,6 +11,9 @@ uniform vec3 wood_b : source_color = vec3(0.14, 0.055, 0.025);   // тёмные
 uniform float carcass = 0.0;
 uniform float age = 1.0;
 uniform float seed = 0.0;
+uniform float grain_scale = 1.0;      // мельче/крупнее волокна (мелкие вещи — больше 1)
+uniform float clearcoat_k = 1.0;      // лак: 1 — блестит, меньше — мутный, старый
+uniform float rough_k = 1.0;          // шероховатость × (больше — матовее)
 uniform float floor_y = 0.0;          // пол в осях мира (для грязи снизу)
 
 varying vec3 v_lp;
@@ -38,7 +41,7 @@ float fbm(vec2 p) {
 
 void fragment() {
 	vec3 n = normalize(v_ln);
-	vec3 p = v_lp + seed;
+	vec3 p = v_lp * grain_scale + seed;
 	// плоскость грани и направление волокон: на вертикальных гранях — вдоль высоты, на полках — вдоль длины
 	vec2 g;                   // g.x — поперёк волокон, g.y — вдоль
 	if (abs(n.y) > 0.6) g = vec2(p.x, p.z);
@@ -99,8 +102,8 @@ void fragment() {
 	float y = v_wp.y - floor_y;
 	col *= 1.0 - 0.35 * smoothstep(0.25, 0.0, y) * (0.5 + 0.5 * n_mid) * age;
 	ALBEDO = col;
-	ROUGHNESS = rough;
+	ROUGHNESS = clamp(rough * rough_k, 0.0, 1.0);
 	SPECULAR = spec;
-	CLEARCOAT = carcass < 0.5 ? 0.5 * (1.0 - smoothstep(0.5, 0.8, n_big) * age) : 0.0;   // слой лака сверху
+	CLEARCOAT = (carcass < 0.5 ? 0.5 * (1.0 - smoothstep(0.5, 0.8, n_big) * age) : 0.0) * clearcoat_k;   // слой лака сверху
 	CLEARCOAT_ROUGHNESS = 0.15;
 }

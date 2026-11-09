@@ -16,6 +16,8 @@ const STAND := Vector3(-15.2, Y2, -31.4)     ## дальше, в проходе 
 const NEAR_PEEK := 3.0
 const NEAR_STAND := 3.2
 const CALLS := ["VERA_CALL1", "VERA_CALL2", "VERA_CALL3"]
+const SAFE_V2 := true                        ## тайник: true — шкафчик с тремя навесными замками (vera_safe.gd);
+                                             ## false — прежний (простые дверцы, «держи ЛКМ», обманка — vera_safe_v10.gd)
 ## где поставить свечи: точки над мебелью (высота — лучом); что не попало на мебель — пропускается
 const CANDLE_XZ := [Vector2(-10.4, -35.0), Vector2(-11.8, -35.0), Vector2(-8.0, -36.2), Vector2(-9.2, -33.0),
 	Vector2(-11.6, -30.6), Vector2(-7.4, -33.4), Vector2(-15.5, -36.1)]
@@ -275,7 +277,7 @@ func _drop_pictures() -> void:
 		var safe: Node = null
 		if i == best:
 			var thick := minf(ab.size.x, ab.size.z)
-			safe = preload("res://scripts/vera_safe.gd").new()
+			safe = (load("res://scripts/vera_safe.gd") if SAFE_V2 else load("res://scripts/vera_safe_v10.gd")).new()
 			safe.setup(L, R, c - nrm * thick * 0.5, nrm, Vector2(maxf(ab.size.x, ab.size.z), ab.size.y))
 			R.set("safe", safe)
 		var pivot := Node3D.new()
@@ -304,6 +306,8 @@ func _drop_pictures() -> void:
 ## Рама срывается: чуть отходит от стены, падает и плашмя хлопается на пол лицом вниз.
 func _fall(pv: Node3D, nrm: Vector3, along_x: bool, h: float, delay: float, safe: Node = null) -> void:
 	await get_tree().create_timer(delay).timeout
+	if safe:
+		safe.visible = true                     # шкафчик за картиной — виден, как только она отошла от стены
 	var axis := Vector3.RIGHT if along_x else Vector3.BACK
 	# в какую сторону крутить, чтобы верх рамы ушёл от стены (по nrm)
 	var test := Basis(axis, 0.5) * Vector3.UP
