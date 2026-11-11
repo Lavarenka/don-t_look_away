@@ -72,6 +72,7 @@ var inv: Node              ## инвентарь (Tab)
 var bath: Node             ## ванная второго этажа
 var doors: Node            ## двери, которые открываются и закрываются по E
 var bedroom: Node          ## спальня бабушки Веры
+var thoughts: Node         ## мысли и воспоминания Миши (thoughts.gd)
 var hush := false          ## в спальне Веры: все звуки дома выключены (bedroom.gd); свои звуки там — с force = true
 var events := {}            ## какие сценки уже случились
 var shade_mode := ""        ## что сейчас делает призрак
@@ -325,6 +326,8 @@ func _ready() -> void:
 	add_child(bedroom)
 	bedroom.setup(self)
 	_lt("спальня Веры")
+	thoughts = preload("res://scripts/thoughts.gd").new()
+	thoughts.setup(self)
 	var atmo := preload("res://scripts/atmosphere.gd").new()     # туман по полу, пыль, облака на луне, мелкие события
 	add_child(atmo)
 	atmo.setup(self)
@@ -514,6 +517,8 @@ func _set_objective(t: String) -> void:
 
 
 func _say(t: String, sec := 3.5) -> void:
+	if thoughts:
+		thoughts.on_say(t)
 	msg_label.text = tr(t)
 	_voice(t)
 	msg_label.modulate.a = 1.0

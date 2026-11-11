@@ -57,7 +57,7 @@ HAUNT_07,The clock struck three times and stopped.,Часы пробили тр�
 HAUNT_08,MISHA,Миша
 HAUNT_09,Someone on the line is laughing. Laughing like a madman.,В трубке кто-то хохочет. Хохочет как сумасшедший.
 HAUNT_10,"""Misha... don't turn around.""",«Миша… не оборачивайся.»
-PHONE_01,"""Misha... is that you? I can hear you breathing.""",«Миша… это ты? Я слышу, как ты дышишь.»
+PHONE_01,"""Misha... is that you? I can hear you breathing.""","«Миша… это ты? Я слышу, как ты дышишь.»"
 PHONE_03,"""Why did you hang up?""",«Зачем ты положил трубку?»
 INTRO_01,Space — skip,Пробел — пропустить
 INTRO_02,"Sukhoy Log, Russia.\nOctober 2026",Сухой Лог.\nОктябрь 2026
@@ -311,7 +311,7 @@ BR_SAFE,E — the lock,E — замок
 BR_SAFE3,E — the locks,E — замки
 BR_SAFE_LOCK,Locked.,Заперто.
 LP_MASH,Mash E — break free!,Жми E — вырывайся!
-VERA_END,"""Welcome home, Mishenka…""",«Вот ты и дома, Мишенька…»
+VERA_END,"""Welcome home, Mishenka…""","«Вот ты и дома, Мишенька…»"
 VERA_PULL,"""Come to me… to Grandma…""",«Ко мне… к бабушке…»
 LP_HELP,Mouse — move the pin · hold LMB — turn the lock · RMB — step back,Мышь — двигать шпильку · держи ЛКМ — поворачивать замок · ПКМ — отойти
 LP_HELP2,Mouse — move the pin · hear a click — LMB · RMB — step back,Мышь — води шпилькой · услышишь щелчок — ЛКМ · ПКМ — отойти
@@ -327,3 +327,31 @@ INV_HAIRPIN,Hairpin,Шпилька
 INV_HAIRPIN_D,"Grandma's hairpin, bent in half. Cold.","Бабушкина шпилька, согнутая пополам. Холодная."
 INV_VPHOTO_D,"An old photo in a frame. This very corridor, 1986.","Старая фотография в рамке. Этот самый коридор, 1986 год."
 INV_N_VERA,Vera's letter,Письмо Веры
+MT_HOUSE,All these years... and it still smells the same. Mothballs and the old stove.,Столько лет здесь не был... А пахнет всё так же — нафталином и печкой.
+MT_CANDLE,A candle's burning. Who lit it? The house has been empty for a week.,Свеча горит. Кто её зажёг? Дом же неделю стоит пустой.
+MT_CHAIR,"We were never allowed to sit in that chair. Grandma always said, ""It's taken.""",В это кресло нам садиться не разрешали. Бабушка говорила: «Занято».
+MT_SERVANT,Grandma's china cabinet. As a kid I wasn't even allowed to breathe on the glass.,Бабушкин сервант. В детстве мне нельзя было даже дышать на стёкла.
+MT_TV,The lodger's old TV. Grandma never threw it out.,Телевизор квартиранта. Бабушка так его и не выбросила.
+MT_NOTE1,"""The lights went out again""... Again. So this has happened before.","«Свет опять выбило»... Опять. Значит, так уже было."
+MT_NOTE2,She writes as if they're all still here.,"Она пишет так, будто они все ещё здесь."
+MT_LIGHT,The fuses blew... so why is this light still on?,Пробки же выбило... Почему здесь горит свет?
+MT_LIGHT2,Grandpa wired this house himself. He used to say the lights here only go out when the house wants them to.,"Дед сам тянул проводку в этом доме. Говорил: свет здесь гаснет, только когда дом сам захочет."
+MT_PORTRAITS,"Grandpa, Grandma... and Anya. I haven't seen her face in so long.","Дед, бабушка... и Аня. Я так давно не видел её лица."
+MT_FUNERAL,"They never found her. And at the wake, Grandma didn't even cry.",Её так и не нашли. А бабушка на поминках даже не плакала.
+MT_NURSERY,Her room. Everything's just like it was... there isn't even any dust.,Её комната. Всё как тогда... даже пыли нет.
+MT_HIDE,"That day we were playing hide and seek. I was ""it""... And Grandma told me to turn away.",В тот день мы играли в прятки. Я водил... А бабушка сказала: «Отвернись».
+MT_ATTIC,I remember now. Grandma was holding her hand... and I just stood there with my back to them.,Я вспомнил. Бабушка держала её за руку... а я просто стоял к ним спиной.
+MT_MANNEQ,Grandma sewed for the whole village. The mannequins scared me more than the dark.,"Бабушка шила на весь посёлок. Манекены пугали меня больше, чем темнота."
+MT_FLOOR2,Up here I always walked fast. And only looked at my feet.,На втором этаже я всегда ходил быстро. И смотрел только под ноги.
+MT_STUDY,Grandpa's study. He only let me in when he was soldering his radios.,"Кабинет деда. Он пускал меня туда, только когда паял свои приёмники."
+MT_ANYA_DOOR,"""Knock!"" She made that sign herself. And I still barged in without knocking.",«Стучать!» Она сама нарисовала эту табличку. А я всё равно врывался без стука.
+MT_BEDKEY,Her bedroom. I was never even allowed to look inside.,Её спальня. Туда мне нельзя было даже заглядывать.
+MT_MIRROR,Anya used to write like that — numbers backwards. I teased her about it.,Аня так писала — цифры задом наперёд. Я дразнил её за это.
+MT_HAIR,Anya had long hair. Grandma brushed it every night. A hundred strokes.,У Ани были длинные волосы. Бабушка расчёсывала их каждый вечер. Сто раз.
+MT_RUNAWAY,Again... Back then I ran away from this house. And I never came back.,Опять... Тогда я сбежал из этого дома. И больше сюда не возвращался.
+MT_BEDROOM,It smells of her perfume. Like she stepped out a minute ago.,Пахнет её духами. Будто она вышла минуту назад.
+MT_WINDOW,Every night she put a candle in the window. She said it was so Anya could find her way home.,Каждую ночь она ставила свечу на окно. Говорила — чтобы Аня нашла дорогу домой.
+MT_LETTER,She gave her away herself. And then all those years she baked me pancakes on weekends...,Она сама её отдала. А потом все эти годы пекла мне блины по выходным...
+MT_HAIRPIN,Her hairpin. She used pins like this to fix Anya's braids.,Её шпилька. Такими шпильками она закалывала Ане косы.
+MT_SAFE,A hiding place behind the painting. All those nights I slept on the other side of this wall — and never knew.,Тайник за картиной. Сколько ночей я спал за этой стенкой — и не знал.
+MT_LOCKS,Three locks. What do you hide like this from your own family?,Три замка. Что можно так прятать от своих?
