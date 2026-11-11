@@ -327,60 +327,16 @@ INV_HAIRPIN,Hairpin,Шпилька
 INV_HAIRPIN_D,"Grandma's hairpin, bent in half. Cold.","Бабушкина шпилька, согнутая пополам. Холодная."
 INV_VPHOTO_D,"An old photo in a frame. This very corridor, 1986.","Старая фотография в рамке. Этот самый коридор, 1986 год."
 INV_N_VERA,Vera's letter,Письмо Веры
-MT_DARK,And now the lights... Fine. Grab the papers and get out.,Ещё и свет... Ладно. Бумаги — и сразу уезжаю.
-MT_CANDLE,A candle's burning. The house has been empty for a week... Who lit it?,Свеча горит. Дом неделю стоит пустой... Кто её зажёг?
-MT_KNOCK,Who's there?! ...I just came in. There was nobody outside.,Кто там?! ...Я же только что зашёл. Снаружи никого не было.
-MT_DOORWAY,Someone just walked past. I saw it. Hey! Who's there?,Там кто-то прошёл. Я видел. Эй! Кто здесь?
-MT_GRAMOPHONE,It started playing on its own? You have to wind it...,Он заиграл сам? Его же заводить надо...
-MT_BOOKS,Okay. That's not a draft.,Так. Это уже не сквозняк.
 MT_NOTE1,"""Don't be afraid of them, they only watch""... Who's ""them"", Grandma?!","«Не бойся их, они только смотрят»... Кого — их, бабушка?!"
-MT_CHAIR,Grandma never let anyone sit in that chair. She said it was taken. Taken by who?,В это кресло бабушка никого не сажала. Говорила: «Занято». Кем занято?
-MT_TV,It works?.. The fuses are blown.,Работает?.. Пробки же выбиты.
-MT_PEEK,There was a woman behind the chair. Covered in blood. Staring at me...,За креслом стояла женщина. Вся в крови. Смотрела на меня...
-MT_ARMCHAIR,The chair turned to the TV. By itself. Like someone sat down to watch.,Кресло повернулось к телевизору. Само. Будто кто-то сел смотреть.
 MT_PHONE,That was her voice. Anya's. But she's been gone for so many years...,Это был её голос. Анин. Но её нет уже столько лет...
-MT_RUNAWAY,"""Again""?.. How does she know I ran away back then?","«Опять»?.. Откуда она знает, что я тогда сбежал?"
-MT_CLOCK,The clock stopped at three... Grandma always woke up at three. I used to hear her whispering to someone.,"Часы встали на трёх... Бабушка просыпалась ровно в три. Я слышал, как она с кем-то шепчется."
-MT_CHANDELIER,"The chandelier's swinging. The windows are shut... Breathe, Misha. Just breathe.","Люстра качается. Окна закрыты... Дыши, Миша. Просто дыши."
-MT_LIGHT,The fuses blew... So why is this light on?,Пробки же выбило... Почему здесь горит свет?
-MT_LIGHT2,Grandpa used to say the lights in this house only go out when the house wants them to. I thought he was joking.,"Дед говорил: свет в этом доме гаснет, только когда дом сам захочет. Я думал, он шутит."
-MT_SLAM,The door... Okay. Okay. There's no going back anyway.,Дверь... Ладно. Ладно. Назад всё равно дороги нет.
-MT_FIGURE,Someone's standing at the end of the hall. Tall. Not moving...,В конце коридора кто-то стоит. Высокий. Не шевелится...
-MT_BULB,"No, no, no... Not the dark.",Нет-нет-нет... Только не темнота.
-MT_PORTRAITS,"Grandpa, Grandma... Anya. Her eyes in the portrait — they're following me.","Дед, бабушка... Аня. Её глаза на портрете — они следят за мной."
-MT_FLASH,The candle flared — and someone was there. Her again. That woman.,Свеча вспыхнула — и там кто-то был. Опять она. Та женщина.
-MT_TURNED,I only looked away for a second...,Я отвернулся всего на секунду...
-MT_WHISPER,Who said that?.. The voice was right by my ear.,Кто это сказал?.. Голос был прямо у уха.
-MT_SHARD,In the glass the house is alive... And someone's walking around in it.,В стекле дом живой... И в нём кто-то ходит.
+MT_LIGHT,The fuses blew... so why is this light on? Grandpa used to say the lights here only go out when the house wants them to.,"Пробки же выбило... Почему здесь горит свет? Дед говорил: свет в этом доме гаснет, только когда дом сам захочет."
 MT_FUNERAL,"They never found her. And at the wake, Grandma didn't even cry.",Её так и не нашли. А бабушка на поминках даже не плакала.
 MT_NURSERY,Her room. Everything's just like it was... not even dust. Who keeps cleaning in here?!,Её комната. Всё как тогда... даже пыли нет. Кто здесь убирает?!
-MT_STEPS,A child's footsteps. Right behind me... Don't turn around. Just don't turn around.,Детские шаги. Прямо за спиной... Не оборачиваться. Только не оборачиваться.
-MT_DANCE,A girl in white. Dancing... No. It's not her. It can't be her.,Девочка в белом. Танцует... Нет. Это не она. Не может быть она.
-MT_HORSE,The rocking horse is moving. Anya used to ride it for hours...,Лошадка качается. Аня часами на ней каталась...
-MT_DOLL_MOVED,The doll. It was sitting in the chair... Who moved it?,Кукла. Она же сидела в кресле... Кто её пересадил?
 MT_HIDE,"Hide and seek. We were playing hide and seek when she vanished. I was ""it""...","Прятки. Мы играли в прятки, когда она пропала. Я водил..."
 MT_ATTIC,I remember now... Grandma was holding her hand. She told me to turn away. And I did.,Я вспомнил... Бабушка держала её за руку. Сказала мне отвернуться. И я отвернулся.
-MT_MANNEQ,"Grandma sewed at night. She said it was for the guests. What guests, Grandma?","Бабушка шила по ночам. Говорила — гостям. Каким гостям, бабушка?"
-MT_MANNEQ_BEHIND,It was right behind me. A mannequin... It walked up on its own.,Он стоял прямо за мной. Манекен... Он подошёл сам.
-MT_SHEET,The sheet slid off... A mirror. I don't want to look into it.,Простыня сползла... Зеркало. Я не хочу в него смотреть.
 MT_TURN,"They turned. All at once. Grandma, what were you hiding up here?","Они повернулись. Все разом. Бабушка, что ты здесь прятала?"
-MT_FLOOR2,I was never allowed upstairs. Now I see why.,Наверх мне ходить запрещали. Теперь понятно почему.
-MT_STUDY,"Grandpa's study. After he died, Grandma locked it — and never went in again herself.",Кабинет деда. После его смерти бабушка заперла его — и сама туда больше не входила.
 MT_ANYA_DOOR,"""Knock."" Her sign... And if I knock — will she answer?",«Стучать». Её табличка... А если постучу — она ответит?
-MT_BATH_OPEN,The door opened by itself... Am I being invited in?,"Дверь открылась сама... Меня что, приглашают?"
-MT_PRINTS,Little handprints... On the other side of the glass.,Маленькие ладошки... С той стороны стекла.
 MT_MIRROR,Numbers written backwards. Only Anya wrote like that...,Цифры задом наперёд. Так писала только Аня...
-MT_MIRROR_GHOST,In the mirror... she was standing right behind me.,В зеркале... она стояла прямо у меня за спиной.
 MT_HAIR,"Hair. Long hair... Like hers. God, just like hers.","Волосы. Длинные... Как у неё. Господи, как у неё."
-MT_BEDKEY,The key to her bedroom. Grandma wore it around her neck. How did it end up here?,"Ключ от её спальни. Бабушка носила его на шее, не снимая. Как он оказался здесь?"
-MT_BATH_GHOST,She came at me. From behind the door... Am I still alive?,Она бросилась на меня. Из-за двери... Я ещё живой?
-MT_BEDROOM,The door won't open. And it smells of her perfume... Like she's here. Like she's been waiting.,Дверь не открывается. И пахнет её духами... Будто она здесь. Будто ждала.
-MT_WINDOW,"Every night she put a candle in the window. ""So Anya can find her way home""...",Каждую ночь она ставила свечу на окно. «Чтобы Аня нашла дорогу домой»...
-MT_BED,Someone was lying under the blanket. I saw it breathing...,"Под одеялом кто-то лежал. Я видел, как оно дышало..."
-MT_DOLL_TURN,It turned its head. A porcelain doll... turned its head.,Она повернула голову. Фарфоровая кукла... повернула голову.
 MT_LETTER,She gave her away. Herself. And all my life she told me Anya got lost...,"Она её отдала. Сама. А мне всю жизнь говорила, что Аня потерялась..."
-MT_DOLL_BIG,She's back in the chair. As if she never got up... As if I'm the one losing my mind.,Она снова в кресле. Будто и не вставала... Будто это я схожу с ума.
-MT_CEILING,Grandma... on the ceiling. That's not her. It can't be her.,Бабушка... на потолке. Это не она. Это не может быть она.
-MT_HAIRPIN,She gave me the hairpin. Her hand was cold... like ice.,Она дала мне шпильку. Рука у неё была холодная... как лёд.
 MT_SAFE,"Three locks... Whatever's in there, she really didn't want it getting out.","Три замка... Что бы там ни было — она очень не хотела, чтобы оно вышло."
-MT_LOCKS,"My hands are shaking... Easy, Misha. Easy.","Руки трясутся... Спокойно, Миша. Спокойно."
