@@ -57,6 +57,7 @@ var _steps: Array[Node3D] = []
 ## false — как было: она просто появлялась в самом тайнике
 ## (бэкап: backup/nursery_found_v1, метка в git: before-found-v2).
 const FOUND_V2 := true
+const FORCE_SPOT := ""    ## для проверки: "bed", "desk", "curt_w", "curt_e", "chair" — она всегда прячется там; "" — случайно
 const BED_TOP := Vector3(-0.88, 0.42, -22.6)     ## где её ноги на кровати (верх матраса ~0.43 м)
 const DESK_TOP := Vector3(1.92, 0.93, -19.08)    ## где её ноги на столе (лампу не задевает)
 const ROOM := Rect2(-1.75, -23.6, 3.5, 5.0)      ## где ей можно стоять на полу (x, z): не у стен и не в шторах
@@ -517,7 +518,7 @@ func _solve() -> void:
 ## Аня прячется в одном из мест комнаты. Её смешок слышен оттуда, а в осколке видны её следы мелом.
 func _start_hide() -> void:
 	var keys := SPOTS.keys()
-	hide_spot = keys.pick_random()
+	hide_spot = FORCE_SPOT if SPOTS.has(FORCE_SPOT) else keys.pick_random()
 	hiding = true
 	_checked.clear()
 	_giggle_t = 2.5
