@@ -32,8 +32,8 @@ const WARD_XZ := Vector2(-5.9, -31.5)                   ## платяной шк
 const DOLL_SCALE := 0.75
 const DOLL_STANDS := true        ## скример после письма: true — кукла стоит во весь рост сбоку и смотрит на тебя;
                                  ## false — прежний: сидит на полу за спиной, голова набок
-const STAND_SCALE := 0.75        ## размер стоящей куклы (как в кресле — 0.75; ростом с ребёнка — около 1.5)
-const STAND_ANG := 0.95          ## где встаёт: столько рад от взгляда вбок (край поля зрения)
+const STAND_SCALE := 2.1         ## размер стоящей куклы: 2.1 — во весь рост, около 1.65 м (как в кресле — 0.75)
+const STAND_DIST := 0.95         ## в скольких метрах сбоку от игрока встаёт
 const TEETH := [Vector3(-6.75, 1.0, -32.85), Vector3(-9.5, 1.0, -33.2), Vector3(-13.42, 0.7, -29.85)]   ## y — откуда пускать луч
 ## Фотография из шкафа: её место — пустой гвоздь в коридоре у самого входа (южная стена, справа от жирафа)
 const HANG_FROM := Vector3(-5.22, Y2 + 1.75, -35.5)     ## откуда луч к стене (стена — на -Z)
@@ -274,6 +274,32 @@ static func _stand_doll(d: Node3D) -> float:
 	for mi in d.find_children("*", "MeshInstance3D", true, false):
 		var m := mi as MeshInstance3D
 		var nm := String(m.name)
+		if nm == "DressTop":
+			# платье вблизи и крупно: в нормалях лифа запечены выпуклости на груди — при росте с человека
+			# они читались как тело. Нормали — заново по самой (гладкой) сетке, рельеф из текстуры — убрать
+			var dm := ArrayMesh.new()
+			for si in m.mesh.get_surface_count():
+				var st := SurfaceTool.new()
+				var sa := m.mesh.surface_get_arrays(si)
+				var dv: PackedVector3Array = sa[Mesh.ARRAY_VERTEX]
+				for i in dv.size():
+					dv[i] = _flat_chest(dv[i])
+				sa[Mesh.ARRAY_VERTEX] = dv
+				sa[Mesh.ARRAY_NORMAL] = null
+				sa[Mesh.ARRAY_TANGENT] = null
+				st.create_from_arrays(sa)
+				st.generate_normals()
+				st.generate_tangents()
+				st.commit(dm)
+				var bm := m.mesh.surface_get_material(si) as BaseMaterial3D
+				if bm:
+					var dmat := bm.duplicate() as BaseMaterial3D
+					dmat.normal_enabled = false
+					dmat.albedo_color = Color(0.9, 0.86, 0.78)
+					dmat.cull_mode = BaseMaterial3D.CULL_BACK     # подвёрнутые края бывших выпуклостей — не видны
+					dm.surface_set_material(si, dmat)
+			m.mesh = dm
+			continue
 		if not nm in ["Skin", "Socks", "Shoes", "Skirt"]:
 			continue
 		var src := m.mesh
@@ -1306,7 +1332,10 @@ func _update_doll(delta: float) -> void:
 		"floor":
 			if DOLL_STANDS:
 				_stand_look(p, delta)
-			var to: Vector3 = floor_doll.global_position + Vector3(0, 0.4 if DOLL_STANDS else 0.25, 0) - p.cam.global_position
+			var look_at_p: Vector3 = floor_doll.global_position + Vector3(0, 0.25, 0)
+			if DOLL_STANDS:
+				look_at_p = (floor_doll.find_child("Head", true, false) as Node3D).global_position
+			var to: Vector3 = look_at_p - p.cam.global_position
 			if to.length() < 4.5 and p.forward().angle_to(to) < 0.5:
 				_doll_t += delta
 			if _doll_t > 0.6:
@@ -1334,9 +1363,9 @@ func _door_body(dn: Node3D) -> void:
 		_box_body(dn, ab.size, ab.get_center())
 
 
-## Стоящая кукла — сбоку: сперва на краю поля зрения (STAND_ANG), если там мешает мебель или открытая
-## дверца — чуть дальше вбок, рядом с тобой. Место свободное, на полу, и с твоих глаз её видно.
-## Лицом к тебе, голова запрокинута — смотрит прямо в лицо, чуть набок.
+## Стоящая кукла — справа от тебя (ты смотришь в шкаф): прямо сбоку, если там мешает мебель или открытая
+## дверца — чуть впереди или чуть позади; справа никак — слева. Место свободное, на полу, с твоих глаз
+## её лицо видно. Лицом к тебе, смотрит прямо в лицо, голова чуть набок.
 func _stand_beside(p: Node3D) -> void:
 	var fwd: Vector3 = p.forward()
 	fwd.y = 0.0
@@ -1347,27 +1376,36 @@ func _stand_beside(p: Node3D) -> void:
 	var floor0 := _top(feet.x, feet.z, 0.3)
 	var at := Vector3.INF
 	var fallback := Vector3.INF
-	for ang in [STAND_ANG, 1.25, 1.6, 1.95]:
-		for dist in [0.8, 0.65]:
-			for sg in [1.0, -1.0]:
+	var room := BoxShape3D.new()                             # сколько места ей нужно: юбка, руки, голова
+	room.size = Vector3(0.62, 1.45, 0.62) * (STAND_SCALE / 2.1)
+	var qs := PhysicsShapeQueryParameters3D.new()
+	qs.shape = room
+	qs.exclude = [p.get_rid()]
+	for sg in [-1.0, 1.0]:                                   # −1 — справа, +1 — слева
+		for ang in [PI / 2, 1.3, 1.85, 2.2]:
+			for dist in [STAND_DIST, STAND_DIST - 0.15]:
 				var dir := fwd.rotated(Vector3.UP, sg * ang)
 				var c: Vector3 = feet + dir * dist
-				# дорога от тебя до места свободна (на высоте её колен и головы)
+				# дорога от тебя до места свободна (не за стеной)
 				var ok := true
-				for hgt in [0.2, 0.5]:
-					var q := PhysicsRayQueryParameters3D.create(feet + Vector3(0, hgt, 0), c + dir * 0.15 + Vector3(0, hgt, 0))
+				for hgt in [0.6, 1.2]:
+					var q := PhysicsRayQueryParameters3D.create(feet + Vector3(0, hgt, 0), c + Vector3(0, hgt, 0))
 					q.exclude = [p.get_rid()]
 					if not sp.intersect_ray(q).is_empty():
 						ok = false
 				var fy := _top(c.x, c.z, 0.3)
 				if absf(fy - floor0) > 0.08:
 					ok = false                                   # не на мебели
+				if ok:                                           # и вокруг места ничего: ни мебели, ни дверцы шкафа
+					qs.transform = Transform3D(Basis(Vector3.UP, atan2(dir.x, dir.z)), Vector3(c.x, fy + 0.1 + room.size.y * 0.5, c.z))
+					if not sp.intersect_shape(qs, 1).is_empty():
+						ok = false
 				if not ok:
 					continue
 				if fallback == Vector3.INF:
 					fallback = Vector3(c.x, fy, c.z)
 				# с глаз видно её лицо (ничто не заслоняет)
-				var q2 := PhysicsRayQueryParameters3D.create(eye, Vector3(c.x, fy + 0.4, c.z))
+				var q2 := PhysicsRayQueryParameters3D.create(eye, Vector3(c.x, fy + 0.62 * STAND_SCALE, c.z))
 				q2.exclude = [p.get_rid()]
 				if sp.intersect_ray(q2).is_empty():
 					at = Vector3(c.x, fy, c.z)
@@ -1385,7 +1423,26 @@ func _stand_beside(p: Node3D) -> void:
 	if fh:
 		var hp: Vector3 = fh.global_position
 		var pitch := -atan2(eye.y - hp.y, Vector2(eye.x - hp.x, eye.z - hp.z).length())
-		fh.rotation = Vector3(clampf(pitch, -0.9, 0.0), 0.0, 0.22)
+		fh.rotation = Vector3(clampf(pitch, -0.9, 0.4), 0.0, 0.22)
+
+
+## Лиф платья куклы (vera_doll.glb): выпуклости на груди срезаны по гладкой поверхности лифа
+## (подобрана по самой сетке: z = c0 + c1·x² + c2·y + c3·y² + c4·y³ + c5·x²·y + c6·x⁴), только то, что выше неё.
+static func _flat_chest(p: Vector3) -> Vector3:
+	var ax := absf(p.x)
+	if ax > 0.072 or p.y < 0.285 or p.y > 0.4 or p.z < 0.06:
+		return p
+	var x2 := p.x * p.x
+	var zf := 0.4330944 - 9.48695199 * x2 - 3.47782862 * p.y + 11.97794245 * p.y * p.y - 13.81102118 * p.y * p.y * p.y \
+			+ 21.63287629 * x2 * p.y - 306.28497698 * x2 * x2
+	var w := (1.0 - smoothstep(0.058, 0.072, ax)) * smoothstep(0.285, 0.3, p.y) * (1.0 - smoothstep(0.385, 0.4, p.y))
+	p.z -= w * maxf(0.0, p.z - (zf + 0.0005))
+	# у самих выпуклостей (x ±0.05, y 0.341) — ровно по поверхности, и ямки вокруг тоже
+	if p.z > 0.075:                                       # внутренний слой лифа (глубже) не трогаем
+		var r := Vector2(ax - 0.05, p.y - 0.341).length()
+		var k := 1.0 - smoothstep(0.014, 0.026, r)
+		p.z = lerpf(p.z, zf + 0.0005, k)
+	return p
 
 
 ## Стоит и смотрит: голова медленно поворачивается за тобой (тело — нет).
@@ -1395,7 +1452,7 @@ func _stand_look(p: Node3D, delta: float) -> void:
 		return
 	var loc: Vector3 = floor_doll.global_basis.orthonormalized().inverse() * (p.cam.global_position - fh.global_position)
 	var yaw := clampf(atan2(loc.x, loc.z), -0.7, 0.7)
-	var pitch := clampf(-atan2(loc.y, Vector2(loc.x, loc.z).length()), -0.9, 0.0)
+	var pitch := clampf(-atan2(loc.y, Vector2(loc.x, loc.z).length()), -0.9, 0.4)
 	fh.rotation = fh.rotation.lerp(Vector3(pitch, yaw, 0.22), minf(1.0, delta * 1.5))
 
 
