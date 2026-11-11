@@ -12,6 +12,8 @@ uniform float sag = 1.0;           // насколько рукав «повис
 uniform float drop = 2.6;          // во сколько раз ткань свисает ниже, чем отстояла от руки в покое
 uniform float sway = 1.0;          // общая сила колыхания
 uniform float lift = 0.0;          // испуг: волосы поднимаются
+uniform float hang = 0.0;          // 0..1: волосы свисают отвесно вниз, а не повторяют наклон головы (она согнулась над тобой)
+uniform float hang_y = 0.17;       // откуда свисают пряди (м, оси головы): линия лба; ниже — висят, выше — как есть
 uniform float alive = 0.0;         // «живая» Аня: волосы и подол по инерции, кожа просвечивает, мокрые пряди; 0 — как было
 uniform vec3 hair_drag = vec3(0.0);   // смещение кончиков прядей (оси меша) — отстают от головы
 uniform vec3 hem_drag = vec3(0.0);    // смещение подола — отстаёт от бёдер
@@ -102,6 +104,16 @@ void vertex() {
 	if (COLOR.g > 0.0) {
 		vec3 ap = tt < 1.0 ? mix(r0, r1, tt) : mix(r1, r2, tt - 1.0);
 		VERTEX = mix(VERTEX, ap + down * UV2.y * drop, COLOR.g * sag * smoothstep(0.03, 0.3, arm_up_r));
+	}
+	// волосы свисают отвесно: каждая прядь — от своей точки на линии лба вниз на свою длину (передние и боковые;
+	// задние остаются на спине — иначе висели бы сквозь голову)
+	if (hang > 0.0 && COLOR.b > 0.0) {
+		float hl = hang_y - v_hp.y;
+		float hw = hang * smoothstep(0.0, 0.06, hl) * smoothstep(-0.05, 0.02, v_hp.z);
+		if (hw > 0.0) {
+			vec3 att = (inverse(head_inv) * vec4(vec3(v_hp.x, hang_y, v_hp.z) / head_k, 1.0)).xyz;
+			VERTEX = mix(VERTEX, att + down * (hl / head_k), hw);
+		}
 	}
 	// волосы: медленные волны, разные для разных прядей
 	float hph = VERTEX.x * 23.0 + VERTEX.z * 17.0;

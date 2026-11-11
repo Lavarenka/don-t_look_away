@@ -48,6 +48,22 @@ var _checked := {}
 var _giggle_t := 3.0
 var _steps: Array[Node3D] = []
 
+## Нашёл её — FOUND_V2: она больше не стоит внутри мебели, и находка страшнее.
+##   кровать, стол: Миша присел и заглянул вниз — пусто, только скрип и смешок СВЕРХУ; выпрямляется —
+##     а она стоит на кровати (на столе), согнувшись над ним, лицо прямо над его лицом, — резкий крик;
+##   шторы, кресло: там пусто — и смешок прямо за спиной; Миша оборачивается — она вплотную, крик.
+##   Потом фонарь гаснет; загорается — она уже стоит поодаль на полу (место подбирается по коллизиям),
+##   «Нашёл... Теперь я вожу» — и счёт. В счёте она тоже не заходит в мебель и в стены.
+## false — как было: она просто появлялась в самом тайнике
+## (бэкап: backup/nursery_found_v1, метка в git: before-found-v2).
+const FOUND_V2 := true
+const BED_TOP := Vector3(-0.88, 0.42, -22.6)     ## где её ноги на кровати (верх матраса ~0.43 м)
+const DESK_TOP := Vector3(1.92, 0.93, -19.08)    ## где её ноги на столе (лампу не задевает)
+const ROOM := Rect2(-1.75, -23.6, 3.5, 5.0)      ## где ей можно стоять на полу (x, z): не у стен и не в шторах
+var _bend: Node                                  ## spirit_bend.gd — пока она согнута над Мишей
+var _eye_base := 1.6                             ## высота глаз Миши (до того как присел)
+var _fill: OmniLight3D                           ## слабый холодный свет у лица Миши, пока она вплотную
+
 
 func _ready() -> void:
 	_number_drawings()
@@ -597,6 +613,14 @@ func _search_anim(sp: String) -> void:
 
 ## Нашёл: она там — и теперь водит она.
 func _found() -> void:
+	if FOUND_V2:
+		_found_v2()
+	else:
+		_found_v1()
+
+
+## Как было до FOUND_V2: она просто стоит в самом тайнике — и счёт.
+func _found_v1() -> void:
 	hiding = false
 	for f in _steps:
 		f.queue_free()
@@ -619,6 +643,286 @@ func _found() -> void:
 	_finale_count()
 
 
+## FOUND_V2: под кроватью и столом — пусто, она над тобой; за шторой и креслом — пусто, она за спиной.
+func _found_v2() -> void:
+	hiding = false
+	for f in _steps:
+		f.queue_free()
+	_steps.clear()
+	match hide_spot:
+		"bed":
+			await _above(Vector3(0.12, 0.0, -22.6), Vector3(-1.35, 0.12, -22.7), BED_TOP, 0.9, 0.2, 1.3)
+		"desk":
+			await _above(Vector3(0.88, 0.0, -19.08), Vector3(1.95, 0.2, -19.0), DESK_TOP, 1.05, 0.22, 1.6)
+		_:
+			await _behind()
+	await _regroup()
+	_finale_count()
+
+
+## «Она над тобой». Миша присел у кровати (стола) и заглянул вниз — там пусто и темно. Скрип сверху,
+## смешок прямо над головой. Начинает выпрямляться — а она стоит наверху, согнувшись над ним: лицо над его лицом,
+## длинные волосы свисают отвесно, ему в лицо (spirit.gdshader: hang). Резкий крик.
+## crouch — где он приседает, under — куда смотрит внизу, stand — где её ноги наверху,
+## bend — наклон спины, lean — наклон всей фигуры от ступней (рад), eye — до какой высоты он успевает подняться.
+func _above(crouch: Vector3, under: Vector3, stand: Vector3, bend: float, lean: float, eye: float) -> void:
+	var p = L.player
+	var head: Node3D = p.head
+	_eye_base = head.position.y
+	var girl: Node3D = L.girl
+	var g = L.girl_sp
+	p.frozen = true
+	crouch.y = p.global_position.y
+	var to := under - (crouch + Vector3(0, 0.45, 0))
+	var yaw := atan2(-to.x, -to.z)
+	var tw := create_tween().set_parallel()
+	tw.tween_property(p, "global_position", crouch, 0.6).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(p, "rotation:y", p.rotation.y + wrapf(yaw - p.rotation.y, -PI, PI), 0.6).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(head, "position:y", 0.45, 0.6).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(head, "rotation:x", atan2(to.y, Vector2(to.x, to.z).length()), 0.6)
+	await tw.finished
+	# пусто. Тишина... над головой скрипнула кровать
+	await get_tree().create_timer(1.1).timeout
+	L._sfx3d("creak", stand + Vector3(0, 0.15, 0), -5.0, 0.7)
+	await get_tree().create_timer(0.7).timeout
+	# она уже наверху: стоит на краю и нависает над ним — спина согнута, руки и волосы висят отвесно
+	girl.global_position = stand
+	girl.rotation = Vector3(lean, atan2(crouch.x - stand.x, crouch.z - stand.z), 0.0)
+	_gpose("idle", 1.0, 0.55)
+	_bend_on(bend)
+	g.life.life = 0.0                # голова — одним целым со спиной (иначе висящие пряди рвутся); живость вернём потом
+	g._p("hang", 1.0)
+	g._p("near_cut", 0.1)            # пряди у самого объектива не рисовать
+	girl.visible = true
+	var face: Vector3 = await _girl_face()
+	L._sfx3d("giggle", face, -2.0, 1.05)
+	await get_tree().create_timer(1.0).timeout
+	# выпрямляется — и упирается взглядом в её лицо
+	var d := face - (crouch + Vector3(0, eye, 0))
+	var yaw2 := atan2(-d.x, -d.z)
+	var pitch2 := clampf(atan2(d.y, Vector2(d.x, d.z).length()), -1.2, 1.2)
+	_fill_on()
+	var tw2 := create_tween().set_parallel()
+	tw2.tween_property(head, "position:y", eye, 0.8).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw2.tween_property(head, "rotation:x", pitch2, 0.8).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw2.tween_property(p, "rotation:y", p.rotation.y + wrapf(yaw2 - p.rotation.y, -PI, PI), 0.8).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	await get_tree().create_timer(0.35).timeout
+	_scream_in_face(0.5)
+	await tw2.finished
+	await get_tree().create_timer(0.8).timeout
+
+
+## Тайник пуст (штора, кресло) — и смешок прямо за спиной. Миша оборачивается — она стоит вплотную.
+func _behind() -> void:
+	var p = L.player
+	var girl: Node3D = L.girl
+	var g = L.girl_sp
+	p.frozen = true
+	await get_tree().create_timer(0.7).timeout
+	var back: Vector3 = -p.forward()
+	back.y = 0.0
+	back = back.normalized()
+	var at := _free_spot(p.global_position + back * 0.62, 0.45)
+	girl.global_position = at
+	L._face(girl, p.global_position)
+	_gpose("reach", 1.3, 0.6)
+	g.life.look_w = 1.0
+	girl.visible = true
+	var face: Vector3 = await _girl_face()
+	L._sfx3d("giggle", face, -2.0, 1.1)
+	await get_tree().create_timer(0.9).timeout
+	# оборачивается
+	_fill_on()
+	var d: Vector3 = face - p.cam.global_position
+	var yaw := atan2(-d.x, -d.z)
+	var tw := create_tween().set_parallel()
+	tw.tween_property(p, "rotation:y", p.rotation.y + wrapf(yaw - p.rotation.y, -PI, PI), 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(p.head, "rotation:x", clampf(atan2(d.y, Vector2(d.x, d.z).length()), -1.0, 1.0), 0.45)
+	await get_tree().create_timer(0.25).timeout
+	_scream_in_face()
+	await tw.finished
+	await get_tree().create_timer(0.8).timeout
+
+
+## Крик в лицо: рот распахнут, волосы дыбом, вспышка.
+func _scream_in_face(lift := 0.7) -> void:
+	var p = L.player
+	L._sfx("sting", 2.0)
+	L._sfx("scream", 0.0, 1.25)
+	L.girl_sp.scream(0.8)
+	L.girl_sp.set_lift(lift)
+	L.girl_sp.set_blood(0.75)
+	p.shake = 1.0
+	L.red_flash.color.a = 0.45
+	create_tween().tween_property(L.red_flash, "color:a", 0.0, 0.8)
+
+
+## После крика: фонарь гаснет, она пропадает; загорается — она уже стоит поодаль на полу, перед Мишей.
+## «Нашёл... Теперь я вожу» — дальше счёт.
+func _regroup() -> void:
+	var p = L.player
+	var girl: Node3D = L.girl
+	var g = L.girl_sp
+	p.light_on = false
+	await get_tree().create_timer(0.1).timeout
+	girl.visible = false
+	_bend_off()
+	_fill_off()
+	g.set_lift(0.0)
+	g._p("hang", 0.0)
+	g._p("near_cut", 0.0)
+	g.life.life = 1.0
+	girl.rotation.x = 0.0
+	# в темноте Миша поднимается во весь рост и опускает взгляд
+	var tw := create_tween().set_parallel()
+	tw.tween_property(p.head, "position:y", _eye_base, 0.6).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(p.head, "rotation:x", 0.0, 0.6).set_trans(Tween.TRANS_SINE)
+	await get_tree().create_timer(1.0).timeout
+	girl.global_position = _spot_in_view()
+	var dg: Vector3 = girl.global_position - p.global_position
+	p.rotation.y = atan2(-dg.x, -dg.z)          # в темноте повернулся к ней: фонарь загорится — она в луче
+	L._face(girl, p.global_position)
+	_gpose("zidle", 2.0, 0.45)
+	girl.visible = true
+	p.light_on = true
+	p.flicker = 0.25
+	p.frozen = false
+	L._sfx("whisper", -2.0, 1.3)
+	L._say("NUR_FOUND", 2.8)
+	await get_tree().create_timer(2.0).timeout
+
+
+## Вплотную фонарь бьёт мимо (он сбоку от глаз) — слабый холодный «отсвет», чтобы её было видно.
+func _fill_on() -> void:
+	_fill_off()
+	_fill = OmniLight3D.new()
+	_fill.light_color = Color(0.55, 0.62, 0.8)
+	_fill.light_energy = 0.45
+	_fill.omni_range = 1.3
+	_fill.omni_attenuation = 1.6
+	_fill.shadow_enabled = false
+	L.player.cam.add_child(_fill)
+	_fill.position = Vector3(0.0, -0.12, -0.05)
+
+
+func _fill_off() -> void:
+	if _fill and is_instance_valid(_fill):
+		_fill.queue_free()
+	_fill = null
+
+
+## Согнуть её вперёд (поверх анимации). Модификатор — до «живости»: взгляд считается по согнутой спине.
+func _bend_on(angle: float) -> void:
+	_bend_off()
+	var g = L.girl_sp
+	_bend = preload("res://scripts/spirit_bend.gd").new()
+	_bend.angle = angle
+	g.sk.add_child(_bend)
+	g.sk.move_child(_bend, g.life.get_index())
+
+
+func _bend_off() -> void:
+	if _bend and is_instance_valid(_bend):
+		_bend.queue_free()
+	_bend = null
+
+
+## Где сейчас её лицо (мир): глаза — от кости головы, как в spirit.gd. Поза с наклоном и взглядом
+## есть в скелете только во время его обновления (потом он возвращает позу анимации) — ловим её там.
+func _girl_face() -> Vector3:
+	var g = L.girl_sp
+	var sk: Skeleton3D = g.sk
+	var hb := sk.find_bone("mixamorig_Head")
+	var rest := sk.get_bone_global_rest(hb)
+	var loc: Vector3 = rest.affine_inverse() * (rest.origin + Vector3(0.0, 0.098, 0.1) / float(g.model.scale.x))
+	var res := [sk.global_transform * (sk.get_bone_global_pose(hb) * loc)]
+	var cb := func(): res[0] = sk.global_transform * (sk.get_bone_global_pose(hb) * loc)
+	sk.skeleton_updated.connect(cb)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	sk.skeleton_updated.disconnect(cb)
+	return res[0]
+
+
+## Можно ли ей стоять в точке c (на полу): внутри комнаты, не в мебели и не в стене.
+func _spot_free(c: Vector3, r := 0.24) -> bool:
+	if not ROOM.has_point(Vector2(c.x, c.z)):
+		return false
+	var p = L.player
+	var q := PhysicsShapeQueryParameters3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(r * 2.0, 1.3, r * 2.0)
+	q.shape = box
+	q.exclude = [p.get_rid()]
+	q.transform = Transform3D(Basis.IDENTITY, Vector3(c.x, p.global_position.y + 0.8, c.z))
+	return (L as Node3D).get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty()
+
+
+## Ближайшее к want свободное место на полу — не ближе near к Мише: сначала сама точка и круги вокруг неё
+## (первым — направление к Мише); не нашлось — ближайшее свободное по всей комнате (сеткой).
+func _free_spot(want: Vector3, near := 0.5) -> Vector3:
+	var p = L.player
+	var pp: Vector3 = p.global_position
+	want.y = pp.y
+	var to_p := Vector3(pp.x - want.x, 0.0, pp.z - want.z)
+	var a0 := atan2(to_p.x, to_p.z) if to_p.length() > 0.01 else 0.0
+	for r in [0.0, 0.12, 0.25, 0.4, 0.55, 0.75, 1.0]:
+		for k in (1 if r == 0.0 else 12):
+			var a: float = a0 + float((k + 1) / 2) * (TAU / 12.0) * (1.0 if k % 2 == 1 else -1.0)
+			var c: Vector3 = want + Vector3(sin(a), 0.0, cos(a)) * r
+			if Vector2(c.x - pp.x, c.z - pp.z).length() >= near and _spot_free(c):
+				return c
+	var cand := []
+	var x := ROOM.position.x
+	while x <= ROOM.end.x + 0.001:
+		var z := ROOM.position.y
+		while z <= ROOM.end.y + 0.001:
+			var c := Vector3(x, pp.y, z)
+			if Vector2(c.x - pp.x, c.z - pp.z).length() >= near:
+				cand.append([Vector2(c.x - want.x, c.z - want.z).length(), c])
+			z += 0.25
+		x += 0.25
+	cand.sort_custom(func(u, v): return u[0] < v[0])
+	for c in cand:
+		if _spot_free(c[1]):
+			return c[1]
+	return want
+
+
+## Свободное место перед Мишей (в поле зрения), метрах в двух: сначала прямо, потом всё дальше в стороны;
+## нигде — просто свободное подальше от него (в темноте он к ней повернётся).
+func _spot_in_view() -> Vector3:
+	var p = L.player
+	var f: Vector3 = p.forward()
+	f.y = 0.0
+	f = f.normalized()
+	for a in [0.0, 0.3, -0.3, 0.6, -0.6, 0.85, -0.85, 1.1, -1.1]:
+		for d in [2.2, 1.9, 1.6, 1.35]:
+			var c: Vector3 = p.global_position + f.rotated(Vector3.UP, a) * d
+			if _spot_free(c):
+				return c
+	return _free_spot(p.global_position + f * 2.0, 1.3)
+
+
+## Вплотную перед Мишей (в темноте, перед касанием): прямо перед ним, если там не стена и не мебель;
+## иначе — чуть в сторону, и Миша (во тьме, незаметно) поворачивается к ней.
+func _touch_spot() -> Vector3:
+	var p = L.player
+	var f: Vector3 = p.forward()
+	f.y = 0.0
+	f = f.normalized()
+	for a in [0.0, 0.35, -0.35, 0.7, -0.7, 1.05, -1.05, 1.4, -1.4, 1.75, -1.75, 2.1, -2.1, 2.5, -2.5, PI]:
+		for d in [0.55, 0.45]:
+			var c: Vector3 = p.global_position + f.rotated(Vector3.UP, a) * d
+			if _spot_free(c, 0.17):
+				p.rotation.y += a
+				return c
+	var c2 := _free_spot(p.global_position + f * 0.55, 0.3)     # совсем зажат — ближайшее свободное
+	var dg: Vector3 = c2 - p.global_position
+	p.rotation.y = atan2(-dg.x, -dg.z)
+	return c2
+
+
 ## Финал: она считает, с каждым счётом ближе, — и касается.
 func _finale_count() -> void:
 	L.busy = true
@@ -636,6 +940,8 @@ func _finale_count() -> void:
 		p.flicker = 0.35
 		await get_tree().create_timer(1.3).timeout
 		girl.global_position = girl.global_position.lerp(p.global_position, 0.35)
+		if FOUND_V2:                           # не в кровати, не в кресле, не в стене
+			girl.global_position = _free_spot(girl.global_position, 0.7)
 		L._face(girl, p.global_position)
 		_gpose(poses[k][0], poses[k][1], poses[k][2], poses[k][3])
 	p.light_on = false
@@ -646,6 +952,8 @@ func _finale_count() -> void:
 	f = p.forward()
 	f.y = 0.0
 	girl.global_position = p.global_position + f.normalized() * 0.55
+	if FOUND_V2:
+		girl.global_position = _touch_spot()
 	L._face(girl, p.global_position)
 	_gpose("reach", 1.7, 1.0, 1.0)            # тянет к тебе руку, вся в крови, волосы дыбом
 	girl.visible = true

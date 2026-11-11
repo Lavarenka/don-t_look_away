@@ -1933,6 +1933,8 @@
 !/scripts/settings.gd.uid
 !/scripts/spirit.gd
 !/scripts/spirit.gd.uid
+!/scripts/spirit_bend.gd
+!/scripts/spirit_bend.gd.uid
 !/scripts/spirit_life.gd
 !/scripts/spirit_life.gd.uid
 !/scripts/test_grab.gd
