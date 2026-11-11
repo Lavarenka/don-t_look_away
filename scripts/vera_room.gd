@@ -30,6 +30,10 @@ const KEY_XZ := Vector2(-13.55, -31.45)
 const DOLL_XZ := Vector2(-7.0, -28.55)                  ## кресло с куклой — северо-восточный угол
 const WARD_XZ := Vector2(-5.9, -31.5)                   ## платяной шкаф у восточной стены, лицом в комнату (на запад)
 const DOLL_SCALE := 0.75
+const DOLL_STANDS := true        ## скример после письма: true — кукла стоит во весь рост сбоку и смотрит на тебя;
+                                 ## false — прежний: сидит на полу за спиной, голова набок
+const STAND_SCALE := 0.75        ## размер стоящей куклы (как в кресле — 0.75; ростом с ребёнка — около 1.5)
+const STAND_ANG := 0.95          ## где встаёт: столько рад от взгляда вбок (край поля зрения)
 const TEETH := [Vector3(-6.75, 1.0, -32.85), Vector3(-9.5, 1.0, -33.2), Vector3(-13.42, 0.7, -29.85)]   ## y — откуда пускать луч
 ## Фотография из шкафа: её место — пустой гвоздь в коридоре у самого входа (южная стена, справа от жирафа)
 const HANG_FROM := Vector3(-5.22, Y2 + 1.75, -35.5)     ## откуда луч к стене (стена — на -Z)
@@ -85,6 +89,7 @@ var doll: Node3D                     ## кукла в кресле
 var doll_head: Node3D
 var doll_eye: Node3D                 ## правый глаз куклы (пока не вставлен — скрыт)
 var floor_doll: Node3D               ## та же кукла — на полу за спиной (скример)
+var _stand_lift := 0.0               ## стоящая кукла: на столько поднять, чтобы туфли стояли на полу
 var ward: Node3D
 var ward_doors: Array[Node3D] = []
 var ward_unlocked := false
@@ -256,6 +261,57 @@ func _place_doll() -> void:
 	floor_doll = _make_doll()
 	L.add_child(floor_doll)
 	floor_doll.visible = false
+	if DOLL_STANDS:
+		floor_doll.scale = Vector3.ONE * STAND_SCALE
+		_stand_lift = -_stand_doll(floor_doll) * STAND_SCALE
+
+
+## Кукла «во весь рост» из сидячей: голени (носки, туфли, фарфоровые ноги) поворачиваются вниз и уходят
+## под юбку, перед юбки, лежавший на коленях, подбирается — кукла стоит, руки вытянуты вперёд.
+## Меши — копии (у куклы в кресле свои, их не трогаем). Возвращает низ туфель (в осях куклы).
+static func _stand_doll(d: Node3D) -> float:
+	var low := 0.0
+	for mi in d.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		var nm := String(m.name)
+		if not nm in ["Skin", "Socks", "Shoes", "Skirt"]:
+			continue
+		var src := m.mesh
+		var am := ArrayMesh.new()
+		for si in src.get_surface_count():
+			var arr := src.surface_get_arrays(si)
+			var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+			var n: PackedVector3Array = arr[Mesh.ARRAY_NORMAL]
+			var tg = arr[Mesh.ARRAY_TANGENT]
+			for i in v.size():
+				var p := v[i]
+				if nm == "Skirt":
+					if p.z > 0.03:                               # перёд юбки: короче вперёд и ниже — колокол
+						var e := p.z - 0.03
+						p = Vector3(p.x, p.y - e * 0.75, 0.03 + e * 0.55)
+				elif nm != "Skin" or (p.y < 0.235 and p.z > 0.17):
+					# голень: поворот на 90° вокруг колена (y 0.15, z 0.2) — носком вперёд, подошвой вниз,
+					# и под юбку — колено под бёдрами
+					var dy := p.y - 0.15
+					var dz := p.z - 0.2
+					p = Vector3(p.x, 0.15 - dz - 0.13, 0.2 + dy - 0.165)
+					var nn := n[i]
+					n[i] = Vector3(nn.x, -nn.z, nn.y)
+					if tg is PackedFloat32Array and (tg as PackedFloat32Array).size() >= (i + 1) * 4:
+						var ty: float = tg[i * 4 + 1]
+						var tz: float = tg[i * 4 + 2]
+						tg[i * 4 + 1] = -tz
+						tg[i * 4 + 2] = ty
+					low = minf(low, p.y)
+				v[i] = p
+			arr[Mesh.ARRAY_VERTEX] = v
+			arr[Mesh.ARRAY_NORMAL] = n
+			if tg is PackedFloat32Array:
+				arr[Mesh.ARRAY_TANGENT] = tg
+			am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+			am.surface_set_material(si, src.surface_get_material(si))
+		m.mesh = am
+	return low
 
 
 func _make_doll() -> Node3D:
@@ -275,6 +331,7 @@ func _place_wardrobe() -> void:
 		var dn := ward.find_child(n, true, false) as Node3D
 		if dn:
 			ward_doors.append(dn)
+			_door_body(dn)
 	_target("v_ward", ward.global_position + Vector3(-0.35, 1.1, 0), "BR_WARD", 0.5, 2.2)
 	# письмо Веры — на дне шкафа
 	letter_node = MeshInstance3D.new()
@@ -1219,31 +1276,37 @@ func _update_doll(delta: float) -> void:
 			_doll_t += delta
 			if _doll_t < 0.8:
 				return
-			var back: Vector3 = -p.forward()
-			back.y = 0.0
-			back = back.normalized()
-			var from: Vector3 = p.global_position + Vector3(0, 0.5, 0)
-			var dist := 1.0
-			var q := PhysicsRayQueryParameters3D.create(from, from + back * 1.4)
-			q.exclude = [p.get_rid()]
-			var hit: Dictionary = p.get_world_3d().direct_space_state.intersect_ray(q)
-			if not hit.is_empty():
-				dist = clampf(from.distance_to(hit["position"]) - 0.35, 0.6, 1.0)
-			var at: Vector3 = Vector3(p.global_position.x, Y2, p.global_position.z) + back * dist
-			floor_doll.global_position = Vector3(at.x, _top(at.x, at.z, 0.3), at.z)
-			var d: Vector3 = p.global_position - at
-			floor_doll.rotation.y = atan2(d.x, d.z)
-			var fh := floor_doll.find_child("Head", true, false) as Node3D
-			if fh:
-				fh.rotation = Vector3(-0.25, 0.0, 0.35)              # смотрит снизу вверх, голова набок
+			if DOLL_STANDS:
+				_stand_beside(p)
+			else:
+				var back: Vector3 = -p.forward()
+				back.y = 0.0
+				back = back.normalized()
+				var from: Vector3 = p.global_position + Vector3(0, 0.5, 0)
+				var dist := 1.0
+				var q := PhysicsRayQueryParameters3D.create(from, from + back * 1.4)
+				q.exclude = [p.get_rid()]
+				var hit: Dictionary = p.get_world_3d().direct_space_state.intersect_ray(q)
+				if not hit.is_empty():
+					dist = clampf(from.distance_to(hit["position"]) - 0.35, 0.6, 1.0)
+				var at: Vector3 = Vector3(p.global_position.x, Y2, p.global_position.z) + back * dist
+				floor_doll.global_position = Vector3(at.x, _top(at.x, at.z, 0.3), at.z)
+				var d: Vector3 = p.global_position - at
+				floor_doll.rotation.y = atan2(d.x, d.z)
+				var fh := floor_doll.find_child("Head", true, false) as Node3D
+				if fh:
+					fh.rotation = Vector3(-0.25, 0.0, 0.35)              # смотрит снизу вверх, голова набок
+			var at2: Vector3 = floor_doll.global_position
 			floor_doll.visible = true
 			doll.visible = false
-			L._sfx3d("giggle", at + Vector3(0, 0.4, 0), -14.0, 0.85, true)
+			L._sfx3d("giggle", at2 + Vector3(0, 0.4, 0), -14.0, 0.85, true)
 			L._sfx("heartbeat", -10.0, 1.0, true)
 			doll_state = "floor"
 			_doll_t = 0.0
 		"floor":
-			var to: Vector3 = floor_doll.global_position + Vector3(0, 0.25, 0) - p.cam.global_position
+			if DOLL_STANDS:
+				_stand_look(p, delta)
+			var to: Vector3 = floor_doll.global_position + Vector3(0, 0.4 if DOLL_STANDS else 0.25, 0) - p.cam.global_position
 			if to.length() < 4.5 and p.forward().angle_to(to) < 0.5:
 				_doll_t += delta
 			if _doll_t > 0.6:
@@ -1252,6 +1315,88 @@ func _update_doll(delta: float) -> void:
 		"back":
 			var y := _head_yaw_to(p.cam.global_position)
 			doll_head.rotation.y = lerp_angle(doll_head.rotation.y, y, minf(1.0, delta * 0.8))
+
+
+## Дверца шкафа — со своей коробкой столкновений (крутится вместе с ней): сквозь открытую не пройти,
+## и кукла не встанет за ней.
+func _door_body(dn: Node3D) -> void:
+	var ab := AABB()
+	var first := true
+	var inv := dn.global_transform.affine_inverse()
+	for mi in [dn] + dn.find_children("*", "MeshInstance3D", true, false):
+		if not mi is MeshInstance3D:
+			continue
+		var m := mi as MeshInstance3D
+		var b: AABB = (inv * m.global_transform) * m.get_aabb()
+		ab = b if first else ab.merge(b)
+		first = false
+	if not first:
+		_box_body(dn, ab.size, ab.get_center())
+
+
+## Стоящая кукла — сбоку: сперва на краю поля зрения (STAND_ANG), если там мешает мебель или открытая
+## дверца — чуть дальше вбок, рядом с тобой. Место свободное, на полу, и с твоих глаз её видно.
+## Лицом к тебе, голова запрокинута — смотрит прямо в лицо, чуть набок.
+func _stand_beside(p: Node3D) -> void:
+	var fwd: Vector3 = p.forward()
+	fwd.y = 0.0
+	fwd = fwd.normalized()
+	var sp: PhysicsDirectSpaceState3D = p.get_world_3d().direct_space_state
+	var feet: Vector3 = p.global_position
+	var eye: Vector3 = p.cam.global_position
+	var floor0 := _top(feet.x, feet.z, 0.3)
+	var at := Vector3.INF
+	var fallback := Vector3.INF
+	for ang in [STAND_ANG, 1.25, 1.6, 1.95]:
+		for dist in [0.8, 0.65]:
+			for sg in [1.0, -1.0]:
+				var dir := fwd.rotated(Vector3.UP, sg * ang)
+				var c: Vector3 = feet + dir * dist
+				# дорога от тебя до места свободна (на высоте её колен и головы)
+				var ok := true
+				for hgt in [0.2, 0.5]:
+					var q := PhysicsRayQueryParameters3D.create(feet + Vector3(0, hgt, 0), c + dir * 0.15 + Vector3(0, hgt, 0))
+					q.exclude = [p.get_rid()]
+					if not sp.intersect_ray(q).is_empty():
+						ok = false
+				var fy := _top(c.x, c.z, 0.3)
+				if absf(fy - floor0) > 0.08:
+					ok = false                                   # не на мебели
+				if not ok:
+					continue
+				if fallback == Vector3.INF:
+					fallback = Vector3(c.x, fy, c.z)
+				# с глаз видно её лицо (ничто не заслоняет)
+				var q2 := PhysicsRayQueryParameters3D.create(eye, Vector3(c.x, fy + 0.4, c.z))
+				q2.exclude = [p.get_rid()]
+				if sp.intersect_ray(q2).is_empty():
+					at = Vector3(c.x, fy, c.z)
+					break
+			if at != Vector3.INF:
+				break
+		if at != Vector3.INF:
+			break
+	if at == Vector3.INF:
+		at = fallback if fallback != Vector3.INF else Vector3(feet.x, floor0, feet.z) - fwd * 0.8
+	floor_doll.global_position = at + Vector3(0, _stand_lift, 0)
+	var d: Vector3 = p.global_position - at
+	floor_doll.rotation = Vector3(0, atan2(d.x, d.z), 0)
+	var fh := floor_doll.find_child("Head", true, false) as Node3D
+	if fh:
+		var hp: Vector3 = fh.global_position
+		var pitch := -atan2(eye.y - hp.y, Vector2(eye.x - hp.x, eye.z - hp.z).length())
+		fh.rotation = Vector3(clampf(pitch, -0.9, 0.0), 0.0, 0.22)
+
+
+## Стоит и смотрит: голова медленно поворачивается за тобой (тело — нет).
+func _stand_look(p: Node3D, delta: float) -> void:
+	var fh := floor_doll.find_child("Head", true, false) as Node3D
+	if fh == null:
+		return
+	var loc: Vector3 = floor_doll.global_basis.orthonormalized().inverse() * (p.cam.global_position - fh.global_position)
+	var yaw := clampf(atan2(loc.x, loc.z), -0.7, 0.7)
+	var pitch := clampf(-atan2(loc.y, Vector2(loc.x, loc.z).length()), -0.9, 0.0)
+	fh.rotation = fh.rotation.lerp(Vector3(pitch, yaw, 0.22), minf(1.0, delta * 1.5))
 
 
 func _doll_vanish() -> void:
