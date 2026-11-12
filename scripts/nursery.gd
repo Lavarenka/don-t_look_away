@@ -58,6 +58,7 @@ var _steps: Array[Node3D] = []
 ## (бэкап: backup/nursery_found_v1, метка в git: before-found-v2).
 const FOUND_V2 := true
 const FORCE_SPOT := ""    ## для проверки: "bed", "desk", "curt_w", "curt_e", "chair" — она всегда прячется там; "" — случайно
+var _test_spot := ""      ## F8 (тест): прятки сразу, она — под кроватью
 const BED_TOP := Vector3(-0.88, 0.42, -22.6)     ## где её ноги на кровати (верх матраса ~0.43 м)
 const DESK_TOP := Vector3(1.92, 0.93, -19.08)    ## где её ноги на столе (лампу не задевает)
 const ROOM := Rect2(-1.75, -23.6, 3.5, 5.0)      ## где ей можно стоять на полу (x, z): не у стен и не в шторах
@@ -108,7 +109,13 @@ func _ready() -> void:
 
 ## Рисунок закрывается на E или кнопкой мыши. Ловим ввод сами: пока рисунок
 ## открыт, игрок «заморожен», и player.gd не передаёт нажатие E дальше.
+## ТЕСТ (только в тестовой сборке, settings.gd: UNLOCK_ALL): F8 в детской — сразу прятки (см. _test_hide).
 func _unhandled_input(e: InputEvent) -> void:
+	if e is InputEventKey and e.pressed and not e.echo and e.physical_keycode == KEY_F8 \
+			and preload("res://scripts/settings.gd").UNLOCK_ALL and L.phase == "nursery" and not solved and not L.busy:
+		get_viewport().set_input_as_handled()
+		_test_hide()
+		return
 	if not viewer.visible:
 		return
 	var close := false
@@ -119,6 +126,18 @@ func _unhandled_input(e: InputEvent) -> void:
 	if close:
 		_close_viewer()
 		get_viewport().set_input_as_handled()
+
+
+## ТЕСТ: загадку пропустить — мелодия будто сыграна, начинаются прятки, и Аня прячется под кроватью
+## (сцена «она над тобой»: подойди к кровати, E — «заглянуть под кровать»). В обычной игре место — случайное.
+func _test_hide() -> void:
+	if viewer.visible:
+		_close_viewer()
+	if dancing:
+		dancing = false
+		L.girl.visible = false
+	_test_spot = "bed"
+	_solve()
 
 
 func _close_viewer() -> void:
@@ -518,7 +537,7 @@ func _solve() -> void:
 ## Аня прячется в одном из мест комнаты. Её смешок слышен оттуда, а в осколке видны её следы мелом.
 func _start_hide() -> void:
 	var keys := SPOTS.keys()
-	hide_spot = FORCE_SPOT if SPOTS.has(FORCE_SPOT) else keys.pick_random()
+	hide_spot = _test_spot if SPOTS.has(_test_spot) else (FORCE_SPOT if SPOTS.has(FORCE_SPOT) else keys.pick_random())
 	hiding = true
 	_checked.clear()
 	_giggle_t = 2.5
