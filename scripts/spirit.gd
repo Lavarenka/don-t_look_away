@@ -23,20 +23,34 @@ var eye_ofs := EYE_OFS
 ## ===== Аня v3 =====
 ## Новое тело с настоящим лицом: кости челюсти, губ, век, бровей и глаз (мимика — scripts/spirit3_face.gd), пальцы,
 ## 5 костей спины и 3 — шеи; волосы — пряди на 13 цепочках костей с физикой (SpringBoneSimulator3D): висят по тяжести,
-## отстают в движении, ложатся на плечи; ночная рубашка — отдельной сеткой.
+## отстают в движении, ложатся на плечи; платье — отдельной сеткой.
 ## Откатить на прежнюю Аню: ANYA_V3 = false (файлы прежней на месте; бэкап скриптов — backup/anya_before_v3,
 ## метка в git — before-anya-v3).
 const ANYA_V3 := true
-## Файлы v3 — полными путями (по ним tools/git_used.py понимает, что они нужны игре).
-const V3_MODEL := "res://models/spirit3/anya.glb"
-const V3_HAIR := "res://models/spirit3/anya_hair.json"       # цепочки костей волос
+## Вид Ани v3 (сборка — tools/anya3):
+##   2 — как первая Аня: белое платье до пят с широкими рукавами и тканой каймой, бордовая вставка с вышивкой, пояс,
+##       подол спереди в крови; землистая кожа, чёрные глазницы, светящиеся глаза, руки в засохшей крови, шнурки на запястьях;
+##   1 — прежний вид v3: бледная, ночная рубашка с длинными рукавами.
+## Файлы — полными путями (по ним tools/git_used.py понимает, что они нужны игре). Бэкап до вида 2 — backup/before_anya_look2,
+## метка в git — before-anya-look2.
+const V3_LOOK := 2
+const V3_FILES := {
+	1: {"model": "res://models/spirit3/anya.glb", "hair_json": "res://models/spirit3/anya_hair.json", "glow_k": 0.10,
+		"skin_head": ["res://models/spirit3/tex/skin_head_albedo.png", "res://models/spirit3/tex/skin_head_normal.png", "res://models/spirit3/tex/skin_head_mask.png"],
+		"skin_body": ["res://models/spirit3/tex/skin_body_albedo.png", "res://models/spirit3/tex/skin_body_normal.png", "res://models/spirit3/tex/skin_body_mask.png"],
+		"gown": ["res://models/spirit3/tex/gown_albedo.png", "res://models/spirit3/tex/gown_normal.png", "res://models/spirit3/tex/gown_mask.png"],
+		"eyes": "res://models/spirit3/tex/eye_albedo.png"},
+	2: {"model": "res://models/spirit3/look2/anya.glb", "hair_json": "res://models/spirit3/look2/anya_hair.json", "glow_k": 0.9,
+		"skin_head": ["res://models/spirit3/look2/tex/skin_head_albedo.png", "res://models/spirit3/look2/tex/skin_head_normal.png", "res://models/spirit3/look2/tex/skin_head_mask.png"],
+		"skin_body": ["res://models/spirit3/look2/tex/skin_body_albedo.png", "res://models/spirit3/look2/tex/skin_body_normal.png", "res://models/spirit3/look2/tex/skin_body_mask.png"],
+		"gown": ["res://models/spirit3/look2/tex/gown_albedo.png", "res://models/spirit3/look2/tex/gown_normal.png", "res://models/spirit3/look2/tex/gown_mask.png"],
+		"eyes": "res://models/spirit3/look2/tex/eye_albedo.png"},
+}
+## общее для обоих видов
 const V3_EYE := "res://models/spirit3/anya_eye.json"         # где на текстуре глаз радужки
-const V3_TEX := {
-	"skin_head": ["res://models/spirit3/tex/skin_head_albedo.png", "res://models/spirit3/tex/skin_head_normal.png", "res://models/spirit3/tex/skin_head_mask.png"],
-	"skin_body": ["res://models/spirit3/tex/skin_body_albedo.png", "res://models/spirit3/tex/skin_body_normal.png", "res://models/spirit3/tex/skin_body_mask.png"],
-	"gown": ["res://models/spirit3/tex/gown_albedo.png", "res://models/spirit3/tex/gown_normal.png", "res://models/spirit3/tex/gown_mask.png"],
-	"hair": "res://models/spirit3/tex/hair_strands.png", "eyes": "res://models/spirit3/tex/eye_albedo.png", "lashes": "res://models/spirit3/tex/lashes.png",
+const V3_COMMON := {"hair": "res://models/spirit3/tex/hair_strands.png", "lashes": "res://models/spirit3/tex/lashes.png",
 	"pores": "res://models/spirit3/tex/detail_pores.png", "weave": "res://models/spirit3/tex/detail_weave.png"}
+var V3_TEX: Dictionary = (V3_FILES[V3_LOOK] as Dictionary).merged(V3_COMMON)
 ## Как кости прежнего рига (Mixamo) называются у v3 — чтобы сцены могли спрашивать кость одним именем: bone("Head").
 const V3_BONES := {"Hips": "root", "Spine": "spine05", "Spine1": "spine04", "Spine2": "spine03", "Chest": "spine01", "Neck": "neck01", "Head": "head",
 	"LeftShoulder": "clavicle_L", "RightShoulder": "clavicle_R", "LeftArm": "upperarm01_L", "RightArm": "upperarm01_R",
@@ -173,7 +187,7 @@ static func v3_shader(n: String, ghostly := false) -> Shader:
 
 
 func _load_v3() -> void:
-	model = load(V3_MODEL).instantiate()
+	model = load(V3_TEX.model).instantiate()
 	add_child(model)
 	sk = model.find_children("*", "Skeleton3D", true, false)[0]
 	ap = AnimationPlayer.new()
@@ -217,6 +231,7 @@ func _load_v3() -> void:
 					sm.set_shader_parameter("iris_a", Vector2(ej.iris_a[0], ej.iris_a[1]))
 					sm.set_shader_parameter("iris_b", Vector2(ej.iris_b[0], ej.iris_b[1]))
 					sm.set_shader_parameter("iris_r", float(ej.iris_r))
+					sm.set_shader_parameter("glow_k", float(V3_TEX.glow_k))
 					eye_mat = sm
 				"lashes":
 					sm.shader = v3_shader("anya_lash")
@@ -238,7 +253,7 @@ func _load_v3() -> void:
 func _setup_v3() -> void:
 	face = preload("res://scripts/spirit3_face.gd").new()
 	sk.add_child(face)
-	var meta: Dictionary = (load(V3_HAIR) as JSON).data
+	var meta: Dictionary = (load(V3_TEX.hair_json) as JSON).data
 	hair_sim = SpringBoneSimulator3D.new()
 	hair_sim.name = "HairSim"
 	sk.add_child(hair_sim)

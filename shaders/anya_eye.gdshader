@@ -8,6 +8,7 @@ uniform vec2 iris_b = vec2(0.2891, 0.2930);
 uniform float iris_r = 0.113;
 uniform float pupil = 0.33;           // радиус зрачка в долях радужки
 uniform float glow = 0.45;            // свечение радужки (как прежние «точки глаз»)
+uniform float glow_k = 0.10;          // сила свечения: вид 2 (как первая Аня) — глаза светятся в темноте
 uniform vec3 glow_color : source_color = vec3(0.80, 0.86, 0.96);
 uniform float lid = 0.0;              // для совместимости (веки закрываются костями)
 
@@ -25,7 +26,7 @@ void fragment() {
 	ROUGHNESS = 0.12;
 	SPECULAR = 0.7;
 	float pulse = 0.85 + 0.15 * sin(TIME * 2.3) * sin(TIME * 0.7 + 1.3);
-	EMISSION = glow_color * iris * glow * 0.10 * pulse * (0.6 + 0.8 * col.g) + vec3(1.0, 0.3, 0.2) * pm * glow * 0.01;
+	EMISSION = glow_color * iris * glow * glow_k * pulse * (0.6 + 0.8 * col.g) + vec3(1.0, 0.3, 0.2) * pm * glow * 0.01;
 	RIM = rim;
 #ifdef GHOSTLY
 	ALPHA = clamp(mix(0.8, 0.4, ghost) * smoothstep(0.0, 0.5, a3_h), 0.0, 1.0);
