@@ -28,9 +28,11 @@ var eye_ofs := EYE_OFS
 ## метка в git — before-anya-v3).
 const ANYA_V3 := true
 ## Вид Ани v3 (сборка — tools/anya3):
+##   5 — вид 4 со страшным лицом: засохшие кровавые слёзы, кровь из носа и рта, губы в крови, царапины от когтей на щеке,
+##       синяк на скуле, вены темнее, кожа мертвенная (кожа головы — models/spirit3/look5/tex, остальное — вид 4);
 ##   4 — вид 3 с причёской как у первой Ани: мокрые прямые волосы гладко по голове, спереди занавесью закрывают лицо
-##       (в узкую щель видны глаза), по бокам падают на грудь, сзади — полотном до пояса. Лицо открывается, когда
-##       она кричит, и в сценах, которые ставят hair_part (scripts/spirit3_hairpart.gd). Всё остальное — файлы вида 3;
+##       (в узкую щель видны глаза), по бокам падают на грудь, сзади — полотном до пояса. Пряди никогда не поднимаются
+##       (HAIR_NEVER_UP; отвести с лица умеет scripts/spirit3_hairpart.gd, но выключено). Всё остальное — файлы вида 3;
 ##   3 — фигура как у первой Ани: узкие покатые плечи, тонкая, шея длиннее, голова чуть меньше; прямой балахон,
 ##       широкие рукава висят вниз; руки висят вдоль тела (свой перенос анимаций — models/spirit3/look3/anim_*.res);
 ##       платье, раскрас и макияж — как у вида 2;
@@ -39,8 +41,9 @@ const ANYA_V3 := true
 ##   1 — прежний вид v3: бледная, ночная рубашка с длинными рукавами.
 ## Файлы — полными путями (по ним tools/git_used.py понимает, что они нужны игре). Бэкап до вида 2 — backup/before_anya_look2,
 ## метка в git — before-anya-look2; до вида 3 — метка anya3-before-figure (скрипты сборки вида 2 — tools/anya3/*_look2.*);
-## до вида 4 — метка anya3-before-hair (волосы вида 3 — tools/anya3/s3_hair_look3.py, cols_look3.py).
-const V3_LOOK := 4
+## до вида 4 — метка anya3-before-hair (волосы вида 3 — tools/anya3/s3_hair_look3.py, cols_look3.py);
+## до вида 5 — метка anya3-before-scary (лицо вида 4 — ANYA_FACE=plain при сборке или tools/anya3/s4_paint_look4.py).
+const V3_LOOK := 5
 const V3_FILES := {
 	1: {"model": "res://models/spirit3/anya.glb", "hair_json": "res://models/spirit3/anya_hair.json", "glow_k": 0.10,
 		"anims": "res://models/spirit3/anim_%s.res", "face": "res://models/spirit3/anya_face.json",
@@ -63,6 +66,12 @@ const V3_FILES := {
 	4: {"model": "res://models/spirit3/look4/anya.glb", "hair_json": "res://models/spirit3/look4/anya_hair.json", "glow_k": 0.9, "hair_spec": 0.45,
 		"anims": "res://models/spirit3/look3/anim_%s.res", "face": "res://models/spirit3/look3/anya_face.json",
 		"skin_head": ["res://models/spirit3/look4/tex/skin_head_albedo.png", "res://models/spirit3/look3/tex/skin_head_normal.png", "res://models/spirit3/look4/tex/skin_head_mask.png"],
+		"skin_body": ["res://models/spirit3/look3/tex/skin_body_albedo.png", "res://models/spirit3/look3/tex/skin_body_normal.png", "res://models/spirit3/look3/tex/skin_body_mask.png"],
+		"gown": ["res://models/spirit3/look3/tex/gown_albedo.png", "res://models/spirit3/look3/tex/gown_normal.png", "res://models/spirit3/look3/tex/gown_mask.png"],
+		"eyes": "res://models/spirit3/look3/tex/eye_albedo.png"},
+	5: {"model": "res://models/spirit3/look4/anya.glb", "hair_json": "res://models/spirit3/look4/anya_hair.json", "glow_k": 0.9, "hair_spec": 0.45,
+		"anims": "res://models/spirit3/look3/anim_%s.res", "face": "res://models/spirit3/look3/anya_face.json",
+		"skin_head": ["res://models/spirit3/look5/tex/skin_head_albedo.png", "res://models/spirit3/look5/tex/skin_head_normal.png", "res://models/spirit3/look5/tex/skin_head_mask.png"],
 		"skin_body": ["res://models/spirit3/look3/tex/skin_body_albedo.png", "res://models/spirit3/look3/tex/skin_body_normal.png", "res://models/spirit3/look3/tex/skin_body_mask.png"],
 		"gown": ["res://models/spirit3/look3/tex/gown_albedo.png", "res://models/spirit3/look3/tex/gown_normal.png", "res://models/spirit3/look3/tex/gown_mask.png"],
 		"eyes": "res://models/spirit3/look3/tex/eye_albedo.png"},
@@ -298,7 +307,7 @@ func _setup_v3() -> void:
 		hair_sim.set_end_bone_direction(i, SkeletonModifier3D.BONE_DIRECTION_FROM_PARENT)
 		hair_sim.set_end_bone_length(i, float(chains[nm].end_len))
 		hair_sim.set_radius(i, float(meta.get("joint_r", 0.022)))
-		hair_sim.set_drag(i, HAIR_DRAG)
+		hair_sim.set_drag(i, HAIR_WET_DRAG if _hair_wet else HAIR_DRAG)
 		hair_sim.set_gravity_direction(i, Vector3.DOWN)
 		hair_sim.set_enable_all_child_collisions(i, true)
 		_hair_front.append(1.0 if front else 0.0)
@@ -338,6 +347,11 @@ const HAIR_GRAVITY := 0.3
 const HAIR_GRAVITY_LOOSE := 1.7
 const HAIR_DRAG := 0.42            ## вязкость: гасит качание
 const HAIR_WET_FRONT := 1.9        ## вид 4: занавесь перед лицом держит форму крепче — лицо закрыто, как у первой Ани
+## Вид 4 и новее: пряди никогда не поднимаются — ни при крике (не расходятся с лица), ни «дыбом» (set_lift), ни по hair_part:
+## всё она делает с опущенными волосами (поднятые смотрелись криво). false — вернуть, как было.
+const HAIR_NEVER_UP := true
+const HAIR_WET_GRAVITY := 0.65     ## вид 4: мокрые волосы тяжёлые — висят, а не разлетаются
+const HAIR_WET_DRAG := 0.55
 var hair_loose := -1.0             ## 0..1 — задать вручную («отпустить» волосы); -1 — само, по наклону головы
 var _hair_front: Array[float] = []
 var _loose := 0.0
@@ -345,13 +359,14 @@ var _lift := 0.0
 
 
 func _hair_apply() -> void:
-	var k := maxf(_loose, clampf(_lift * 1.6, 0.0, 1.0))
+	var lift := 0.0 if (_hair_wet and HAIR_NEVER_UP) else _lift
+	var k := maxf(_loose, clampf(lift * 1.6, 0.0, 1.0))
 	for i in hair_sim.setting_count:
 		var st := HAIR_STIFF * (1.0 if _hair_front[i] > 0.5 else 0.55)
 		if _hair_wet and _hair_front[i] > 0.5:
 			st *= HAIR_WET_FRONT
 		hair_sim.set_stiffness(i, lerpf(st, HAIR_STIFF_LOOSE, k))
-		hair_sim.set_gravity(i, lerpf(HAIR_GRAVITY, HAIR_GRAVITY_LOOSE, k) * (1.0 - 1.9 * _lift))
+		hair_sim.set_gravity(i, lerpf(HAIR_WET_GRAVITY if _hair_wet else HAIR_GRAVITY, HAIR_GRAVITY_LOOSE, k) * (1.0 - 1.9 * lift))
 
 
 ## Скрыта — физика волос не считается; показалась (обычно уже в другом месте) — волосы начинают с позы покоя,
@@ -591,7 +606,7 @@ func scream(hold := 0.7) -> void:
 	tw.tween_property(self, "mouth", 0.0, 0.9).set_trans(Tween.TRANS_SINE)
 	tw.parallel().tween_property(self, "grimace", 0.0, 1.2)
 	life.shiver = 1.0
-	if v3 and _hair_wet:                 # волосы взлетают с лица — видно крик
+	if v3 and _hair_wet and not HAIR_NEVER_UP:   # волосы взлетают с лица — видно крик
 		var tp := create_tween()
 		tp.tween_property(self, "_scream_part", 1.0, 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		tp.tween_interval(hold + 0.2)
@@ -617,6 +632,8 @@ func set_blood(v: float) -> void:
 ## Волосы дыбом (0..1). У v3 — физикой: тяжесть слабеет и меняет знак, пряди всплывают.
 func set_lift(v: float) -> void:
 	_p("lift", v)
+	if v3 and _hair_wet and HAIR_NEVER_UP and hair_mat:
+		hair_mat.set_shader_parameter("lift", 0.0)
 	if v3:
 		_lift = v
 		_hair_apply()
@@ -705,7 +722,7 @@ func _process(delta: float) -> void:
 	if v3:
 		_hair_tick(delta)
 		if _part:
-			_part.amount = maxf(hair_part, _scream_part)
+			_part.amount = 0.0 if (_hair_wet and HAIR_NEVER_UP) else maxf(hair_part, _scream_part)
 		return
 	# положение рук для шейдера: рукава висят на них под своим весом
 	for s in ["Left", "Right"]:

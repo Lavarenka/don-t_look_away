@@ -37,11 +37,12 @@ const SEGS := [
 	["ЧЕЛЮСТЬ И ЛИЦО", "Крик: челюсть, брови, зрачки в точку, пальцы-когти, волосы дыбом", 6.0, "_s_scream"],
 	["ЧЕЛЮСТЬ И ЛИЦО", "Следит за тобой одними глазами — отойди в сторону", 7.0, "_s_eyes"],
 	["ВОЛОСЫ", "Трясёт головой — пряди хлещут", 5.5, "_s_shake"],
-	["ВОЛОСЫ", "Сквозняк — волосы сдувает вбок", 6.5, "_s_draft"],
-	["ВОЛОСЫ", "Волосы всплывают, будто в воде", 6.0, "_s_lift"],
+	["ВОЛОСЫ", "Сквозняк — мокрые пряди чуть колышутся", 6.5, "_s_draft"],
+	["ВОЛОСЫ", "Подол всплывает, будто в воде (мокрые волосы висят)", 6.0, "_s_lift"],
 	["ВОЛОСЫ", "Наклоняется — волосы свисают и закрывают лицо", 8.5, "_s_hang"],
 	["ЕЩЁ", "Кровь проступает", 7.0, "_s_blood"],
 	["ЕЩЁ", "Полупрозрачная, призрачная", 5.0, "_s_ghost"],
+	["ЕЩЁ", "Скример: бросается, хватает за голову и кричит в лицо", 6.5, "_s_attack"],
 ]
 
 var L: Node
@@ -49,6 +50,7 @@ var g: Node3D                    ## Аня (spirit.gd)
 var bend: SkeletonModifier3D     ## наклон спины (spirit_bend.gd)
 var pose: SkeletonModifier3D     ## добавочные повороты костей (menu_pose.gd)
 var reach: SkeletonModifier3D    ## правая рука к точке (spirit3_reach.gd)
+var reach_l: SkeletonModifier3D  ## левая рука к точке (скример: обе руки — к твоей голове)
 var label: Label
 var lights: Array[Light3D] = []
 var idx := -1
@@ -58,6 +60,7 @@ var _gen := 0                    ## номер «поколения»: прер�
 var _tws: Array[Tween] = []
 var _t := 0.0                    ## секунд с начала номера
 var _face_player := true
+var _froze := false              ## скример заморозил игрока (вернуть в _reset)
 var _tick := Callable()          ## что номер делает каждый кадр
 
 
@@ -86,6 +89,10 @@ func setup(level: Node) -> void:
 	reach.side = "R"
 	g.sk.add_child(reach)
 	g.sk.move_child(reach, g.face.get_index())
+	reach_l = preload("res://scripts/spirit3_reach.gd").new()
+	reach_l.side = "L"
+	g.sk.add_child(reach_l)
+	g.sk.move_child(reach_l, g.face.get_index())
 	_make_lights()
 	_make_label()
 	go(0)
@@ -210,6 +217,11 @@ func _reset() -> void:
 	pose.target = {}
 	pose.speed = 6.0
 	reach.weight = 0.0
+	reach_l.weight = 0.0
+	g.visible = true
+	if L.player.frozen and _froze:             # скример держал тебя — отпустить
+		L.player.frozen = false
+	_froze = false
 	if moved:
 		_turn_to(L.player.global_position, 1.0)
 		g.hair_sim.reset()
@@ -389,10 +401,9 @@ func _s_jerks(gen: int) -> void:
 
 
 # ======================== ЧЕЛЮСТЬ И ЛИЦО ========================
-## Номера про лицо: передние пряди отведены, чтобы лицо было видно.
+## Номера про лицо: у прежних причёсок передние пряди отведены, чтобы лицо было видно; у вида 4 — видно в щель между прядями.
 func _face_on(extra_pose := {}) -> void:
-	g.hair_part = 1.0
-	if not g._hair_wet:                     # прежние причёски: пряди отводит поза
+	if not g._hair_wet:                     # прежние причёски: пряди отводит поза (у вида 4 пряди всегда опущены)
 		var t := HAIR_PART.duplicate()
 		t.merge(extra_pose, true)
 		extra_pose = t
@@ -508,7 +519,8 @@ func _s_draft(_gen_: int) -> void:
 	_tick = func(_d: float):
 		var k := smoothstep(0.4, 1.4, _t) * (1.0 - smoothstep(4.4, 5.4, _t))
 		var gust := 0.75 + 0.25 * sin(_t * 5.3) * sin(_t * 1.7 + 0.6)
-		g.hair_sim.external_force = Vector3(1.8, 0.15, 0.5) * k * gust
+		var f := Vector3(0.55, -0.1, 0.2) if g._hair_wet else Vector3(1.8, 0.15, 0.5)     # вид 4: пряди не поднимать
+		g.hair_sim.external_force = f * k * gust
 
 
 func _s_lift(gen: int) -> void:
@@ -541,3 +553,77 @@ func _s_blood(gen: int) -> void:
 
 func _s_ghost(_gen_: int) -> void:
 	g.set_ghostly(0.55)
+
+
+# ======================== СКРИМЕР ========================
+## 26. Стоит, смотрит — дёрнула головой — и в долю секунды оказывается у самого лица: хватает обеими руками за голову
+## (пальцы-когти у висков), тянется лицом к лицу и кричит; экран трясёт. Волосы — опущены (у вида 4 — всегда).
+func _s_attack(gen: int) -> void:
+	if not await _wait(1.6, gen):
+		return
+	g.life._next = 0.0                                     # рывок головы — сейчас будет
+	if not await _wait(0.35, gen):
+		return
+	_face_player = false
+	var p = L.player
+	var cam: Camera3D = p.cam
+	var fwd: Vector3 = -cam.global_basis.z
+	fwd.y = 0.0
+	fwd = fwd.normalized() if fwd.length() > 0.01 else Vector3.FORWARD
+	var rgt := fwd.cross(Vector3.UP).normalized()          # вправо от тебя
+	var eye := cam.global_position
+	var stand := eye + fwd * 0.56                          # её лицо — сантиметров сорок перед твоим
+	stand.y = eye.y - 1.52                                 # глаза — на уровне твоих
+	g.rotation.y = atan2(-fwd.x, -fwd.z)
+	p.frozen = true
+	_froze = true
+	g.play("run", 1.6, 0.05)
+	bend.angle = 0.5
+	_tw().tween_property(g, "global_position", stand, 0.17).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	_tw().tween_property(bend, "amount", 0.15, 0.17)
+	if not await _wait(0.17, gen):
+		return
+	# схватила: руки — к твоим вискам, пальцы скрючены; голова — вперёд, к тебе
+	g.play("idle", 1.0, 0.08)
+	reach.target = eye - rgt * 0.17 + fwd * 0.02 + Vector3(0, -0.01, 0)       # запястья — у твоих висков, кисти — за кадром,
+	reach_l.target = eye + rgt * 0.17 + fwd * 0.02 + Vector3(0, -0.01, 0)     # видны руки с краёв и её лицо между ними
+	reach.pole = (-rgt * 0.8 + Vector3.DOWN * 0.6).normalized()
+	reach_l.pole = (rgt * 0.8 + Vector3.DOWN * 0.6).normalized()
+	_tw().tween_property(reach, "weight", 1.0, 0.09)
+	_tw().tween_property(reach_l, "weight", 1.0, 0.09)
+	g.set_eyes(1.0)                                        # глаза горят сквозь волосы (крик ещё ярче)
+	g.scream(1.5)
+	p.shake = 1.2
+	if _near():
+		L._sfx("bang", -4.0, 0.75)
+		L._sfx("scream", 1.0, 0.95)
+	pose.speed = 30.0
+	var t0 := _t
+	_tick = func(_d: float):
+		var k := clampf((_t - t0) / 0.12, 0.0, 1.0) * (1.0 - smoothstep(1.55, 1.9, _t - t0))
+		if k > 0.0:                                        # трясёт головой в крике, тянется вперёд
+			var j := _t * 30.0
+			pose.target = {"Head": Vector3(-0.14 + sin(j * 1.3) * 0.035, sin(j) * 0.028, sin(j * 0.7) * 0.04) * k}   # подбородок вверх — лицо к тебе
+			p.shake = maxf(p.shake, 0.55 * k)
+		else:
+			pose.target = {}
+	if not await _wait(1.9, gen):
+		return
+	# отпустила — и пропала
+	g.visible = false
+	reach.weight = 0.0
+	reach_l.weight = 0.0
+	_tick = Callable()
+	pose.target = {}
+	p.shake = 0.0
+	if not await _wait(0.9, gen):
+		return
+	p.frozen = false
+	_froze = false
+	bend.amount = 0.0
+	g.global_position = HOME
+	g.play("idle", 1.0, 0.0)
+	g.set_eyes(0.45)
+	g.visible = true
+	_face_player = true
+	g.hair_sim.reset()
