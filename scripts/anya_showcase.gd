@@ -43,6 +43,7 @@ const SEGS := [
 	["ЕЩЁ", "Кровь проступает", 7.0, "_s_blood"],
 	["ЕЩЁ", "Полупрозрачная, призрачная", 5.0, "_s_ghost"],
 	["ЕЩЁ", "Скример: бросается, хватает за голову и кричит в лицо", 6.5, "_s_attack"],
+	["ЕЩЁ", "Зловещая улыбка: не мигая, клонит голову набок — и улыбается шире, чем умеют люди", 8.0, "_s_grin"],
 ]
 
 var L: Node
@@ -204,6 +205,8 @@ func _reset() -> void:
 	g.watch_head = true
 	g.hair_loose = -1.0
 	g.hair_part = 0.0
+	if g._blink_next > 50.0:                   # «зловещая улыбка» запрещала моргать
+		g._blink_next = randf_range(1.0, 3.0)
 	g.set_eyes(0.45)
 	g.set_shiver(0.0)
 	g.life.life = 1.0
@@ -627,3 +630,43 @@ func _s_attack(gen: int) -> void:
 	g.visible = true
 	_face_player = true
 	g.hair_sim.reset()
+
+
+# ======================== ЗЛОВЕЩАЯ УЛЫБКА ========================
+## 27. Смотрит не мигая, медленно клонит голову набок (подбородок чуть вверх — смотрит свысока, сбоку);
+## улыбка растягивается шире, чем бывает у людей: уголки — вверх и в стороны, видны зубы, носогубные складки
+## глубокие, а глаза не улыбаются — распахнуты, брови чуть сведены. Тихий смешок, уголок рта дёргается,
+## голова рывком встаёт прямо — а улыбка остаётся. Волосы опущены и висят по тяжести: лицо видно, потому что
+## голова наклонена (пряди не поднимаются).
+func _s_grin(gen: int) -> void:
+	g.murmur = false
+	g._blink_next = 99.0                                   # не мигает
+	g.hair_loose = 1.0
+	var smile := func(v: float, tw_r := 0.0, tw_l := 0.0) -> void:
+		g.face.extra = {"MouthLeftPullUp": 1.25 * v * (1.0 + tw_l), "MouthRightPullUp": 1.25 * v * (1.0 + tw_r),     # шире человеческого
+			"MouthLeftPullSide": 1.05 * v, "MouthRightPullSide": 1.05 * v, "UpperLipUp": 0.6 * v, "lowerLipDown": 0.5 * v,
+			"LeftCheekUp": 0.6 * v, "RightCheekUp": 0.6 * v, "NasolabialDeepener": 0.7 * v, "JawDrop": 0.1 * v,
+			"LeftUpperLidOpen": 0.75, "RightUpperLidOpen": 0.75, "LeftBrowDown": 0.35 * v, "RightBrowDown": 0.35 * v}
+	smile.call(0.0)
+	pose.speed = 0.8
+	pose.target = {"Head": Vector3(-0.17, 0.0, 0.30)}       # медленно — набок, подбородок вверх: мокрые пряди сползают с лица
+	if not await _wait(0.9, gen):
+		return
+	_tw().tween_method(func(v: float): smile.call(v), 0.0, 1.0, 2.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	if not await _wait(2.5, gen):
+		return
+	pose.speed = 26.0                                      # голова — рывком прямо и чуть к тебе, улыбка остаётся
+	pose.target = {"Head": Vector3(-0.17, 0.0, 0.0)}
+	g.life._next = 0.0
+	if _near():
+		L._sfx3d("giggle", _head(), -9.0, 0.82)
+	var t0 := _t
+	_tick = func(_d: float):                               # уголок рта дёргается — то один, то другой
+		var dt := _t - t0
+		var r := 0.45 * exp(-pow((dt - 0.45) / 0.05, 2.0)) + 0.35 * exp(-pow((dt - 1.9) / 0.05, 2.0))
+		var l := 0.4 * exp(-pow((dt - 1.1) / 0.05, 2.0))
+		smile.call(1.0, r, l)
+	if not await _wait(3.0, gen):
+		return
+	_tick = Callable()
+	_tw().tween_method(func(v: float): smile.call(v), 1.0, 0.0, 0.9).set_trans(Tween.TRANS_SINE)
