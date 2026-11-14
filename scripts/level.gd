@@ -817,7 +817,7 @@ func _prep_pass_ghost() -> void:
 	pass_g.set_ghostly(0.55)
 	pass_g.set_blood(0.2)
 	pass_g.set_eyes(0.0)
-	pass_g.mat.set_shader_parameter("rim", 0.18)
+	pass_g._p("rim", 0.18)
 	pass_lamp = OmniLight3D.new()          # еле заметный холодный отсвет — видно и без фонаря
 	pass_lamp.light_color = Color(0.6, 0.7, 1.0)
 	pass_lamp.light_energy = 0.0

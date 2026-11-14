@@ -1,7 +1,10 @@
 extends Node3D
-## Призрак девочки (Blood Stained Spirit, adhamasalah, CC BY; риг и анимации — Mixamo).
-## Меш с запечёнными масками (tools/bake_spirit.gd) + шейдер shaders/spirit.gdshader:
-## рукава провисают под весом, волосы и подол колышутся, кровь проступает по команде.
+## Призрак девочки — Аня.
+## Сейчас в игре — Аня v3 (ANYA_V3): своя модель на основе MakeHuman (CC0), сборка — tools/anya3;
+## анимации перенесены со старой (tools/retarget_anya3.gd).
+## Прежняя: Blood Stained Spirit (adhamasalah, CC BY; риг и анимации — Mixamo), меш с запечёнными масками
+## (tools/bake_spirit.gd) + шейдер shaders/spirit.gdshader: рукава провисают под весом, волосы и подол колышутся,
+## кровь проступает по команде.
 ##
 ## Анимации: idle — стоит как призрак, zidle — жуткое покачивание, walk — медленный шаг,
 ## run — бег, reach — тянет руку.
@@ -16,6 +19,37 @@ const NEW_DIR := "res://models/spirit2/"
 ## Из make_ghost.py (anya_ghost.json), координаты Blender: глаза, рот, кость головы; рост до макушки.
 const NEW_INFO := {"eye_l": [0.025338, -0.100612, 1.389180], "mouth": [-0.000000, -0.142592, 1.350613], "head": [-0.001301, -0.014884, 1.307164], "height": 1.508432}
 var eye_ofs := EYE_OFS
+
+## ===== Аня v3 =====
+## Новое тело с настоящим лицом: кости челюсти, губ, век, бровей и глаз (мимика — scripts/spirit3_face.gd), пальцы,
+## 5 костей спины и 3 — шеи; волосы — пряди на 13 цепочках костей с физикой (SpringBoneSimulator3D): висят по тяжести,
+## отстают в движении, ложатся на плечи; ночная рубашка — отдельной сеткой.
+## Откатить на прежнюю Аню: ANYA_V3 = false (файлы прежней на месте; бэкап скриптов — backup/anya_before_v3,
+## метка в git — before-anya-v3).
+const ANYA_V3 := true
+## Файлы v3 — полными путями (по ним tools/git_used.py понимает, что они нужны игре).
+const V3_MODEL := "res://models/spirit3/anya.glb"
+const V3_HAIR := "res://models/spirit3/anya_hair.json"       # цепочки костей волос
+const V3_EYE := "res://models/spirit3/anya_eye.json"         # где на текстуре глаз радужки
+const V3_TEX := {
+	"skin_head": ["res://models/spirit3/tex/skin_head_albedo.png", "res://models/spirit3/tex/skin_head_normal.png", "res://models/spirit3/tex/skin_head_mask.png"],
+	"skin_body": ["res://models/spirit3/tex/skin_body_albedo.png", "res://models/spirit3/tex/skin_body_normal.png", "res://models/spirit3/tex/skin_body_mask.png"],
+	"gown": ["res://models/spirit3/tex/gown_albedo.png", "res://models/spirit3/tex/gown_normal.png", "res://models/spirit3/tex/gown_mask.png"],
+	"hair": "res://models/spirit3/tex/hair_strands.png", "eyes": "res://models/spirit3/tex/eye_albedo.png", "lashes": "res://models/spirit3/tex/lashes.png",
+	"pores": "res://models/spirit3/tex/detail_pores.png", "weave": "res://models/spirit3/tex/detail_weave.png"}
+## Как кости прежнего рига (Mixamo) называются у v3 — чтобы сцены могли спрашивать кость одним именем: bone("Head").
+const V3_BONES := {"Hips": "root", "Spine": "spine05", "Spine1": "spine04", "Spine2": "spine03", "Chest": "spine01", "Neck": "neck01", "Head": "head",
+	"LeftShoulder": "clavicle_L", "RightShoulder": "clavicle_R", "LeftArm": "upperarm01_L", "RightArm": "upperarm01_R",
+	"LeftForeArm": "lowerarm01_L", "RightForeArm": "lowerarm01_R", "LeftHand": "wrist_L", "RightHand": "wrist_R",
+	"LeftUpLeg": "upperleg01_L", "RightUpLeg": "upperleg01_R", "LeftLeg": "lowerleg01_L", "RightLeg": "lowerleg01_R",
+	"LeftFoot": "foot_L", "RightFoot": "foot_R"}
+var v3 := false                    ## эта Аня — v3 (выставляется в _ready)
+var force_old := false             ## задать true до добавления в сцену — прежняя модель, даже если ANYA_V3
+var face: SkeletonModifier3D       ## v3: мимика, взгляд глаз, пальцы (spirit3_face.gd)
+var hair_sim: SpringBoneSimulator3D   ## v3: физика волос
+var mats: Array[ShaderMaterial] = []  ## v3: все её материалы (оттенок, кровь, призрачность — всем сразу)
+var eye_mat: ShaderMaterial
+var _face_loc := Vector3.ZERO      ## точка между глаз в осях кости головы (face_point)
 var hair_mat: ShaderMaterial       ## волосы новой модели (тот же шейдер, с альфой карточек)
 var _r0 := Basis.IDENTITY          ## поза покоя головы — оси «лица» для шейдера
 const ANIMS := ["idle", "zidle", "walk", "run", "reach"]
@@ -69,23 +103,241 @@ var _inert_ready := false
 
 
 func _ready() -> void:
-	if new_model:
+	v3 = ANYA_V3 and not new_model and not force_old
+	if v3:
+		_load_v3()
+	elif new_model:
 		_load_new()
 	else:
 		_load_old()
 	for s_ in ["Left", "Right"]:
-		_arms[s_] = [sk.find_bone("mixamorig_%sArm" % s_), sk.find_bone("mixamorig_%sForeArm" % s_), sk.find_bone("mixamorig_%sHand" % s_)]
+		_arms[s_] = [bone(s_ + "Arm"), bone(s_ + "ForeArm"), bone(s_ + "Hand")]
 	life = preload("res://scripts/spirit_life.gd").new()
+	if v3:
+		life.bones = {"head": "head", "necks": ["neck01", "neck02", "neck03"], "sp1": "spine02", "sp2": "spine01", "sh": ["clavicle_L", "clavicle_R"]}
 	sk.add_child(life)
-	_make_eyes()
-	_head_b = sk.find_bone("mixamorig_Head")
-	_r0 = sk.get_bone_global_rest(_head_b).basis.orthonormalized() if new_model else Basis.IDENTITY
-	_p("head_k", model.scale.x)
-	sk.skeleton_updated.connect(_head_to_shader)
-	_hips_b = sk.find_bone("mixamorig_Hips")
-	_p("alive", 1.0 if ALIVE else 0.0)
+	_head_b = bone("Head")
+	_hips_b = bone("Hips")
+	var hr := sk.get_bone_global_rest(_head_b)
+	if v3:
+		_setup_v3()
+		var mid := (sk.get_bone_global_rest(sk.find_bone("eye_L")).origin + sk.get_bone_global_rest(sk.find_bone("eye_R")).origin) * 0.5
+		_face_loc = hr.affine_inverse() * (mid + Vector3(0, 0, 0.02))
+	else:
+		_make_eyes()
+		_r0 = hr.basis.orthonormalized() if new_model else Basis.IDENTITY
+		_p("head_k", model.scale.x)
+		sk.skeleton_updated.connect(_head_to_shader)
+		_p("alive", 1.0 if ALIVE else 0.0)
+		_face_loc = hr.affine_inverse() * (hr.origin + Vector3(0.0, 0.098, 0.1) / model.scale.x)
 	_blink_next = randf_range(2.0, 6.0)
 	play("idle")
+
+
+## Имя кости этой модели по имени прежнего рига без приставки: "Head", "LeftArm", "Spine1"…
+func bone_name(n: String) -> String:
+	return String(V3_BONES.get(n, n)) if v3 else "mixamorig_" + n
+
+
+## Номер кости по имени прежнего рига: bone("Head").
+func bone(n: String) -> int:
+	return sk.find_bone(bone_name(n))
+
+
+## Точка между её глаз (мир) — в позе после всех надстроек над анимацией (наклон, взгляд, рывки головы):
+## такая поза есть в скелете только во время его обновления, поэтому ждём пару кадров. Вызывать с await.
+func face_point() -> Vector3:
+	var res := [sk.global_transform * (sk.get_bone_global_pose(_head_b) * _face_loc)]
+	var cb := func(): res[0] = sk.global_transform * (sk.get_bone_global_pose(_head_b) * _face_loc)
+	sk.skeleton_updated.connect(cb)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	sk.skeleton_updated.disconnect(cb)
+	return res[0]
+
+
+## ---------- Аня v3 ----------
+static var _v3_shaders := {}
+## Шейдер v3 по имени файла; ghostly — «призрачная» версия (та же, с прозрачностью-зерном).
+static func v3_shader(n: String, ghostly := false) -> Shader:
+	var key := n + ("#g" if ghostly else "")
+	if not _v3_shaders.has(key):
+		var sh: Shader = load("res://shaders/%s.gdshader" % n)
+		if ghostly:
+			var g := Shader.new()
+			g.code = sh.code.replace("shader_type spatial;", "shader_type spatial;\n#define GHOSTLY")
+			sh = g
+		_v3_shaders[key] = sh
+	return _v3_shaders[key]
+
+
+func _load_v3() -> void:
+	model = load(V3_MODEL).instantiate()
+	add_child(model)
+	sk = model.find_children("*", "Skeleton3D", true, false)[0]
+	ap = AnimationPlayer.new()
+	model.add_child(ap)
+	var lib := AnimationLibrary.new()
+	for n in ANIMS:
+		lib.add_animation(n, load("res://models/spirit3/anim_%s.res" % n))
+	ap.add_animation_library("g", lib)
+	var ej: Dictionary = (load(V3_EYE) as JSON).data
+	for mi_ in model.find_children("*", "MeshInstance3D", true, false):
+		var g := mi_ as MeshInstance3D
+		for si in g.mesh.get_surface_count():
+			var src := g.mesh.surface_get_material(si)
+			var nm := String(src.resource_name) if src else ""
+			var sm := ShaderMaterial.new()
+			match nm:
+				"skin_head", "skin_body":
+					sm.shader = v3_shader("anya_skin")
+					sm.set_shader_parameter("albedo_tex", load(V3_TEX[nm][0]))
+					sm.set_shader_parameter("normal_tex", load(V3_TEX[nm][1]))
+					sm.set_shader_parameter("mask_tex", load(V3_TEX[nm][2]))
+					sm.set_shader_parameter("pore_tex", load(V3_TEX.pores))
+					sm.set_shader_parameter("pore_scale", 90.0 if nm == "skin_head" else 130.0)
+					sm.set_shader_parameter("pore_k", 0.55)
+					if nm == "skin_head":
+						mat = sm
+				"gown":
+					sm.shader = v3_shader("anya_cloth")
+					sm.set_shader_parameter("albedo_tex", load(V3_TEX.gown[0]))
+					sm.set_shader_parameter("normal_tex", load(V3_TEX.gown[1]))
+					sm.set_shader_parameter("mask_tex", load(V3_TEX.gown[2]))
+					sm.set_shader_parameter("weave_tex", load(V3_TEX.weave))
+					_mi = g
+				"hair":
+					sm.shader = v3_shader("anya_hair")
+					sm.set_shader_parameter("strand_tex", load(V3_TEX.hair))
+					hair_mat = sm
+				"eyes":
+					sm.shader = v3_shader("anya_eye")
+					sm.set_shader_parameter("albedo_tex", load(V3_TEX.eyes))
+					sm.set_shader_parameter("iris_a", Vector2(ej.iris_a[0], ej.iris_a[1]))
+					sm.set_shader_parameter("iris_b", Vector2(ej.iris_b[0], ej.iris_b[1]))
+					sm.set_shader_parameter("iris_r", float(ej.iris_r))
+					eye_mat = sm
+				"lashes":
+					sm.shader = v3_shader("anya_lash")
+					sm.set_shader_parameter("lash_tex", load(V3_TEX.lashes))
+				"teeth":
+					sm.shader = v3_shader("anya_mouth")
+					sm.set_shader_parameter("kind", 1)
+				_:
+					sm.shader = v3_shader("anya_mouth")
+					sm.set_shader_parameter("kind", 0)
+			sm.set_meta("v3", nm)
+			g.set_surface_override_material(si, sm)
+			mats.append(sm)
+		if String(g.name).begins_with("Hair"):
+			g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+
+
+## v3: мимика и физика волос (после «живости» — в скелете модификаторы идут по порядку).
+func _setup_v3() -> void:
+	face = preload("res://scripts/spirit3_face.gd").new()
+	sk.add_child(face)
+	var meta: Dictionary = (load(V3_HAIR) as JSON).data
+	hair_sim = SpringBoneSimulator3D.new()
+	hair_sim.name = "HairSim"
+	sk.add_child(hair_sim)
+	var chains: Dictionary = meta.chains
+	hair_sim.setting_count = chains.size()
+	var i := 0
+	for nm in chains:
+		var bl: Array = chains[nm].bones
+		var front := absf(float(chains[nm].az)) < 60.0
+		hair_sim.set_root_bone_name(i, bl[0])
+		hair_sim.set_end_bone_name(i, bl[bl.size() - 1])
+		hair_sim.set_extend_end_bone(i, true)
+		hair_sim.set_end_bone_direction(i, SkeletonModifier3D.BONE_DIRECTION_FROM_PARENT)
+		hair_sim.set_end_bone_length(i, float(chains[nm].end_len))
+		hair_sim.set_radius(i, 0.022)
+		hair_sim.set_drag(i, HAIR_DRAG)
+		hair_sim.set_gravity_direction(i, Vector3.DOWN)
+		hair_sim.set_enable_all_child_collisions(i, true)
+		_hair_front.append(1.0 if front else 0.0)
+		i += 1
+	_hair_apply()
+	# обо что волосы опираются: голова, лицо, шея, плечи, грудь и спина, руки (точки — в осях скелета, поза покоя)
+	_hair_ball("head", Vector3(0, 1.607, 0.040), 0.108)
+	_hair_ball("head", Vector3(0, 1.525, 0.085), 0.078)
+	_hair_capsule("neck01", Vector3(0, 1.40, -0.005), Vector3(0, 1.53, 0.02), 0.058)
+	_hair_capsule("spine01", Vector3(-0.15, 1.325, -0.01), Vector3(0.15, 1.325, -0.01), 0.085)
+	_hair_capsule("spine02", Vector3(0, 1.02, 0.01), Vector3(0, 1.26, 0.0), 0.135)
+	_hair_capsule("spine04", Vector3(0, 0.80, 0.0), Vector3(0, 0.98, 0.01), 0.15)
+	for sd in ["L", "R"]:
+		var a := sk.get_bone_global_rest(sk.find_bone("upperarm01_" + sd)).origin
+		var b := sk.get_bone_global_rest(sk.find_bone("lowerarm01_" + sd)).origin
+		_hair_capsule("upperarm01_" + sd, a, b, 0.062)
+
+
+## Волосы. Пока она стоит прямо, пряди держат форму причёски (пробор, лицо видно между прядями) и только качаются;
+## когда голова сильно наклонена (нагнулась над тобой, ползёт) — «отпускаются» и висят по тяжести.
+const HAIR_STIFF := 1.7            ## упругость: насколько пряди держат форму (спереди — полностью, сзади — слабее)
+const HAIR_STIFF_LOOSE := 0.04
+const HAIR_GRAVITY := 0.3
+const HAIR_GRAVITY_LOOSE := 1.7
+const HAIR_DRAG := 0.42            ## вязкость: гасит качание
+var hair_loose := -1.0             ## 0..1 — задать вручную («отпустить» волосы); -1 — само, по наклону головы
+var _hair_front: Array[float] = []
+var _loose := 0.0
+var _lift := 0.0
+
+
+func _hair_apply() -> void:
+	var k := maxf(_loose, clampf(_lift * 1.6, 0.0, 1.0))
+	for i in hair_sim.setting_count:
+		var st := HAIR_STIFF * (1.0 if _hair_front[i] > 0.5 else 0.55)
+		hair_sim.set_stiffness(i, lerpf(st, HAIR_STIFF_LOOSE, k))
+		hair_sim.set_gravity(i, lerpf(HAIR_GRAVITY, HAIR_GRAVITY_LOOSE, k) * (1.0 - 1.9 * _lift))
+
+
+## Скрыта — физика волос не считается; показалась (обычно уже в другом месте) — волосы начинают с позы покоя,
+## а не хлещут через всю комнату.
+## (Сам сброс — в следующем кадре, из _hair_tick: при выходе из игры узлы тоже получают это уведомление,
+## и трогать физику в этот момент нельзя — движок зависал на выходе.)
+var _vis_dirty := false
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_VISIBILITY_CHANGED and v3:
+		_vis_dirty = true
+
+
+## Каждый кадр: по наклону головы решить, держат ли волосы форму или висят.
+func _hair_tick(delta: float) -> void:
+	if _vis_dirty:
+		_vis_dirty = false
+		hair_sim.reset()
+	var want := hair_loose
+	if want < 0.0:
+		var up := (sk.global_transform.basis * sk.get_bone_global_pose(_head_b).basis.y).normalized()   # ось головы (вверх в покое)
+		want = smoothstep(0.30, 0.75, 1.0 - up.dot(Vector3.UP))
+	var k := move_toward(_loose, want, delta * 2.5)
+	if absf(k - _loose) > 0.001:
+		_loose = k
+		_hair_apply()
+
+
+func _hair_ball(bone_: String, at: Vector3, r: float) -> void:
+	var c := SpringBoneCollisionSphere3D.new()
+	hair_sim.add_child(c)
+	c.bone_name = bone_
+	c.radius = r
+	c.position_offset = sk.get_bone_global_rest(sk.find_bone(bone_)).affine_inverse() * at
+
+
+func _hair_capsule(bone_: String, a: Vector3, b: Vector3, r: float) -> void:
+	var c := SpringBoneCollisionCapsule3D.new()
+	hair_sim.add_child(c)
+	c.bone_name = bone_
+	c.radius = r
+	c.height = a.distance_to(b) + r * 2.0
+	var rest := sk.get_bone_global_rest(sk.find_bone(bone_))
+	var y := (b - a).normalized()
+	var x := y.cross(Vector3.FORWARD if absf(y.z) < 0.9 else Vector3.RIGHT).normalized()
+	var want := Basis(x, y, x.cross(y))
+	c.position_offset = rest.affine_inverse() * ((a + b) * 0.5)
+	c.rotation_offset = (rest.basis.orthonormalized().inverse() * want).get_rotation_quaternion()
 
 
 func _load_old() -> void:
@@ -151,8 +403,12 @@ func _load_new() -> void:
 			_mi = g
 
 
-## Параметр шейдера — и телу, и волосам.
+## Параметр шейдера — и телу, и волосам (у v3 — всем её материалам: оттенок, кровь, ореол, near_cut…).
 func _p(name_: String, v: Variant) -> void:
+	if v3:
+		for m in mats:
+			m.set_shader_parameter(name_, v)
+		return
 	mat.set_shader_parameter(name_, v)
 	if hair_mat:
 		hair_mat.set_shader_parameter(name_, v)
@@ -222,6 +478,9 @@ func _make_eyes() -> void:
 var eye_power := 0.45
 func set_eyes(v: float) -> void:
 	eye_power = v
+	if v3:
+		eye_mat.set_shader_parameter("glow", v)
+		return
 	for e in eyes:
 		e.visible = v > 0.01
 		(e.material_override as ShaderMaterial).set_shader_parameter("power", v)
@@ -249,6 +508,13 @@ func scream(hold := 0.7) -> void:
 	tw.tween_property(self, "mouth", 0.0, 0.9).set_trans(Tween.TRANS_SINE)
 	tw.parallel().tween_property(self, "grimace", 0.0, 1.2)
 	life.shiver = 1.0
+	if v3:                               # пальцы скрючиваются, зрачки сжимаются в точку
+		var tc := create_tween()
+		tc.tween_property(face, "claw", 1.0, 0.12)
+		tc.tween_interval(hold)
+		tc.tween_property(face, "claw", 0.0, 1.0)
+		eye_mat.set_shader_parameter("pupil", 0.16)
+		get_tree().create_timer(hold + 0.5).timeout.connect(func(): eye_mat.set_shader_parameter("pupil", 0.30))
 	if eye_power > 0.01:
 		var e0 := eye_power
 		set_eyes(e0 * 2.4)
@@ -260,8 +526,12 @@ func set_blood(v: float) -> void:
 	_p("blood", v)
 
 
+## Волосы дыбом (0..1). У v3 — физикой: тяжесть слабеет и меняет знак, пряди всплывают.
 func set_lift(v: float) -> void:
 	_p("lift", v)
+	if v3:
+		_lift = v
+		_hair_apply()
 
 
 ## Полупрозрачная «призрачная» версия (0 — обычная, 1 — сильно просвечивает):
@@ -271,6 +541,19 @@ static var _ghost_shader: Shader
 ## Прозрачность — «alpha hash» (рассыпчатое зерно вместо смешивания): рисуется как непрозрачная,
 ## с предпроходом глубины, поэтому 200 тыс. треугольников волос не пересчитываются слоями — нет просадки FPS.
 func set_ghostly(v: float) -> void:
+	if v3:
+		var on := v > 0.0
+		if on != _ghost_on:
+			_ghost_on = on
+			for m in mats:
+				var n := String(m.get_meta("v3"))
+				var file := "anya_skin" if n.begins_with("skin") else ("anya_cloth" if n == "gown" else ("anya_hair" if n == "hair" else ("anya_eye" if n == "eyes" else ("anya_lash" if n == "lashes" else "anya_mouth"))))
+				m.shader = v3_shader(file, on)
+			if on:
+				for mi in find_children("*", "GeometryInstance3D", true, false):
+					(mi as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_p("ghost", v)
+		return
 	if v <= 0.0:
 		if mat.shader == _ghost_shader:
 			mat.shader = load("res://shaders/spirit.gdshader")
@@ -286,6 +569,7 @@ func set_ghostly(v: float) -> void:
 	_p("ghost", v)
 
 
+var _ghost_on := false
 static var _ghost_hair_shader: Shader
 static func ghost_shader(hair := false) -> Shader:
 	if hair and _ghost_hair_shader:
@@ -329,6 +613,9 @@ func _process(delta: float) -> void:
 	# парит: плавно поднимается и медленно покачивается вверх-вниз
 	_float = move_toward(_float, float_h, delta * 0.6)
 	model.position.y = _float + (sin(_t * 1.4) * 0.035 if _float > 0.01 else 0.0)
+	if v3:
+		_hair_tick(delta)
+		return
 	# положение рук для шейдера: рукава висят на них под своим весом
 	for s in ["Left", "Right"]:
 		var b: Array = _arms[s]
@@ -345,7 +632,7 @@ func _process(delta: float) -> void:
 
 ## Губы шевелятся сами: изредка чуть приоткрывает рот и беззвучно что-то шепчет, потом снова замирает.
 func _update_face(delta: float) -> void:
-	if not FACE:
+	if not FACE and not v3:
 		_p("mouth", 0.0)
 		_p("grimace", 0.0)
 		return
@@ -371,6 +658,11 @@ func _update_face(delta: float) -> void:
 		gr += 0.07 * sin(_t * 17.0) * sin(_t * 5.3 + 1.7) + 0.05
 	if mouth > 0.3:                  # в крике челюсть подрагивает
 		m += sin(_t * 41.0) * 0.04 * mouth
+	if v3:                           # у v3 рот — костями: крик — челюсть и губы, шёпот и дыхание — чуть приоткрытые губы
+		face.jaw = mouth + (sin(_t * 41.0) * 0.04 * mouth if mouth > 0.3 else 0.0)
+		face.murmur = maxf(m - mouth, 0.0) if mouth < 0.05 else 0.0
+		face.grimace = clampf(gr, 0.0, 1.0)
+		return
 	_p("mouth", m)
 	_p("grimace", gr)
 
@@ -388,6 +680,9 @@ func _alive(delta: float) -> void:
 		life.look_target = cam.global_position
 	life.look_w = move_toward(life.look_w, want, delta * 0.8)
 	life.fwd_world = global_basis.z
+	if v3 and cam:                    # глаза находят тебя раньше, чем повернётся голова
+		face.look_target = cam.global_position
+		face.look_w = move_toward(face.look_w, 1.0 if (watch and visible) else 0.0, delta * 2.5)
 	# --- моргание: редко, иногда глаза надолго закрыты, иногда два раза подряд
 	_blink_next -= delta
 	if _blink_t < 0.0 and _blink_next <= 0.0:
@@ -409,6 +704,8 @@ func _alive(delta: float) -> void:
 			_blink_t = -1.0
 	for e in eyes:
 		(e.material_override as ShaderMaterial).set_shader_parameter("lid", _blink)
+	if v3:
+		face.blink = _blink
 	# --- инерция: кончики волос и подол отстают от движения головы/бёдер и качаются, как на пружине
 	if delta <= 0.0 or _mi == null:
 		return
@@ -433,6 +730,8 @@ func _alive(delta: float) -> void:
 	# телепорт (появилась в другом месте) — не дёргать волосы через всю комнату
 	if tip_v.length() > 12.0 or pv.length() > 12.0:
 		_hair_x = Vector3.ZERO; _hair_v = Vector3.ZERO; _hem_x = Vector3.ZERO; _hem_v = Vector3.ZERO
+		if v3:
+			hair_sim.reset()
 		return
 	var d := minf(delta, 0.05)
 	_hair_v += ((-tip_v * 0.04).limit_length(0.14) - _hair_x) * 38.0 * d - _hair_v * 5.0 * d
@@ -446,7 +745,7 @@ func _alive(delta: float) -> void:
 
 ## Поза головы — уже после «живости» (рывки головы), иначе рот съезжал бы при рывках.
 func _head_to_shader() -> void:
-	if not FACE:
+	if not FACE or v3:
 		return
 	var hp := sk.get_bone_global_pose(_head_b)
 	# оси «лица» = оси кости головы в покое (у новой модели они не совпадают с осями скелета)

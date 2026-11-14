@@ -76,6 +76,10 @@ var POSES: Array = [
 ]
 var _pose: SkeletonModifier3D
 var _pose_i := 0
+var _reach := {}                   ## Аня v3: ИК рук (spirit3_reach.gd), "L" и "R"
+## Куда она кладёт ладонь на косяк (мир меню): правый и левый края проёма
+const JAMB_R := Vector3(0.44, 1.25, -0.93)
+const JAMB_L := Vector3(-0.26, 1.25, -0.93)
 var _mask_mat: ShaderMaterial
 ## Слой призрака виден только внутри проёма двери (там, где за ним нет стены) — когда она за стеной.
 ## Проём в пикселях фона 1920×1080: верх-лево, верх-право, низ-право, низ-лево.
@@ -396,8 +400,17 @@ func _build_live() -> void:
 	add_child(_live)
 	# поза поверх анимации (выглядывает из-за косяка) и темнее, «в тени»
 	_pose = preload("res://scripts/menu_pose.gd").new()
+	_pose.v3 = _girl.v3
 	_girl.sk.add_child(_pose)
-	_girl.mat.set_shader_parameter("tint", GHOST_TINT)
+	if _girl.v3:                                 # у Ани v3 руку на косяк кладёт ИК; поза и рука — до мимики и физики волос
+		_girl.sk.move_child(_pose, _girl.face.get_index())
+		for sd in ["L", "R"]:
+			var r: SkeletonModifier3D = preload("res://scripts/spirit3_reach.gd").new()
+			r.side = sd
+			_girl.sk.add_child(r)
+			_girl.sk.move_child(r, _girl.face.get_index())
+			_reach[sd] = r
+	_girl._p("tint", GHOST_TINT)
 	_girl.set_blood(0.25)
 	_shadow_twin()
 	_set_pose(0, true)
@@ -572,6 +585,13 @@ func _set_pose(i: int, instant := false) -> void:
 	else:
 		_girl.freeze(p[2], p[3])
 	_pose.target = p[4]
+	if _girl.v3:
+		_reach["R"].target = JAMB_R
+		_reach["R"].weight = 1.0 if (p[4] as Dictionary).has("RightArm") else 0.0
+		_reach["L"].target = JAMB_L
+		_reach["L"].weight = 1.0 if (p[4] as Dictionary).has("LeftArm") else 0.0
+		_girl.face.claw = 0.45 if ((p[4] as Dictionary).has("LeftArm") or (p[4] as Dictionary).has("RightArm")) else 0.0   # пальцы держатся за косяк
+		_girl.hair_sim.reset()
 	if instant:
 		_pose.snap()
 	_mask_mat.set_shader_parameter("masked", 1.0 if p[5] else 0.0)

@@ -17,6 +17,10 @@ var _neck := -1
 var _sp2 := -1
 var _sp1 := -1
 var _sh := [-1, -1]
+## Имена костей. По умолчанию — риг Mixamo (старая Аня, Вера); для Ани v3 их задаёт spirit.gd до добавления в скелет.
+var bones := {"head": "mixamorig_Head", "necks": ["mixamorig_Neck"], "sp1": "mixamorig_Spine1", "sp2": "mixamorig_Spine2",
+	"sh": ["mixamorig_LeftShoulder", "mixamorig_RightShoulder"]}
+var _necks := PackedInt32Array()   ## шея: одна кость или цепочка снизу вверх
 
 # ---- взгляд: голова медленно поворачивается за целью (камерой игрока) ----
 var look_w := 0.0                  ## 0..1 — сила (spirit.gd плавно включает, когда игрок рядом)
@@ -34,11 +38,14 @@ var _snap := 0.0                   ## > 0 — поворот рывком (дё�
 func _ready() -> void:
 	_rng.randomize()
 	var sk := get_skeleton()
-	_head = sk.find_bone("mixamorig_Head")
-	_neck = sk.find_bone("mixamorig_Neck")
-	_sp1 = sk.find_bone("mixamorig_Spine1")
-	_sp2 = sk.find_bone("mixamorig_Spine2")
-	_sh = [sk.find_bone("mixamorig_LeftShoulder"), sk.find_bone("mixamorig_RightShoulder")]
+	_head = sk.find_bone(bones.head)
+	for nb in bones.necks:
+		if sk.find_bone(nb) >= 0:
+			_necks.append(sk.find_bone(nb))
+	_neck = _necks[_necks.size() - 1] if _necks.size() > 0 else -1
+	_sp1 = sk.find_bone(bones.sp1)
+	_sp2 = sk.find_bone(bones.sp2)
+	_sh = [sk.find_bone(bones.sh[0]), sk.find_bone(bones.sh[1])]
 	# в позе покоя лицо смотрит туда же, куда тело: +Z узла призрака, переведённое в оси скелета
 	if _head >= 0:
 		var fwd_sk: Vector3 = (sk.global_transform.basis.inverse() * (get_parent_node_3d_global_basis_z(sk))).normalized()
@@ -121,11 +128,13 @@ func _look(sk: Skeleton3D) -> void:
 	_pitch = lerpf(_pitch, pitch * behind, k)
 	var want := (fwd * cos(_pitch) * cos(_yaw) + right * cos(_pitch) * sin(_yaw) + up * sin(_pitch)).normalized()
 	var w := look_w * life
-	# шея берёт часть поворота, голова — остальное
+	# шея берёт часть поворота (каждая её кость — свою долю), голова — остальное
 	var cur := (hp.basis.orthonormalized() * _face_local).normalized()
-	_turn(sk, _neck, cur, want, 0.4 * w)
-	hp = sk.get_bone_global_pose(_head)
-	cur = (hp.basis.orthonormalized() * _face_local).normalized()
+	var nk := 0.4 if _necks.size() <= 1 else 0.22
+	for nb in _necks:
+		_turn(sk, nb, cur, want, nk * w)
+		hp = sk.get_bone_global_pose(_head)
+		cur = (hp.basis.orthonormalized() * _face_local).normalized()
 	_turn(sk, _head, cur, want, w)
 	# наклон головы набок вокруг направления взгляда
 	if absf(_tilt) > 0.001:

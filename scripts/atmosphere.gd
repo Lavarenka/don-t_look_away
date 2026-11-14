@@ -242,8 +242,8 @@ func _shadow_pass() -> bool:
 		g.global_position = a
 		var d := b - a
 		g.rotation.y = atan2(d.x, d.z)
-		g.mat.set_shader_parameter("tint", Color(0.07, 0.065, 0.07))
-		g.mat.set_shader_parameter("rim", 0.0)
+		g._p("tint", Color(0.07, 0.065, 0.07))
+		g._p("rim", 0.0)
 		g.set_eyes(0.0)
 		g.set_blood(0.0)
 		for mi in g.find_children("*", "GeometryInstance3D", true, false):

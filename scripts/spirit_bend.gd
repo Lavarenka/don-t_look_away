@@ -9,6 +9,8 @@ var amount := 1.0            ## 0..1 — доля наклона (можно в�
 var chain := [["mixamorig_Spine", 0.6], ["mixamorig_Spine1", 0.4]]   ## где гнётся спина и какая доля угла
 var arms := 1.0              ## 0..1 — руки висят отвесно (а не торчат вперёд вместе с согнутой спиной)
 var reach_to := Vector3.INF  ## если задано (мир) — руки тянутся к этой точке, а не просто вниз
+## Кости рук: [плечо, локоть, кисть] слева и справа (по умолчанию — риг Mixamo; для Ани v3 задаёт nursery.gd)
+var arm_names := [["mixamorig_LeftArm", "mixamorig_LeftForeArm", "mixamorig_LeftHand"], ["mixamorig_RightArm", "mixamorig_RightForeArm", "mixamorig_RightHand"]]
 var _chain := []
 var _arms := []              ## [плечо, предплечье, кисть] слева и справа
 
@@ -19,8 +21,8 @@ func _ready() -> void:
 		var i := sk.find_bone(b[0])
 		if i >= 0:
 			_chain.append([i, float(b[1])])
-	for s in ["Left", "Right"]:
-		var a := [sk.find_bone("mixamorig_%sArm" % s), sk.find_bone("mixamorig_%sForeArm" % s), sk.find_bone("mixamorig_%sHand" % s)]
+	for an in arm_names:
+		var a := [sk.find_bone(an[0]), sk.find_bone(an[1]), sk.find_bone(an[2])]
 		if not a.has(-1):
 			_arms.append(a)
 

@@ -710,8 +710,9 @@ func _above(crouch: Vector3, under: Vector3, stand: Vector3, bend: float, lean: 
 	girl.rotation = Vector3(lean, atan2(crouch.x - stand.x, crouch.z - stand.z), 0.0)
 	_gpose("idle", 1.0, 0.55)
 	_bend_on(bend)
-	g.life.life = 0.0                # голова — одним целым со спиной (иначе висящие пряди рвутся); живость вернём потом
-	g._p("hang", 1.0)
+	if not g.v3:                     # у Ани v3 волосы висят сами (физика) — голову «замораживать» не нужно
+		g.life.life = 0.0            # голова — одним целым со спиной (иначе висящие пряди рвутся); живость вернём потом
+		g._p("hang", 1.0)
 	g._p("near_cut", 0.1)            # пряди у самого объектива не рисовать
 	girl.visible = true
 	var face: Vector3 = await _girl_face()
@@ -837,6 +838,9 @@ func _bend_on(angle: float) -> void:
 	var g = L.girl_sp
 	_bend = preload("res://scripts/spirit_bend.gd").new()
 	_bend.angle = angle
+	if g.v3:                         # кости Ани v3: спина гнётся плавно по четырём позвонкам
+		_bend.chain = [["spine05", 0.3], ["spine04", 0.3], ["spine03", 0.25], ["spine02", 0.15]]
+		_bend.arm_names = [["upperarm01_L", "lowerarm01_L", "wrist_L"], ["upperarm01_R", "lowerarm01_R", "wrist_R"]]
 	g.sk.add_child(_bend)
 	g.sk.move_child(_bend, g.life.get_index())
 
@@ -850,18 +854,7 @@ func _bend_off() -> void:
 ## Где сейчас её лицо (мир): глаза — от кости головы, как в spirit.gd. Поза с наклоном и взглядом
 ## есть в скелете только во время его обновления (потом он возвращает позу анимации) — ловим её там.
 func _girl_face() -> Vector3:
-	var g = L.girl_sp
-	var sk: Skeleton3D = g.sk
-	var hb := sk.find_bone("mixamorig_Head")
-	var rest := sk.get_bone_global_rest(hb)
-	var loc: Vector3 = rest.affine_inverse() * (rest.origin + Vector3(0.0, 0.098, 0.1) / float(g.model.scale.x))
-	var res := [sk.global_transform * (sk.get_bone_global_pose(hb) * loc)]
-	var cb := func(): res[0] = sk.global_transform * (sk.get_bone_global_pose(hb) * loc)
-	sk.skeleton_updated.connect(cb)
-	await get_tree().process_frame
-	await get_tree().process_frame
-	sk.skeleton_updated.disconnect(cb)
-	return res[0]
+	return await L.girl_sp.face_point()
 
 
 ## Можно ли ей стоять в точке c (на полу): внутри комнаты, не в мебели и не в стене.

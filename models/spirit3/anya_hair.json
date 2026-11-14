@@ -1,0 +1,195 @@
+{
+ "chains": {
+  "f1L": {
+   "bones": [
+    "hair_f1L_0",
+    "hair_f1L_1",
+    "hair_f1L_2",
+    "hair_f1L_3",
+    "hair_f1L_4"
+   ],
+   "end_len": 0.1941009350670562,
+   "az": 16
+  },
+  "f1R": {
+   "bones": [
+    "hair_f1R_0",
+    "hair_f1R_1",
+    "hair_f1R_2",
+    "hair_f1R_3",
+    "hair_f1R_4"
+   ],
+   "end_len": 0.1936129240492811,
+   "az": -16
+  },
+  "f2L": {
+   "bones": [
+    "hair_f2L_0",
+    "hair_f2L_1",
+    "hair_f2L_2",
+    "hair_f2L_3",
+    "hair_f2L_4"
+   ],
+   "end_len": 0.19450471866227256,
+   "az": 40
+  },
+  "f2R": {
+   "bones": [
+    "hair_f2R_0",
+    "hair_f2R_1",
+    "hair_f2R_2",
+    "hair_f2R_3",
+    "hair_f2R_4"
+   ],
+   "end_len": 0.1944837011992121,
+   "az": -40
+  },
+  "s1L": {
+   "bones": [
+    "hair_s1L_0",
+    "hair_s1L_1",
+    "hair_s1L_2",
+    "hair_s1L_3",
+    "hair_s1L_4"
+   ],
+   "end_len": 0.19453141990122905,
+   "az": 72
+  },
+  "s1R": {
+   "bones": [
+    "hair_s1R_0",
+    "hair_s1R_1",
+    "hair_s1R_2",
+    "hair_s1R_3",
+    "hair_s1R_4"
+   ],
+   "end_len": 0.19452659980617726,
+   "az": -72
+  },
+  "s2L": {
+   "bones": [
+    "hair_s2L_0",
+    "hair_s2L_1",
+    "hair_s2L_2",
+    "hair_s2L_3",
+    "hair_s2L_4"
+   ],
+   "end_len": 0.19177870563061816,
+   "az": 100
+  },
+  "s2R": {
+   "bones": [
+    "hair_s2R_0",
+    "hair_s2R_1",
+    "hair_s2R_2",
+    "hair_s2R_3",
+    "hair_s2R_4"
+   ],
+   "end_len": 0.20235581854137252,
+   "az": -100
+  },
+  "b1L": {
+   "bones": [
+    "hair_b1L_0",
+    "hair_b1L_1",
+    "hair_b1L_2",
+    "hair_b1L_3",
+    "hair_b1L_4"
+   ],
+   "end_len": 0.19442720310349282,
+   "az": 132
+  },
+  "b1R": {
+   "bones": [
+    "hair_b1R_0",
+    "hair_b1R_1",
+    "hair_b1R_2",
+    "hair_b1R_3",
+    "hair_b1R_4"
+   ],
+   "end_len": 0.19453418620258597,
+   "az": -132
+  },
+  "b2L": {
+   "bones": [
+    "hair_b2L_0",
+    "hair_b2L_1",
+    "hair_b2L_2",
+    "hair_b2L_3",
+    "hair_b2L_4"
+   ],
+   "end_len": 0.19449784671949988,
+   "az": 160
+  },
+  "b2R": {
+   "bones": [
+    "hair_b2R_0",
+    "hair_b2R_1",
+    "hair_b2R_2",
+    "hair_b2R_3",
+    "hair_b2R_4"
+   ],
+   "end_len": 0.19438484773614276,
+   "az": -160
+  },
+  "bc": {
+   "bones": [
+    "hair_bc_0",
+    "hair_bc_1",
+    "hair_bc_2",
+    "hair_bc_3",
+    "hair_bc_4"
+   ],
+   "end_len": 0.19451249767157808,
+   "az": 180
+  }
+ },
+ "center": [
+  0.0,
+  -0.04522677538935532,
+  1.6076284362416682
+ ],
+ "cuts": [
+  0.0,
+  0.075,
+  0.17,
+  0.29,
+  0.43,
+  0.6
+ ],
+ "hairline": [
+  [
+   0,
+   26
+  ],
+  [
+   35,
+   25
+  ],
+  [
+   55,
+   17
+  ],
+  [
+   75,
+   8
+  ],
+  [
+   92,
+   1
+  ],
+  [
+   110,
+   -20
+  ],
+  [
+   140,
+   -34
+  ],
+  [
+   180,
+   -40
+  ]
+ ],
+ "scale": 1.1443580079714715
+}
