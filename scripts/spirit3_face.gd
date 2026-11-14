@@ -1,12 +1,14 @@
 extends SkeletonModifier3D
 ## Аня v3: лицо и кисти поверх анимации (ставится в скелет после spirit_life.gd).
-## Мимика — «лицевые единицы» MakeHuman (models/spirit3/anya_face.json, CC0): повороты костей лица в их собственных осях.
+## Мимика — «лицевые единицы» MakeHuman (models/spirit3/anya_face.json, у вида 3 — models/spirit3/look3/anya_face.json, CC0):
+## повороты костей лица в их собственных осях. Какой файл — задаёт spirit.gd (units_path) до добавления в скелет.
 ## Взгляд — кости глаз, моргание — кости век, рот — кость челюсти и губ; пальцы — расслабленный изгиб,
 ## мелкие подёргивания и «когти» (claw). Всем управляет spirit.gd.
 
 const UNITS_PATH := "res://models/spirit3/anya_face.json"
+var units_path := UNITS_PATH     ## файл лицевых единиц (у каждого вида Ани — свой: другая голова)
 const EYE_MAX := 0.62            ## насколько глаз может отвернуться от «прямо» (рад)
-static var _units := {}          ## единица → {имя кости: Quaternion}
+static var _units_by := {}       ## файл → {единица → {имя кости: Quaternion}}
 
 var jaw := 0.0                   ## 0..1 — крик: рот распахнут, верхняя губа вверх, брови вниз
 var grimace := 0.0               ## 0..1 — оскал: уголки рта вниз, нос морщится
@@ -27,14 +29,17 @@ var _t := 0.0
 
 func _ready() -> void:
 	var sk := get_skeleton()
-	if _units.is_empty():
-		var d: Dictionary = (load(UNITS_PATH) as JSON).data
+	if not _units_by.has(units_path):
+		var d: Dictionary = (load(units_path) as JSON).data
+		var all := {}
 		for u in d:
 			var m := {}
 			for b in d[u]:
 				var a: Array = d[u][b]
 				m[b] = Quaternion(a[0], a[1], a[2], a[3]).normalized()
-			_units[u] = m
+			all[u] = m
+		_units_by[units_path] = all
+	var _units: Dictionary = _units_by[units_path]
 	for u in _units:
 		var arr := []
 		for b in _units[u]:

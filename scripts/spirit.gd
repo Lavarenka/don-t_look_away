@@ -28,25 +28,36 @@ var eye_ofs := EYE_OFS
 ## метка в git — before-anya-v3).
 const ANYA_V3 := true
 ## Вид Ани v3 (сборка — tools/anya3):
+##   3 — фигура как у первой Ани: узкие покатые плечи, тонкая, шея длиннее, голова чуть меньше; прямой балахон,
+##       широкие рукава висят вниз; руки висят вдоль тела (свой перенос анимаций — models/spirit3/look3/anim_*.res);
+##       платье, раскрас и макияж — как у вида 2;
 ##   2 — как первая Аня: белое платье до пят с широкими рукавами и тканой каймой, бордовая вставка с вышивкой, пояс,
 ##       подол спереди в крови; землистая кожа, чёрные глазницы, светящиеся глаза, руки в засохшей крови, шнурки на запястьях;
 ##   1 — прежний вид v3: бледная, ночная рубашка с длинными рукавами.
 ## Файлы — полными путями (по ним tools/git_used.py понимает, что они нужны игре). Бэкап до вида 2 — backup/before_anya_look2,
-## метка в git — before-anya-look2.
-const V3_LOOK := 2
+## метка в git — before-anya-look2; до вида 3 — метка anya3-before-figure (скрипты сборки вида 2 — tools/anya3/*_look2.*).
+const V3_LOOK := 3
 const V3_FILES := {
 	1: {"model": "res://models/spirit3/anya.glb", "hair_json": "res://models/spirit3/anya_hair.json", "glow_k": 0.10,
+		"anims": "res://models/spirit3/anim_%s.res", "face": "res://models/spirit3/anya_face.json",
 		"skin_head": ["res://models/spirit3/tex/skin_head_albedo.png", "res://models/spirit3/tex/skin_head_normal.png", "res://models/spirit3/tex/skin_head_mask.png"],
 		"skin_body": ["res://models/spirit3/tex/skin_body_albedo.png", "res://models/spirit3/tex/skin_body_normal.png", "res://models/spirit3/tex/skin_body_mask.png"],
 		"gown": ["res://models/spirit3/tex/gown_albedo.png", "res://models/spirit3/tex/gown_normal.png", "res://models/spirit3/tex/gown_mask.png"],
 		"eyes": "res://models/spirit3/tex/eye_albedo.png"},
 	2: {"model": "res://models/spirit3/look2/anya.glb", "hair_json": "res://models/spirit3/look2/anya_hair.json", "glow_k": 0.9,
+		"anims": "res://models/spirit3/anim_%s.res", "face": "res://models/spirit3/anya_face.json",
 		"skin_head": ["res://models/spirit3/look2/tex/skin_head_albedo.png", "res://models/spirit3/look2/tex/skin_head_normal.png", "res://models/spirit3/look2/tex/skin_head_mask.png"],
 		"skin_body": ["res://models/spirit3/look2/tex/skin_body_albedo.png", "res://models/spirit3/look2/tex/skin_body_normal.png", "res://models/spirit3/look2/tex/skin_body_mask.png"],
 		"gown": ["res://models/spirit3/look2/tex/gown_albedo.png", "res://models/spirit3/look2/tex/gown_normal.png", "res://models/spirit3/look2/tex/gown_mask.png"],
 		"eyes": "res://models/spirit3/look2/tex/eye_albedo.png"},
+	3: {"model": "res://models/spirit3/look3/anya.glb", "hair_json": "res://models/spirit3/look3/anya_hair.json", "glow_k": 0.9,
+		"anims": "res://models/spirit3/look3/anim_%s.res", "face": "res://models/spirit3/look3/anya_face.json",
+		"skin_head": ["res://models/spirit3/look3/tex/skin_head_albedo.png", "res://models/spirit3/look3/tex/skin_head_normal.png", "res://models/spirit3/look3/tex/skin_head_mask.png"],
+		"skin_body": ["res://models/spirit3/look3/tex/skin_body_albedo.png", "res://models/spirit3/look3/tex/skin_body_normal.png", "res://models/spirit3/look3/tex/skin_body_mask.png"],
+		"gown": ["res://models/spirit3/look3/tex/gown_albedo.png", "res://models/spirit3/look3/tex/gown_normal.png", "res://models/spirit3/look3/tex/gown_mask.png"],
+		"eyes": "res://models/spirit3/look3/tex/eye_albedo.png"},
 }
-## общее для обоих видов
+## общее для всех видов
 const V3_EYE := "res://models/spirit3/anya_eye.json"         # где на текстуре глаз радужки
 const V3_COMMON := {"hair": "res://models/spirit3/tex/hair_strands.png", "lashes": "res://models/spirit3/tex/lashes.png",
 	"pores": "res://models/spirit3/tex/detail_pores.png", "weave": "res://models/spirit3/tex/detail_weave.png"}
@@ -61,6 +72,7 @@ var v3 := false                    ## эта Аня — v3 (выставляет
 var force_old := false             ## задать true до добавления в сцену — прежняя модель, даже если ANYA_V3
 var face: SkeletonModifier3D       ## v3: мимика, взгляд глаз, пальцы (spirit3_face.gd)
 var hair_sim: SpringBoneSimulator3D   ## v3: физика волос
+var skirt: SkeletonModifier3D        ## v3 (вид 3): юбка — цепочки skirt_<i>_<j> от бёдер к подолу (spirit3_skirt.gd)
 var mats: Array[ShaderMaterial] = []  ## v3: все её материалы (оттенок, кровь, призрачность — всем сразу)
 var eye_mat: ShaderMaterial
 var _face_loc := Vector3.ZERO      ## точка между глаз в осях кости головы (face_point)
@@ -194,7 +206,7 @@ func _load_v3() -> void:
 	model.add_child(ap)
 	var lib := AnimationLibrary.new()
 	for n in ANIMS:
-		lib.add_animation(n, load("res://models/spirit3/anim_%s.res" % n))
+		lib.add_animation(n, load(String(V3_TEX.anims) % n))
 	ap.add_animation_library("g", lib)
 	var ej: Dictionary = (load(V3_EYE) as JSON).data
 	for mi_ in model.find_children("*", "MeshInstance3D", true, false):
@@ -252,6 +264,7 @@ func _load_v3() -> void:
 ## v3: мимика и физика волос (после «живости» — в скелете модификаторы идут по порядку).
 func _setup_v3() -> void:
 	face = preload("res://scripts/spirit3_face.gd").new()
+	face.units_path = V3_TEX.face
 	sk.add_child(face)
 	var meta: Dictionary = (load(V3_TEX.hair_json) as JSON).data
 	hair_sim = SpringBoneSimulator3D.new()
@@ -275,7 +288,17 @@ func _setup_v3() -> void:
 		_hair_front.append(1.0 if front else 0.0)
 		i += 1
 	_hair_apply()
-	# обо что волосы опираются: голова, лицо, шея, плечи, грудь и спина, руки (точки — в осях скелета, поза покоя)
+	if sk.find_bone("skirt_0_0") >= 0:
+		_setup_skirt()
+	# обо что волосы опираются: голова, лицо, шея, плечи, грудь и спина, руки (точки — в осях скелета, поза покоя).
+	# Вид 3 и новее: опоры подогнаны под фигуру при сборке (tools/anya3/cols.py) — в файле волос.
+	if meta.has("colliders"):
+		for c in meta.colliders:
+			if c.type == "ball":
+				_hair_ball(c.bone, _vec(c.at), float(c.r))
+			else:
+				_hair_capsule(c.bone, _vec(c.a), _vec(c.b), float(c.r))
+		return
 	_hair_ball("head", Vector3(0, 1.607, 0.040), 0.108)
 	_hair_ball("head", Vector3(0, 1.525, 0.085), 0.078)
 	_hair_capsule("neck01", Vector3(0, 1.40, -0.005), Vector3(0, 1.53, 0.02), 0.058)
@@ -324,6 +347,8 @@ func _hair_tick(delta: float) -> void:
 	if _vis_dirty:
 		_vis_dirty = false
 		hair_sim.reset()
+		if skirt:
+			skirt.reset()
 	var want := hair_loose
 	if want < 0.0:
 		var up := (sk.global_transform.basis * sk.get_bone_global_pose(_head_b).basis.y).normalized()   # ось головы (вверх в покое)
@@ -332,6 +357,22 @@ func _hair_tick(delta: float) -> void:
 	if absf(k - _loose) > 0.001:
 		_loose = k
 		_hair_apply()
+
+
+## Юбка (вид 3): от бёдер вниз — цепочки костей; висит по тяжести, ноги её не тянут, а отодвигают (spirit3_skirt.gd).
+## Последний модификатор скелета: считается по уже готовой позе ног.
+func _setup_skirt() -> void:
+	skirt = preload("res://scripts/spirit3_skirt.gd").new()
+	skirt.name = "Skirt"
+	sk.add_child(skirt)
+	# сцены добавляют свои модификаторы позже (позы, наклоны, ИК рук) — юбка всё равно считается последней
+	sk.child_entered_tree.connect(func(n: Node) -> void:
+		if n != skirt and is_instance_valid(skirt):
+			sk.move_child.call_deferred(skirt, -1))
+
+
+static func _vec(a: Array) -> Vector3:
+	return Vector3(float(a[0]), float(a[1]), float(a[2]))
 
 
 func _hair_ball(bone_: String, at: Vector3, r: float) -> void:
@@ -343,8 +384,12 @@ func _hair_ball(bone_: String, at: Vector3, r: float) -> void:
 
 
 func _hair_capsule(bone_: String, a: Vector3, b: Vector3, r: float) -> void:
+	_capsule_to(hair_sim, bone_, a, b, r)
+
+
+func _capsule_to(sim: SpringBoneSimulator3D, bone_: String, a: Vector3, b: Vector3, r: float) -> void:
 	var c := SpringBoneCollisionCapsule3D.new()
-	hair_sim.add_child(c)
+	sim.add_child(c)
 	c.bone_name = bone_
 	c.radius = r
 	c.height = a.distance_to(b) + r * 2.0
@@ -548,6 +593,8 @@ func set_lift(v: float) -> void:
 	if v3:
 		_lift = v
 		_hair_apply()
+		if skirt:
+			skirt.lift = v
 
 
 ## Полупрозрачная «призрачная» версия (0 — обычная, 1 — сильно просвечивает):
@@ -747,6 +794,8 @@ func _alive(delta: float) -> void:
 		_hair_x = Vector3.ZERO; _hair_v = Vector3.ZERO; _hem_x = Vector3.ZERO; _hem_v = Vector3.ZERO
 		if v3:
 			hair_sim.reset()
+			if skirt:
+				skirt.reset()
 		return
 	var d := minf(delta, 0.05)
 	_hair_v += ((-tip_v * 0.04).limit_length(0.14) - _hair_x) * 38.0 * d - _hair_v * 5.0 * d
