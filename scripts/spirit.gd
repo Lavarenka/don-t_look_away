@@ -85,6 +85,7 @@ const REALISM := 1.0
 ## (бэкап файлов: backup/anya_before_alive, метка в git: anya-before-alive).
 const ALIVE := true
 var watch := true            ## следить головой за камерой игрока (можно выключить для отдельной сцены)
+var watch_head := true       ## v3: false — голова не поворачивается, за тобой следят только глаза
 const WATCH_DIST := 9.0      ## дальше — не замечает
 var _blink := 0.0            ## 0..1 — веки
 var _blink_next := 4.0
@@ -549,9 +550,8 @@ func set_ghostly(v: float) -> void:
 				var n := String(m.get_meta("v3"))
 				var file := "anya_skin" if n.begins_with("skin") else ("anya_cloth" if n == "gown" else ("anya_hair" if n == "hair" else ("anya_eye" if n == "eyes" else ("anya_lash" if n == "lashes" else "anya_mouth"))))
 				m.shader = v3_shader(file, on)
-			if on:
-				for mi in find_children("*", "GeometryInstance3D", true, false):
-					(mi as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			for mi in find_children("*", "GeometryInstance3D", true, false):     # призрак тени не отбрасывает
+				(mi as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if on else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		_p("ghost", v)
 		return
 	if v <= 0.0:
@@ -678,7 +678,7 @@ func _alive(delta: float) -> void:
 		var dist := cam.global_position.distance_to(global_position)
 		want = 1.0 - smoothstep(WATCH_DIST - 2.0, WATCH_DIST, dist)
 		life.look_target = cam.global_position
-	life.look_w = move_toward(life.look_w, want, delta * 0.8)
+	life.look_w = move_toward(life.look_w, want if watch_head else 0.0, delta * 0.8)
 	life.fwd_world = global_basis.z
 	if v3 and cam:                    # глаза находят тебя раньше, чем повернётся голова
 		face.look_target = cam.global_position

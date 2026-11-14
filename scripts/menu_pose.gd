@@ -27,10 +27,10 @@ func _process_modification() -> void:
 	var sk := get_skeleton()
 	for k in cur.keys():
 		if v3:
-			if not V3.has(k):
-				continue
+			# имя прежнего рига — по таблице; иначе — прямо кость v3 (например, корень пряди hair_f1L_0)
+			var lst: Array = V3[k] if V3.has(k) else [[k, 1.0]]
 			var q := Quaternion.from_euler(cur[k])
-			for e in V3[k]:
+			for e in lst:
 				var vb := sk.find_bone(e[0])
 				if vb < 0:
 					continue

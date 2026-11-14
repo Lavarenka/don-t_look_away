@@ -1889,6 +1889,7 @@
 !/scenes/main.tscn
 !/scenes/menu.tscn
 !/scenes/tools/render_menu_plate.tscn
+!/scripts/anya_showcase.gd
 !/scripts/atmosphere.gd
 !/scripts/atmosphere.gd.uid
 !/scripts/attic.gd

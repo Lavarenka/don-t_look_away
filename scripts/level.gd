@@ -103,6 +103,9 @@ var sfx_cache := {}
 var last_loud := -100.0      ## когда звучал последний громкий звук (крик, скример, удар)
 const RUNNER_ON := false     ## бегущий призрак в коридоре (пока выключен)
 const TEST_GRAB := false     ## ПРОБНЫЙ скример в прихожей: новая Аня держит за голову и кричит в лицо (scripts/test_grab.gd)
+## ТЕСТ: в начале игры в прихожей стоит Аня v3 и по кругу показывает позы, движения, челюсть и лицо, волосы
+## (scripts/anya_showcase.gd; F7/F6 — номера, F5 — пауза, F4 — подсветка). Для релиза — false.
+const ANYA_TEST := true
 const LOUD := ["scream", "scream_mask", "scream_cabinet", "cabinet_riser", "cabinet_final", "sting", "bang", "whisper_harsh", "girl_appear", "phone_call", "gurgle", "pipes", "heartbeat", "far_moan", "far_whisper", "far_scream"]
 var tv_mat: ShaderMaterial
 
@@ -348,6 +351,11 @@ func _ready() -> void:
 	SETTINGS.apply_general()
 	_lt("бегущая девочка, настройки")
 	_lt_save()
+	if ANYA_TEST and not Engine.has_meta("chapter"):
+		events["doorway"] = true             # пролёт призрака в проёме зала — не мешать показу
+		var show := preload("res://scripts/anya_showcase.gd").new()
+		add_child(show)
+		show.setup(self)
 	# выбрана глава в меню — переносим в её начало
 	if Engine.has_meta("chapter"):
 		var ch: int = Engine.get_meta("chapter")
