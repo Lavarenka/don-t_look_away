@@ -196,6 +196,7 @@ func _reset() -> void:
 	g.watch = true
 	g.watch_head = true
 	g.hair_loose = -1.0
+	g.hair_part = 0.0
 	g.set_eyes(0.45)
 	g.set_shiver(0.0)
 	g.life.life = 1.0
@@ -390,10 +391,13 @@ func _s_jerks(gen: int) -> void:
 # ======================== ЧЕЛЮСТЬ И ЛИЦО ========================
 ## Номера про лицо: передние пряди отведены, чтобы лицо было видно.
 func _face_on(extra_pose := {}) -> void:
-	var t := HAIR_PART.duplicate()
-	t.merge(extra_pose, true)
+	g.hair_part = 1.0
+	if not g._hair_wet:                     # прежние причёски: пряди отводит поза
+		var t := HAIR_PART.duplicate()
+		t.merge(extra_pose, true)
+		extra_pose = t
 	pose.speed = 4.0
-	pose.target = t
+	pose.target = extra_pose
 
 
 func _s_blink(_gen_: int) -> void:

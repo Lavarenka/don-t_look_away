@@ -9,6 +9,7 @@ uniform vec3 base_color : source_color = vec3(0.022, 0.019, 0.020);
 uniform float alpha_cut = 0.40;
 uniform float sway = 1.0;
 uniform float lift = 0.0;             // испуг: пряди чуть топорщатся (основной подъём — физикой)
+uniform float spec_k = 1.0;           // сила бликов (вид 4: занавесь перед лицом под фонарём не должна седеть — меньше)
 varying float v_t;
 varying float v_seed;
 varying float v_under;
@@ -38,7 +39,7 @@ void fragment() {
 	// каждая прядь блестит по-своему: нормаль чуть наклонена поперёк пряди — блик дробится на волоски
 	NORMAL = normalize(NORMAL + TANGENT * (s.r - 0.5) * 0.8);
 	ROUGHNESS = mix(0.40, 0.66, s.g);
-	SPECULAR = 0.32 * (0.5 + s.r);
+	SPECULAR = 0.32 * (0.5 + s.r) * spec_k;
 	ANISOTROPY = 0.6;
 	ANISOTROPY_FLOW = vec2(0.0, 1.0);
 #ifdef GHOSTLY
