@@ -389,13 +389,16 @@ func _zombie_start() -> void:
 
 
 ## Коридор со свечами (CORRIDOR_RUN): вошёл и посмотрел вглубь с фонарём — Аня выбегает из темноты в конце
-## коридора и бежит прямо на Мишу (как в показе, чуть быстрее); в шаге от него замирает как вкопанная, миг
-## смотрит — фонарь мигает, и её нет. Без крика. Вместо двух прежних появлений (стоит в конце коридора,
-## после мигания — ближе). false — как было (метка в git до правки — corridor-before-run).
+## коридора и, не сбавляя хода, бежит прямо в Мишу: влетает в него — удар, фонарь мигает, и её нет. Без крика.
+## Вместо двух прежних появлений (стоит в конце коридора, после мигания — ближе). false — как было
+## (метка в git до правки — corridor-before-run; бег с остановкой в шаге — коммит 41c803e).
 const CORRIDOR_RUN := true
 const CORR_RUN_FROM := Vector3(0.0, 0.0, -17.2)
-const CORR_RUN_SPEED := 5.6          ## м/с (анимация бега ускоряется вместе с ней)
-const CORR_RUN_STOP := 1.2           ## замирает в стольких метрах от Миши
+const CORR_RUN_SPEED := 6.5          ## м/с (анимация бега ускоряется вместе с ней)
+const CORR_RUN_HIT := 0.35           ## ближе — влетела в Мишу (лицо у самого объектива): исчезает, пока камера не вошла в голову
+const CORR_LEAP := 1.7               ## с этого расстояния — прыжок в лицо: на бегу пригнулась, а тут взлетает
+const CORR_LEAP_UP := 0.15           ##   на столько вверх (лицо — к глазам Миши)
+const CORR_LEAP_TILT := 0.15         ##   и откидывается назад (рад) — лицом в объектив, а не макушкой
 var corr_run := false
 var _corr_step_t := 0.0
 var _corr_lamp: OmniLight3D
@@ -434,32 +437,37 @@ func _update_corr_run(delta: float) -> void:
 	to.y = 0.0
 	var d := to.length()
 	zombie.rotation.y = atan2(to.x, to.z)
-	if d > CORR_RUN_STOP:
-		zombie.global_position += to / maxf(d, 0.001) * minf(CORR_RUN_SPEED * delta, d - CORR_RUN_STOP)
-		_corr_step_t -= delta
-		if _corr_step_t <= 0.0:
-			_corr_step_t = 0.165
-			_sfx3d("thump", zombie.global_position, -6.0, randf_range(1.3, 1.5))
-		player.shake = maxf(player.shake, clampf(1.0 - d / 10.0, 0.0, 1.0) * 0.25)
+	var left := d - minf(CORR_RUN_SPEED * delta, d)        # сколько останется после этого шага (по полу)
+	if left <= CORR_RUN_HIT:
+		# влетела: исчезает в этом же кадре — иначе камера оказалась бы внутри её головы
+		corr_run = false
+		_corr_hit()
 		return
-	corr_run = false
-	_corr_freeze()
+	zombie.global_position += to / maxf(d, 0.001) * (d - left)
+	var k := smoothstep(0.0, 1.0, clampf((CORR_LEAP - left) / (CORR_LEAP - CORR_RUN_HIT), 0.0, 1.0))
+	zombie.global_position.y = CORR_RUN_FROM.y + CORR_LEAP_UP * k
+	zombie.rotation.x = -CORR_LEAP_TILT * k
+	_corr_step_t -= delta
+	if _corr_step_t <= 0.0 and k < 0.3:     # в прыжке шагов уже нет
+		_corr_step_t = 0.14
+		_sfx3d("thump", zombie.global_position, -6.0, randf_range(1.3, 1.5))
+	player.shake = maxf(player.shake, clampf(1.0 - d / 10.0, 0.0, 1.0) * 0.3)
 
 
-## Добежала: замерла как вкопанная (волосы по инерции — вперёд), дрожит, смотрит — и исчезает.
-func _corr_freeze() -> void:
+## Влетела в Мишу: удар, фонарь гаснет на миг — её нет.
+func _corr_hit() -> void:
 	var g := run_girl
-	g.play("idle", 1.0, 0.12)
-	g.set_shiver(0.5)
-	player.shake = 0.45
-	await get_tree().create_timer(0.9).timeout
-	g.set_shiver(0.0)
-	player.flicker = 0.35
-	_sfx("click", -8.0)
 	zombie.visible = false
+	zombie.rotation.x = 0.0
+	zombie.global_position.y = CORR_RUN_FROM.y
 	_corr_lamp.light_energy = 0.0
+	g.play("idle", 1.0, 0.0)                 # волосы снова живые (на бегу их физика стояла)
 	g.ap.stop()
-	_sfx("whisper", -8.0)
+	player.flicker = 0.45
+	player.shake = 1.0
+	_sfx("whoosh", -2.0, 0.85)
+	_sfx("thump", -6.0, 0.7)
+	_sfx("whisper", -10.0, 1.1)
 
 
 func _update_zombie(delta: float) -> void:

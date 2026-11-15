@@ -13,7 +13,7 @@ const JAMB := Vector3(0.5, 1.36, -0.13)       ## запястье — у кра�
 const HAIR_PART := {"hair_f1L_0": Vector3(0.6, 0, 0.9), "hair_f1R_0": Vector3(0.6, 0, -0.9),
 	"hair_f2L_0": Vector3(0.45, 0, 0.6), "hair_f2R_0": Vector3(0.45, 0, -0.6)}
 const WALK_SPEED := 0.9                       ## м/с при анимации шага со скоростью 1
-const RUN_SPEED := 5.6                        ## м/с (было 4.4 — бег чуть быстрее; анимация ускоряется вместе с ним)
+const RUN_SPEED := 6.5                        ## м/с (было 4.4 — бег быстрее, как в коридоре; анимация ускоряется вместе с ним)
 
 ## [раздел, что показывается, длительность (с), функция]
 const SEGS := [
@@ -375,8 +375,8 @@ func _s_run(gen: int) -> void:
 	var dur: float = RUN_FROM.distance_to(stop) / RUN_SPEED
 	g.play("run", 1.3 * RUN_SPEED / 4.4, 0.1)
 	_tw().tween_property(g, "global_position", stop, dur)
-	for k in int(dur / 0.165):
-		get_tree().create_timer(0.1 + k * 0.165, false).timeout.connect(func():
+	for k in int(dur / 0.14):
+		get_tree().create_timer(0.1 + k * 0.14, false).timeout.connect(func():
 			if gen == _gen and _near():
 				L._sfx3d("thump", g.global_position, -9.0, randf_range(1.3, 1.5)))
 	if not await _wait(dur, gen):
