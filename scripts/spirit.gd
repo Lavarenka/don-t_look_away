@@ -360,6 +360,10 @@ const HAIR_WET_FRONT := 1.9        ## вид 4: занавесь перед ли
 ## Вид 4 и новее: пряди никогда не поднимаются — ни при крике (не расходятся с лица), ни «дыбом» (set_lift), ни по hair_part:
 ## всё она делает с опущенными волосами (поднятые смотрелись криво). false — вернуть, как было.
 const HAIR_NEVER_UP := true
+## Вид 4 и новее: пока она бежит (анимация «run» — бег, бросок в скримере), физика прядей стоит: волосы держат
+## причёску (занавесь перед лицом) и не отлетают назад — иначе на бегу открывались лицо и макушка. Остановилась —
+## физика снова идёт с этой позы, без рывка. false — как было (метка в git — corridor-before-run).
+const HAIR_HOLD_RUN := true
 const HAIR_WET_GRAVITY := 0.65     ## вид 4: мокрые волосы тяжёлые — висят, а не разлетаются
 const HAIR_WET_DRAG := 0.55
 var hair_loose := -1.0             ## 0..1 — задать вручную («отпустить» волосы); -1 — само, по наклону головы
@@ -537,6 +541,7 @@ static func hair_shader() -> Shader:
 func play(n: String, speed := 1.0, blend := 0.25) -> void:
 	ap.play("g/" + n, blend)
 	ap.speed_scale = speed
+	_hair_hold(n == "run")
 
 
 ## Замереть в позе: анимация n на секунде t.
@@ -544,6 +549,7 @@ func freeze(n: String, t: float) -> void:
 	ap.play("g/" + n, 0.0)
 	ap.seek(t, true)
 	ap.speed_scale = 0.0
+	_hair_hold(false)
 
 
 ## Играть анимацию n с секунды t — так призрак «живой» даже в короткие появления.
@@ -551,6 +557,18 @@ func play_from(n: String, t: float, speed := 0.8) -> void:
 	ap.play("g/" + n, 0.0)
 	ap.seek(t, true)
 	ap.speed_scale = speed
+	_hair_hold(n == "run")
+
+
+## Бег (HAIR_HOLD_RUN): физика прядей стоит — волосы держат причёску; on = false — снова качаются, с текущей позы.
+func _hair_hold(on: bool) -> void:
+	if not v3 or hair_sim == null or not (_hair_wet and HAIR_NEVER_UP and HAIR_HOLD_RUN):
+		return
+	if hair_sim.active != on:
+		return
+	hair_sim.active = not on
+	if not on:
+		hair_sim.reset()
 
 
 func set_speed(s: float) -> void:

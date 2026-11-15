@@ -388,7 +388,82 @@ func _zombie_start() -> void:
 	bulb.light_energy = 0.0
 
 
+## Коридор со свечами (CORRIDOR_RUN): вошёл и посмотрел вглубь с фонарём — Аня выбегает из темноты в конце
+## коридора и бежит прямо на Мишу (как в показе, чуть быстрее); в шаге от него замирает как вкопанная, миг
+## смотрит — фонарь мигает, и её нет. Без крика. Вместо двух прежних появлений (стоит в конце коридора,
+## после мигания — ближе). false — как было (метка в git до правки — corridor-before-run).
+const CORRIDOR_RUN := true
+const CORR_RUN_FROM := Vector3(0.0, 0.0, -17.2)
+const CORR_RUN_SPEED := 5.6          ## м/с (анимация бега ускоряется вместе с ней)
+const CORR_RUN_STOP := 1.2           ## замирает в стольких метрах от Миши
+var corr_run := false
+var _corr_step_t := 0.0
+var _corr_lamp: OmniLight3D
+
+
+func _corridor_run() -> void:
+	events["zombie"] = true                  # прежний бегущий призрак (RUNNER_ON) — уже был этот бег
+	var g := run_girl
+	zombie.global_position = CORR_RUN_FROM
+	_face(zombie, player.global_position)
+	if g.v3:
+		g.hair_sim.reset()
+		if g.skirt:
+			g.skirt.reset()
+	g.set_blood(0.6)
+	g.set_shiver(0.0)
+	g.play("run", 1.3 * CORR_RUN_SPEED / 4.4, 0.0)
+	if _corr_lamp == null:                   # еле заметный холодный отсвет — силуэт видно и вдали от фонаря
+		_corr_lamp = OmniLight3D.new()
+		_corr_lamp.light_color = Color(0.6, 0.7, 1.0)
+		_corr_lamp.omni_range = 1.8
+		_corr_lamp.position = Vector3(0, 1.3, 0.4)
+		zombie.add_child(_corr_lamp)
+	_corr_lamp.light_energy = 0.4
+	zombie.visible = true
+	corr_run = true
+	_corr_step_t = 0.0
+	player.flicker = 0.15
+	_sfx3d("whisper", CORR_RUN_FROM + Vector3(0, 1.3, 0), -10.0, 1.2)
+
+
+func _update_corr_run(delta: float) -> void:
+	if not corr_run:
+		return
+	var to: Vector3 = player.global_position - zombie.global_position
+	to.y = 0.0
+	var d := to.length()
+	zombie.rotation.y = atan2(to.x, to.z)
+	if d > CORR_RUN_STOP:
+		zombie.global_position += to / maxf(d, 0.001) * minf(CORR_RUN_SPEED * delta, d - CORR_RUN_STOP)
+		_corr_step_t -= delta
+		if _corr_step_t <= 0.0:
+			_corr_step_t = 0.165
+			_sfx3d("thump", zombie.global_position, -6.0, randf_range(1.3, 1.5))
+		player.shake = maxf(player.shake, clampf(1.0 - d / 10.0, 0.0, 1.0) * 0.25)
+		return
+	corr_run = false
+	_corr_freeze()
+
+
+## Добежала: замерла как вкопанная (волосы по инерции — вперёд), дрожит, смотрит — и исчезает.
+func _corr_freeze() -> void:
+	var g := run_girl
+	g.play("idle", 1.0, 0.12)
+	g.set_shiver(0.5)
+	player.shake = 0.45
+	await get_tree().create_timer(0.9).timeout
+	g.set_shiver(0.0)
+	player.flicker = 0.35
+	_sfx("click", -8.0)
+	zombie.visible = false
+	_corr_lamp.light_energy = 0.0
+	g.ap.stop()
+	_sfx("whisper", -8.0)
+
+
 func _update_zombie(delta: float) -> void:
+	_update_corr_run(delta)
 	if not zombie_run:
 		return
 	var to: Vector3 = player.global_position - zombie.global_position
@@ -1033,11 +1108,26 @@ func _check_events() -> void:
 			events["zombie_wait"] = time_now
 		elif time_now - float(events["zombie_wait"]) > 1.5:
 			_zombie_start()
-	# 2. в коридоре: фигура в самом конце
+	# 2. в коридоре: фигура в самом конце (CORRIDOR_RUN — Аня бежит на тебя из темноты)
 	if phase == "corridor" and not events.has("corridor") and player.global_position.z < -6.6:
-		events["corridor"] = true
-		_shade_show(Vector3(0, 0, -16.8), "corridor_far")
-		_sfx("sting", -8.0)
+		if CORRIDOR_RUN:
+			# ждём, пока посмотрит вглубь коридора с фонарём (полсекунды) — иначе бег пройдёт мимо глаз;
+			# ушёл далеко вглубь, так и не посмотрев, — бега уже не будет (разбежаться негде)
+			var far: Vector3 = CORR_RUN_FROM + Vector3(0, 1.2, 0)
+			if player.global_position.z < -12.5:
+				events["corridor"] = true
+			elif player.forward().angle_to(far - player.cam.global_position) < 0.4 and player.is_light_lit() and not busy:
+				if not events.has("corr_run_wait"):
+					events["corr_run_wait"] = time_now
+				elif time_now - float(events["corr_run_wait"]) > 0.5:
+					events["corridor"] = true
+					_corridor_run()
+			else:
+				events.erase("corr_run_wait")
+		else:
+			events["corridor"] = true
+			_shade_show(Vector3(0, 0, -16.8), "corridor_far")
+			_sfx("sting", -8.0)
 
 
 # ---------------- телевизор и Гость ----------------

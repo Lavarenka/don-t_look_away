@@ -595,8 +595,8 @@ func _update_corridor(delta: float) -> void:
 		return
 	if _anya_lunge:
 		return
-	# пока в коридоре показывается обычный призрак — Ани в осколке нет (не дублируются)
-	_anya.visible = L.events.has("corridor") and not L.shade.visible
+	# пока в коридоре показывается обычный призрак (или бежит Аня, level.gd: CORRIDOR_RUN) — Ани в осколке нет
+	_anya.visible = L.events.has("corridor") and not L.shade.visible and not L.zombie.visible
 	_anya.look_at(Vector3(L.player.global_position.x, 0, L.player.global_position.z), Vector3.UP, true)
 	# подсказка, если игрок долго не поднимает осколок
 	if _corr_hint_t < 0.0:
