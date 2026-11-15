@@ -28,6 +28,9 @@ var eye_ofs := EYE_OFS
 ## метка в git — before-anya-v3).
 const ANYA_V3 := true
 ## Вид Ани v3 (сборка — tools/anya3):
+##   6 — вид 5 с рукавами у́же: по руке свободно, к краю чуть расширяются (у вида 5 раструб до 21 см вперёд-назад —
+##       в скримере руки тянутся к лицу игрока, и рукава закрывали пол-экрана). Модель, волосы, текстуры платья —
+##       models/spirit3/look6, остальное — вид 5;
 ##   5 — вид 4 со страшным лицом: засохшие кровавые слёзы, кровь из носа и рта, губы в крови, царапины от когтей на щеке,
 ##       синяк на скуле, вены темнее, кожа мертвенная (кожа головы — models/spirit3/look5/tex, остальное — вид 4);
 ##   4 — вид 3 с причёской как у первой Ани: мокрые прямые волосы гладко по голове, спереди занавесью закрывают лицо
@@ -42,8 +45,9 @@ const ANYA_V3 := true
 ## Файлы — полными путями (по ним tools/git_used.py понимает, что они нужны игре). Бэкап до вида 2 — backup/before_anya_look2,
 ## метка в git — before-anya-look2; до вида 3 — метка anya3-before-figure (скрипты сборки вида 2 — tools/anya3/*_look2.*);
 ## до вида 4 — метка anya3-before-hair (волосы вида 3 — tools/anya3/s3_hair_look3.py, cols_look3.py);
-## до вида 5 — метка anya3-before-scary (лицо вида 4 — ANYA_FACE=plain при сборке или tools/anya3/s4_paint_look4.py).
-const V3_LOOK := 5
+## до вида 5 — метка anya3-before-scary (лицо вида 4 — ANYA_FACE=plain при сборке или tools/anya3/s4_paint_look4.py);
+## до вида 6 — метка anya3-before-sleeves (рукава вида 5 — tools/anya3/s2_gown_look5.py, s4_paint_look5.py, cols_look5.py).
+const V3_LOOK := 6
 const V3_FILES := {
 	1: {"model": "res://models/spirit3/anya.glb", "hair_json": "res://models/spirit3/anya_hair.json", "glow_k": 0.10,
 		"anims": "res://models/spirit3/anim_%s.res", "face": "res://models/spirit3/anya_face.json",
@@ -74,6 +78,12 @@ const V3_FILES := {
 		"skin_head": ["res://models/spirit3/look5/tex/skin_head_albedo.png", "res://models/spirit3/look5/tex/skin_head_normal.png", "res://models/spirit3/look5/tex/skin_head_mask.png"],
 		"skin_body": ["res://models/spirit3/look3/tex/skin_body_albedo.png", "res://models/spirit3/look3/tex/skin_body_normal.png", "res://models/spirit3/look3/tex/skin_body_mask.png"],
 		"gown": ["res://models/spirit3/look3/tex/gown_albedo.png", "res://models/spirit3/look3/tex/gown_normal.png", "res://models/spirit3/look3/tex/gown_mask.png"],
+		"eyes": "res://models/spirit3/look3/tex/eye_albedo.png"},
+	6: {"model": "res://models/spirit3/look6/anya.glb", "hair_json": "res://models/spirit3/look6/anya_hair.json", "glow_k": 0.9, "hair_spec": 0.45,
+		"anims": "res://models/spirit3/look3/anim_%s.res", "face": "res://models/spirit3/look3/anya_face.json",
+		"skin_head": ["res://models/spirit3/look5/tex/skin_head_albedo.png", "res://models/spirit3/look5/tex/skin_head_normal.png", "res://models/spirit3/look5/tex/skin_head_mask.png"],
+		"skin_body": ["res://models/spirit3/look3/tex/skin_body_albedo.png", "res://models/spirit3/look3/tex/skin_body_normal.png", "res://models/spirit3/look3/tex/skin_body_mask.png"],
+		"gown": ["res://models/spirit3/look6/tex/gown_albedo.png", "res://models/spirit3/look6/tex/gown_normal.png", "res://models/spirit3/look6/tex/gown_mask.png"],
 		"eyes": "res://models/spirit3/look3/tex/eye_albedo.png"},
 }
 ## общее для всех видов
