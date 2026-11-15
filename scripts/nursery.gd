@@ -2,7 +2,8 @@ extends Node
 ## Детская Ани (третья комната).
 ## Загадка: 5 рисунков Ани, на каждом цифра и цвет мелка. На музыкальной шкатулке
 ## 5 цветных клавиш — сыграть мелодию в порядке рисунков: жёлтый, красный, синий,
-## зелёный, чёрный (белый мел на чёрной бумаге). Рисунок №5 лежит под кроватью — там скример.
+## зелёный, чёрный (белый мел на чёрной бумаге). Рисунок №5 лежит под кроватью — когда Миша впервые
+## тянется за ним, из темноты хватает рука и пытается затащить под кровать (bed_grab.gd).
 ## Ошибся — шкатулка фальшивит, а одна из игрушек, на которую ты не смотришь,
 ## поворачивается к тебе. Разгадал — финал демки.
 
@@ -29,6 +30,9 @@ var bed_scare_done := false
 ## Под кроватью: true — катсцена «рука» (тянешься к рисунку, из темноты хватает детская рука,
 ## scripts/bed_grab.gd); false — прежние «глаза» в щели.
 const BED_GRAB := true
+## После руки: false — только рука (вырвался, встал, рисунок у него); true — как было: встаёт, а Аня стоит
+## прямо перед ним и кричит (скример). Метка в git до правки — nursery-before-no-scream.
+const BED_GIRL_SCARE := false
 var bed_grab: Node
 var toys := ["NBear", "NDuck", "NHorse", "NElephant", "NRockChair"]
 var wound := false            ## шкатулка заведена ключиком (ключик спрятан за портретом в коридоре)
@@ -50,13 +54,17 @@ var _steps: Array[Node3D] = []
 
 ## Нашёл её — FOUND_V2: она больше не стоит внутри мебели, и находка страшнее.
 ##   кровать, стол: Миша присел и заглянул вниз — пусто, только скрип и смешок СВЕРХУ; выпрямляется —
-##     а она стоит на кровати (на столе), согнувшись над ним, лицо прямо над его лицом, — резкий крик;
-##   шторы, кресло: там пусто — и смешок прямо за спиной; Миша оборачивается — она вплотную, крик.
+##     а она стоит на кровати (на столе), согнувшись над ним, лицо прямо над его лицом (крик — FOUND_SCREAM);
+##   шторы, кресло: там пусто — и смешок прямо за спиной; Миша оборачивается — она вплотную.
 ##   Потом фонарь гаснет; загорается — она уже стоит поодаль на полу (место подбирается по коллизиям),
 ##   «Нашёл... Теперь я вожу» — и счёт. В счёте она тоже не заходит в мебель и в стены.
 ## false — как было: она просто появлялась в самом тайнике
 ## (бэкап: backup/nursery_found_v1, метка в git: before-found-v2).
 const FOUND_V2 := true
+## Крик при находке (FOUND_V2): false — она не кричит: молча смотрит ему в лицо вплотную (глаза вспыхивают,
+## у Миши стукнуло сердце, он вздрогнул); true — как было: крик в лицо, красная вспышка, тряска.
+## Метка в git до правки — nursery-before-no-scream.
+const FOUND_SCREAM := false
 const FORCE_SPOT := ""    ## для проверки: "bed", "desk", "curt_w", "curt_e", "chair" — она всегда прячется там; "" — случайно
 var _test_spot := ""      ## F8 (тест): прятки сразу, она — под кроватью
 const BED_TOP := Vector3(-0.88, 0.42, -22.6)     ## где её ноги на кровати (верх матраса ~0.43 м)
@@ -471,27 +479,28 @@ func _under_bed() -> void:
 		await get_tree().create_timer(1.3).timeout
 		eyes.visible = false
 	p.flicker = 0.4
-	# встаёт — а она уже стоит прямо перед ним
+	# встаёт (BED_GIRL_SCARE: а она уже стоит прямо перед ним — скример)
 	var tw2 := create_tween().set_parallel()
 	tw2.tween_property(head, "position:y", base_y, 0.45).set_trans(Tween.TRANS_SINE)
 	tw2.tween_property(head, "rotation:x", 0.0, 0.45)
 	await tw2.finished
-	var girl: Node3D = L.girl
-	var f: Vector3 = p.forward()
-	f.y = 0.0
-	girl.global_position = p.global_position + f.normalized() * 0.6
-	L._face(girl, p.global_position)
-	_gpose("reach", 2.2, 0.6, 0.7)
-	girl.visible = true
-	L._sfx("sting", 2.0)
-	L._sfx("scream", 0.0, 1.25)
-	L.girl_sp.scream(0.7)
-	p.shake = 0.9
-	L.red_flash.color.a = 0.5
-	create_tween().tween_property(L.red_flash, "color:a", 0.0, 0.8)
-	await get_tree().create_timer(0.55).timeout
-	girl.visible = false
-	_gpose("idle", -1.0, 0.0)
+	if BED_GIRL_SCARE:
+		var girl: Node3D = L.girl
+		var f: Vector3 = p.forward()
+		f.y = 0.0
+		girl.global_position = p.global_position + f.normalized() * 0.6
+		L._face(girl, p.global_position)
+		_gpose("reach", 2.2, 0.6, 0.7)
+		girl.visible = true
+		L._sfx("sting", 2.0)
+		L._sfx("scream", 0.0, 1.25)
+		L.girl_sp.scream(0.7)
+		p.shake = 0.9
+		L.red_flash.color.a = 0.5
+		create_tween().tween_property(L.red_flash, "color:a", 0.0, 0.8)
+		await get_tree().create_timer(0.55).timeout
+		girl.visible = false
+		_gpose("idle", -1.0, 0.0)
 	await get_tree().create_timer(0.6).timeout
 	L.busy = false
 	p.frozen = false
@@ -682,7 +691,7 @@ func _found_v2() -> void:
 
 ## «Она над тобой». Миша присел у кровати (стола) и заглянул вниз — там пусто и темно. Скрип сверху,
 ## смешок прямо над головой. Начинает выпрямляться — а она стоит наверху, согнувшись над ним: лицо над его лицом,
-## длинные волосы свисают отвесно, ему в лицо (spirit.gdshader: hang). Резкий крик.
+## длинные волосы свисают отвесно, ему в лицо (spirit.gdshader: hang). Молча смотрит (или крик — FOUND_SCREAM).
 ## crouch — где он приседает, under — куда смотрит внизу, stand — где её ноги наверху,
 ## bend — наклон спины, lean — наклон всей фигуры от ступней (рад), eye — до какой высоты он успевает подняться.
 func _above(crouch: Vector3, under: Vector3, stand: Vector3, bend: float, lean: float, eye: float) -> void:
@@ -728,7 +737,7 @@ func _above(crouch: Vector3, under: Vector3, stand: Vector3, bend: float, lean: 
 	tw2.tween_property(head, "rotation:x", pitch2, 0.8).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tw2.tween_property(p, "rotation:y", p.rotation.y + wrapf(yaw2 - p.rotation.y, -PI, PI), 0.8).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	await get_tree().create_timer(0.35).timeout
-	_scream_in_face(0.5)
+	_meet_face(0.5)
 	await tw2.finished
 	await get_tree().create_timer(0.8).timeout
 
@@ -760,9 +769,35 @@ func _behind() -> void:
 	tw.tween_property(p, "rotation:y", p.rotation.y + wrapf(yaw - p.rotation.y, -PI, PI), 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_property(p.head, "rotation:x", clampf(atan2(d.y, Vector2(d.x, d.z).length()), -1.0, 1.0), 0.45)
 	await get_tree().create_timer(0.25).timeout
-	_scream_in_face()
+	_meet_face()
 	await tw.finished
 	await get_tree().create_timer(0.8).timeout
+
+
+## Миша встретился с ней взглядом вплотную: крик в лицо (FOUND_SCREAM) или молча смотрит.
+func _meet_face(lift := 0.7) -> void:
+	if FOUND_SCREAM:
+		_scream_in_face(lift)
+	else:
+		_stare_in_face()
+
+
+## Без крика: она молча смотрит ему в лицо — глаза вспыхивают, зрачки сжимаются в точку, кровь проступает;
+## у Миши стукнуло сердце, он вздрогнул. Рот закрыт.
+func _stare_in_face() -> void:
+	var p = L.player
+	var g = L.girl_sp
+	L._sfx("heartbeat", -6.0, 1.0)
+	var e0: float = g.eye_power
+	g.set_eyes(maxf(e0, 0.45) * 2.0)
+	if g.v3:
+		g.eye_mat.set_shader_parameter("pupil", 0.16)
+	g.set_blood(0.75)
+	p.shake = 0.3
+	get_tree().create_timer(1.4).timeout.connect(func():
+		g.set_eyes(e0)
+		if g.v3:
+			g.eye_mat.set_shader_parameter("pupil", 0.30))
 
 
 ## Крик в лицо: рот распахнут, волосы дыбом, вспышка.
@@ -778,7 +813,7 @@ func _scream_in_face(lift := 0.7) -> void:
 	create_tween().tween_property(L.red_flash, "color:a", 0.0, 0.8)
 
 
-## После крика: фонарь гаснет, она пропадает; загорается — она уже стоит поодаль на полу, перед Мишей.
+## После находки: фонарь гаснет, она пропадает; загорается — она уже стоит поодаль на полу, перед Мишей.
 ## «Нашёл... Теперь я вожу» — дальше счёт.
 func _regroup() -> void:
 	var p = L.player
